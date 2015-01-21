@@ -162,12 +162,12 @@ function add_custom_label($value){
 // OK NOW WE NEED A POST-SUBMISSION HOOK TO CATCH ANY SUBMISSIONS FROM FORMS WITH 'bb_cart_enable' CHECKED
 add_action("gform_after_submission", "check_for_cart_additions", 10, 2);
 function check_for_cart_additions($entry, $form){
-    if($form['custom_flash_message']){
+    if(!empty($form['custom_flash_message'])){
         $_SESSION['flash_message'] = $form['custom_flash_message'];
     }
 
     $frequency = 'one-off';
-    if($form['bb_cart_enable']=="cart_enabled"){
+    if(!empty($form['bb_cart_enable']) && $form['bb_cart_enable']=="cart_enabled"){
         // ANNOYINGLY HAVE TO RUN THIS ALL THROUGH ONCE TO SET THE FIELD LABEL IN CASE THERE'S A CUSTOM LABEL SET
         foreach ($form['fields'] as $field) {
             if ($field['inputName']=='bb_cart_custom_item_label')
