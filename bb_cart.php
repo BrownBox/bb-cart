@@ -3,12 +3,11 @@
  * Plugin Name: BB Cart Evolution
  * Plugin URI: n/a
  * Description: A cart to provide some simple session and checkout facilities for GF
- * Version: 1.0
+ * Version: 1.1
  * Author: Brown Box
  * Author URI: http://brownbox.net.au
  * License: Proprietary Brown Box
  */
-
 
 // ADD JQUERY
 // function jquery_method() {
@@ -26,10 +25,10 @@
 define('BB_CART_SESSION_ITEM', 'bb_cart_item');
 
 // JUST DO SOME SESSION STUFF HERE TO KEEP IT CLEAN + NOT CREATE ANY SESSION PROBLEMS
-add_action('init', 'myStartSession', 1);
-function myStartSession() {
+add_action('init', 'bb_cart_start_session', 1);
+function bb_cart_start_session() {
     if(!session_id()) {
-        session_name("bb_cart_session_name");
+//         session_name("bb_cart_session_name");
         $domain = network_site_url();
         $domain = substr($domain, strpos($domain, '//')+2);
         $domain = substr($domain, 0, strrpos($domain, '/'));
@@ -37,13 +36,13 @@ function myStartSession() {
         session_start();
     }
 }
-function myEndSession() {
-    session_destroy ();
+function bb_cart_end_session() {
+    session_destroy();
 }
 
-add_action('init', 'myStartSession', 1);
-add_action('wp_logout', 'myEndSession');
-// add_action('wp_login', 'myEndSession');
+add_action('init', 'bb_cart_start_session', 1);
+add_action('wp_logout', 'bb_cart_end_session');
+// add_action('wp_login', 'bb_cart_end_session');
 
 // ENABLE OUR CREDIT CARD FIELDS
 add_action("gform_enable_credit_card_field", "enable_creditcard");
@@ -57,10 +56,9 @@ function enable_password_field($is_enabled){
     return true;
 }
 
-
 add_action('wp_head', 'bb_remove_item_from_cart');
-function bb_remove_item_from_cart(){
-    if($_GET['remove_item'] !== false) { // you have to use this comparison operator because '0' is ignored otherwise even though it's legit
+function bb_remove_item_from_cart() {
+    if(isset($_GET['remove_item'])) {
         $item = $_GET['remove_item'];
         if (strpos($item, ':') !== false) {
             list($section, $item) = explode(':', $item);
@@ -69,7 +67,6 @@ function bb_remove_item_from_cart(){
             unset($_SESSION[BB_CART_SESSION_ITEM][$item]);
     }
 }
-
 
 // THIS IS OUR FUNCTION FOR CLEANING UP THE PRICING AMOUNTS THAT GF SPITS OUT
 function clean_amount($entry){
@@ -93,8 +90,6 @@ function clean_amount($entry){
     return $amount;
 }
 
-
-
 // WE NEED TO ADD THE OPTION TO GRAVITY FORMS SETTINGS TO SELECT WHICH FORMS WILL ADD ITEMS TO THE CART
 add_filter('gform_form_settings', 'bb_cart_custom_form_setting', 10, 2);
 function bb_cart_custom_form_setting($settings, $form) {
@@ -108,15 +103,12 @@ function bb_cart_custom_form_setting($settings, $form) {
     $settings['Form Options']['bb_cart_enable'] = '
         <tr>
             <th><label for="bb_cart_enable">Enable CART?</label></th>
-            <td><input type="checkbox" value="cart_enabled" '.$checked_text.' name="bb_cart_enable"> When checked, any "product" item in this form when submitted will be added to the cart.</td>
+            <td><input type="checkbox" value="cart_enabled" '.$checked_text.' name="bb_cart_enable"> When checked, the values from any "Product" or "EnvoyRecharge" fields in this form when submitted will be added to the cart.</td>
         </tr>
         <tr>
             <th><label for="custom_flash_message">Flash Message?</label></th>
             <td><input type="text" value="'.rgar($form, 'custom_flash_message').'" name="custom_flash_message" class="fieldwidth-3"> <br/>This custom message will be displayed in the site header when this form is submitted.</td>
         </tr>';
-
-
-
     return $settings;
 }
 
@@ -136,9 +128,8 @@ function bb_add_total_name($value){
 add_filter("gform_field_value_bb_cart_total_price", "bb_cart_total_price");
 function bb_cart_total_price($value){
     $total = 0;
-    $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
-    if (!empty($cart_items)) {
-        foreach ($cart_items as $item ) {
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+        foreach ($_SESSION[BB_CART_SESSION_ITEM] as $item ) {
             $total += $item['price'];
         }
     }
@@ -152,10 +143,13 @@ function bb_cart_total_quantity($value){
 
 add_filter("gform_field_value_bb_cart_checkout_items_array", "bb_cart_checkout_items_array");
 function bb_cart_checkout_items_array($value){
-    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $item ) {
-        $array_string .= $item['entry_id'] . ",";
+    $array_string = '';
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+        foreach ($_SESSION[BB_CART_SESSION_ITEM] as $item ) {
+            $array_string .= $item['entry_id'] . ",";
+        }
+        $array_string = substr($array_string, 0, -1);
     }
-    $array_string = substr($array_string, 0, -1);
     return $array_string;
 }
 
@@ -173,22 +167,29 @@ function check_for_cart_additions($entry, $form){
     }
 
     $frequency = 'one-off';
-
     if($form['bb_cart_enable']=="cart_enabled"){
         // ANNOYINGLY HAVE TO RUN THIS ALL THROUGH ONCE TO SET THE FIELD LABEL IN CASE THERE'S A CUSTOM LABEL SET
         foreach ($form['fields'] as $field) {
-            if($field['inputName']=='bb_cart_custom_item_label')
+            if ($field['inputName']=='bb_cart_custom_item_label')
                 $label = $entry[$field['id']];
             elseif ($field['adminLabel'] == 'bb_donation_frequency')
                 $frequency = $entry[$field['id']];
         }
         foreach ($form['fields'] as $field) {
-            if($field['type']=="product") {
+            $amount = '';
+            if ($field['type']=="product") {
+                $amount = $entry[$field["id"]];
+            } elseif ($field['type'] == 'envoyrecharge') {
+                $amount = $entry[$field["id"].'.1'];
+                if ($entry[$field["id"].'.5'] == 'recurring')
+                    $frequency = $entry[$field["id"].'.2'];
+            }
+            if (!empty($amount)) {
                 // now we can add products to our session
                 // only problem is that the 'price' field is a joke in GF so many different formats.. so we need to clean that
-                $clean_price = clean_amount($entry[$field["id"]]); // this will now be the a correctly formatted amount in cents
-                if($clean_price>0) {
-                    if($label=='')
+                $clean_price = clean_amount($amount); // this will now be the correctly formatted amount in cents
+                if ($clean_price>0) {
+                    if ($label == '')
                         $label = $field['label'];
 
                     $_SESSION[BB_CART_SESSION_ITEM][] = array(
@@ -207,25 +208,19 @@ function check_for_cart_additions($entry, $form){
 // WE'LL DO ANOTHER AFTER SUBMISSION ONE TO CORRECTLY UPDATE THE ORIGINAL FORMS WITH THE PAYMENT SUCCESS
 add_action("gform_after_submission", "bb_cart_post_purchase_actions", 10, 2);
 function bb_cart_post_purchase_actions($entry, $form){
-    if (strpos($_SERVER['REQUEST_URI'], 'checkout') !== false) {
-        foreach ($form['fields'] as $field) {
-            if ($field['type'] == 'creditcard') {
-                $user_id = get_current_user_id();
-
-                $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
-                if (!empty($cart_items)) {
-                    $donations = 0;
-                    foreach ($cart_items as $item) {
-                        $donations += $item['price']/100;
-                        RGFormsModel::update_lead_property($item['entry_id'], "payment_status", 'Approved');
-                        RGFormsModel::update_lead_property($item['entry_id'], "payment_amount", $item['price']/100);
-                        RGFormsModel::update_lead_property($item['entry_id'], "payment_date",   $entry['date_created']);
-                        RGFormsModel::update_lead_property($item['entry_id'], "payment_method", 'Credit Card');
-//                         RGFormsModel::update_lead_property($item['entry_id'], "transaction_id", ???);
-                    }
+    foreach ($form['fields'] as $field) {
+        if ($field['type'] == 'creditcard') {
+            $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+            if (!empty($cart_items)) {
+                foreach ($cart_items as $item) {
+                    RGFormsModel::update_lead_property($item['entry_id'], "payment_status", 'Approved');
+                    RGFormsModel::update_lead_property($item['entry_id'], "payment_amount", $item['price']/100);
+                    RGFormsModel::update_lead_property($item['entry_id'], "payment_date",   $entry['date_created']);
+                    RGFormsModel::update_lead_property($item['entry_id'], "payment_method", 'Credit Card');
+//                     RGFormsModel::update_lead_property($item['entry_id'], "transaction_id", ???);
                 }
-                myEndSession();
             }
+            bb_cart_end_session();
         }
     }
 }
@@ -298,14 +293,11 @@ function bb_cart_configure_notifications( $notification, $form, $entry ) {
     return $notification;
 }
 
-
 // OK SO NOW THAT WE'VE GOT ITEMS SUCCESSFULLY IN THE SESSION, WE NEED TO BUILD THAT CART EXPERIENCE AND HEADER
-
 
 // CREATE CUSTOM OPTIONS PANELS
 
 #toplevel_page_bb_cart-bb_cart div.wp-menu-image:before {
-
 
 function add_menu_icons_styles(){
 ?>
@@ -318,11 +310,9 @@ function add_menu_icons_styles(){
 }
 // add_action( 'admin_head', 'add_menu_icons_styles' );
 
-
 add_action('admin_menu', 'bb_cart_create_menu');
 
 function bb_cart_create_menu() {
-
     //create new top-level menu
     add_menu_page('CART Settings', 'CART Settings', 'administrator', 'bb_cart_settings', 'bb_cart_settings_page');
 
@@ -344,7 +334,6 @@ function bb_cart_settings_page() {
 ?>
 <div class="wrap">
 <h2>CART Settings</h2>
-
 <form method="post" action="options.php">
     <?php settings_fields( 'bb-cart-settings-group' ); ?>
     <?php do_settings_sections( 'bb-cart-settings-group' ); ?>
@@ -363,19 +352,17 @@ function bb_cart_settings_page() {
         <th scope="row" width="20%">EnvoyRelate API Endpoint</th>
         <td><input type="text" name="bb_cart_envoyrelate_endpoint" value="<?php echo get_option('bb_cart_envoyrelate_endpoint'); ?>" size="50"/></td>
         </tr>
-
       </table>
     <?php submit_button(); ?>
-
 </form>
 </div>
-<?php }
+<?php
+}
 
 function bb_cart_orders() {
-    ?>
+?>
 <div class="wrap">
 <h2>CART Orders</h2>
-
     <form action="/wp-admin/admin.php" method='get'>
         <label for='order_id'>Enter order ID for details</label>
         <input type='text' size='10' name='order_id' id='order_id' value="<?php echo $_GET['order_id']; ?>"/>
@@ -448,40 +435,36 @@ function bb_cart_orders() {
                     </tr>
                 </tbody>
               </table>
-
-
               <?php
           }
     }
-
-
 } // end bb_cart_orders
-
 
 function bb_cart_shortcode(){
     $total_price = 0;
-    $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
-if (!empty($cart_items)) {
-    $html = '<h2>Donations</h2>'."\n";
-    $html .= '<table class="bb-table">'."\n";
-    $html .= '<tr>'."\n";
-    $html .=  '<th>Type</th>'."\n";
-    $html .=  '<th>Amount</th>'."\n";
-    $html .=  '<th></th>'."\n";
-    $html .=  '</tr>'."\n";
-    foreach ($cart_items as $idx => $item) {
-        $html .=  '<tr>'."\n";
-        $html .=  '<td>Donation</td>'."\n";
-        $item_price = $item['price']/100;
-        $total_price += $item_price;
-        $frequency = $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
-        $html .=  '<td>$'.number_format($item_price, 2).$frequency.'</td>'."\n";
-        $html .=  '<td><a href="?remove_item='.$idx.'" title="Remove" onclick="return confirm(\'Are you sure you want to remove this donation?\');">x</a></td>'."\n";
+    $html = '';
+//     var_dump($_SESSION[BB_CART_SESSION_ITEM]);
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+        $html = '<h2>Cart</h2>'."\n";
+        $html .= '<table class="bb-table">'."\n";
+        $html .= '<tr>'."\n";
+        $html .=  '<th>Type</th>'."\n";
+        $html .=  '<th>Amount</th>'."\n";
+        $html .=  '<th></th>'."\n";
         $html .=  '</tr>'."\n";
+        foreach ($_SESSION[BB_CART_SESSION_ITEM] as $idx => $item) {
+            $html .=  '<tr>'."\n";
+            $html .=  '<td>'.$item['label'].'</td>'."\n";
+            $item_price = $item['price']/100;
+            $total_price += $item_price;
+            $frequency = $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
+            $html .=  '<td>$'.number_format($item_price, 2).$frequency.'</td>'."\n";
+            $html .=  '<td><a href="?remove_item='.$idx.'" title="Remove" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a></td>'."\n";
+            $html .=  '</tr>'."\n";
+        }
+        $html .=  '</table>'."\n";
+        $html .=  '  <h5>Total: $'.number_format($total_price, 2).'</h5>'."\n";
     }
-    $html .=  '</table>'."\n";
-}
-    $html .=  '  <h5>Total: $'.number_format($total_price, 2).'</h5>'."\n";
     return $html;
 }
 add_shortcode('bb_cart_table', 'bb_cart_shortcode' );
