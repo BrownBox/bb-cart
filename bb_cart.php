@@ -70,23 +70,22 @@ function bb_remove_item_from_cart() {
 
 // THIS IS OUR FUNCTION FOR CLEANING UP THE PRICING AMOUNTS THAT GF SPITS OUT
 function clean_amount($entry){
-    $entry = preg_replace("/\|(.*)/", '',$entry);  // replace everything from the pipe symbol forward
-    if(strpos($entry,'.') === false)
-        $entry .= ".00";
+    $amount = preg_replace("/\|(.*)/", '',$entry);  // replace everything from the pipe symbol forward
+    if(strpos($amount,'.') === false)
+        $amount .= ".00";
 
-    if(strpos($entry,'&#8364;')!==false){
-        $startsAt = strpos($entry, "&#8364;") + strlen("&#8364;");
-        $endsAt = strlen($entry);
-        $amount = substr($entry, 0, $endsAt);
-        $amount = preg_replace("/[^0-9,.]/", "", $amount);
-    }else{
-        $amount = preg_replace("/[^0-9,.]/", "", $entry);
+    if(strpos($amount,'&#8364;')!==false){
+        $startsAt = strpos($amount, "&#8364;") + strlen("&#8364;");
+        $endsAt = strlen($amount);
+        $amount = substr($amount, 0, $endsAt);
     }
 
-    $entry = number_format($entry, 2);
+    $amount = preg_replace("/[^0-9,.]/", "", $amount);
+    $amount = number_format($amount, 2);
 
     $amount = str_replace('.', '', $amount);
     $amount = str_replace(',', '', $amount);
+
     return $amount;
 }
 
