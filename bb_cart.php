@@ -147,7 +147,7 @@ function bb_cart_total_price($value){
     $total = 0;
     if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
         foreach ($_SESSION[BB_CART_SESSION_ITEM] as $item ) {
-            $total += $item['price'];
+            $total += $item['price']*$item['quantity'];
         }
     }
     $total = $total/100;
@@ -187,6 +187,9 @@ function check_for_cart_additions($entry, $form){
     $frequency = 'one-off';
     $deductible = false;
     $campaign = '';
+    $quantity = 1;
+    $variation = '';
+    $sku = '';
     if(!empty($form['bb_cart_enable']) && $form['bb_cart_enable']=="cart_enabled"){
         // ANNOYINGLY HAVE TO RUN THIS ALL THROUGH ONCE TO SET THE FIELD LABEL IN CASE THERE'S A CUSTOM LABEL SET
         foreach ($form['fields'] as $field) {
@@ -198,15 +201,38 @@ function check_for_cart_additions($entry, $form){
                 $deductible = (boolean)$entry[$field['id']];
             elseif ($field['inputName'] == 'bb_campaign')
                 $campaign = $entry[$field['id']];
+            elseif ($field['type'] == 'quantity' && !empty($entry[$field['id']]))
+                $quantity = $entry[$field['id']];
+            elseif ($field['inputName'] == 'bb_variations')
+                $variation = $entry[$field['id']];
+            elseif ($field['inputName'] == 'bb_sku')
+                $sku = $entry[$field['id']];
         }
         foreach ($form['fields'] as $field) {
             $amount = '';
+            $old_quantity = $quantity;
+            $old_label = $label;
+
             if ($field['type']=="product") {
-                $amount = $entry[$field["id"]];
+                if (!empty($entry[$field["id"]])) {
+                    $amount = $entry[$field["id"]];
+                } elseif (!empty($field['inputs'])) {
+                    foreach ($field['inputs'] as $input) {
+                        if ($input['name'] == 'bb_product_price') {
+                            $amount = $entry[(string)$input["id"]];
+                        } elseif ($input['name'] == 'bb_product_quantity' && !empty($entry[(string)$input["id"]])) {
+                            $quantity = $entry[(string)$input["id"]];
+                        } elseif ($input['name'] == 'bb_product_name' && !empty($entry[(string)$input["id"]])) {
+                            $label = $entry[(string)$input["id"]];
+                        }
+                    }
+                }
             } elseif ($field['type'] == 'envoyrecharge') {
                 $amount = $entry[$field["id"].'.1'];
                 if ($entry[$field["id"].'.5'] == 'recurring')
                     $frequency = $entry[$field["id"].'.2'];
+            } elseif ($field['type'] == 'bb_click_array') {
+                $amount = $entry[$field["id"].'.1'];
             }
             if (!empty($amount)) {
                 // now we can add products to our session
@@ -218,17 +244,22 @@ function check_for_cart_additions($entry, $form){
 
                     global $blog_id;
                     $_SESSION[BB_CART_SESSION_ITEM][] = array(
-                        'label' => $label,
-                        'price' => $clean_price,
-                        'form_id' => $form['id'],
-                        'entry_id' => $entry['id'],
-                        'frequency' => $frequency,
-			            'deductible' => $deductible,
-			            'campaign' => $campaign,
-			            'blog_id' => $blog_id,
+                            'label' => $label,
+                            'price' => $clean_price,
+                            'form_id' => $form['id'],
+                            'entry_id' => $entry['id'],
+                            'frequency' => $frequency,
+    			            'deductible' => $deductible,
+    			            'campaign' => $campaign,
+    			            'blog_id' => $blog_id,
+                            'quantity' => $quantity,
+                            'variation' => $variation,
+                            'sku' => $sku,
                     );
                 }
             }
+            $quantity = $old_quantity;
+            $label = $old_label;
         }
     }
 }
@@ -549,16 +580,19 @@ function bb_cart_shortcode() {
         $html .=  '</tr>'."\n";
         foreach ($_SESSION[BB_CART_SESSION_ITEM] as $idx => $item) {
             $html .=  '<tr>'."\n";
-            $html .=  '<td>'.$item['label'].'</td>'."\n";
+            $label = $item['quantity'].'x '.$item['label'];
+            if (!empty($item['variation'])) {
+                $label .= ' ('.$item['variation'].')';
+            }
+            $html .=  '<td>'.$label.'</td>'."\n";
             $item_price = $item['price']/100;
-            $total_price += $item_price;
             $frequency = $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
-            $html .=  '<td>$'.number_format($item_price, 2).$frequency.'</td>'."\n";
+            $html .=  '<td>$'.number_format($item_price*$item['quantity'], 2).$frequency.'</td>'."\n";
             $html .=  '<td><a href="?remove_item='.$idx.'" title="Remove" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a></td>'."\n";
             $html .=  '</tr>'."\n";
         }
         $html .=  '</table>'."\n";
-        $html .=  '  <h5>Total: $'.number_format($total_price, 2).'</h5>'."\n";
+        $html .=  '  <h5>Total: $'.number_format(bb_cart_total_price(), 2).'</h5>'."\n";
     }
     return $html;
 }
