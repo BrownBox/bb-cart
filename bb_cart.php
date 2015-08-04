@@ -46,15 +46,21 @@ add_action('init', 'bb_cart_start_session', 1);
 add_action('wp_logout', 'bb_cart_end_session');
 // add_action('wp_login', 'bb_cart_end_session');
 
+// Enqueue styles
+add_action( 'wp_enqueue_scripts', 'bb_cart_enqueue' );
+function bb_cart_enqueue() {
+    wp_enqueue_style('bb_cart', plugin_dir_url(__FILE__).'/assets/css/bb_cart.css');
+}
+
 // ENABLE OUR CREDIT CARD FIELDS
-add_action("gform_enable_credit_card_field", "enable_creditcard");
-function enable_creditcard($is_enabled){
+add_action("gform_enable_credit_card_field", "bb_cart_enable_creditcard");
+function bb_cart_enable_creditcard($is_enabled){
     return true;
 }
 
 // ENABLE PASSWORD FIELDS
-add_action("gform_enable_password_field", "enable_password_field");
-function enable_password_field($is_enabled){
+add_action("gform_enable_password_field", "bb_cart_enable_password_field");
+function bb_cart_enable_password_field($is_enabled){
     return true;
 }
 
