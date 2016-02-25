@@ -3,7 +3,7 @@
  * Plugin Name: BB Cart Evolution
  * Plugin URI: n/a
  * Description: A cart to provide some simple session and checkout facilities for GF
- * Version: 2.0
+ * Version: 2.0.1
  * Author: Brown Box
  * Author URI: http://brownbox.net.au
  * License: Proprietary Brown Box
@@ -23,6 +23,10 @@ new \bb_cart\cptClass('Transaction', 'Transactions', array(
         'labels' => array(
                 'name' => 'Transactions',
         ),
+        'public' => false,
+        'has_archive' => false,
+        'query_var' => false,
+        'show_ui' => true,
 ));
 
 // JUST DO SOME SESSION STUFF HERE TO KEEP IT CLEAN + NOT CREATE ANY SESSION PROBLEMS
