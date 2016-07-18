@@ -92,7 +92,8 @@ function clean_amount($entry) {
         $amount = substr($entry, 0, $endsAt);
         $amount = preg_replace("/[^0-9,.]/", "", $amount);
     }else{
-        $amount = preg_replace("/[^0-9,.]/", "", sprintf("%.2f",$entry));
+        $amount = preg_replace("/[^0-9,.]/", "", $entry);
+        $amount = sprintf("%.2f", $amount);
     }
 
     $amount = str_replace('.', '', $amount);
