@@ -312,6 +312,7 @@ function bb_cart_post_purchase_actions($entry, $form){
         if (!empty($cart_items)) {
             $donation_amount = 0;
             $total_amount = 0;
+            $payment_method = 'Credit Card';
             $first_item = reset($cart_items);
 
             foreach ($form['fields'] as $field) {
@@ -324,6 +325,8 @@ function bb_cart_post_purchase_actions($entry, $form){
                 } else if($field['type']== 'date' && !empty($entry[$field['id']])) {
                     $transaction_date = $entry[$field['id']];
                     $transaction_date = date('Y-m-d',strtotime($transaction_date));
+                } else if ($field->inputName == 'payment_method') {
+                    $payment_method = $entry[$field->id];
                 }
             }
 
@@ -350,11 +353,12 @@ function bb_cart_post_purchase_actions($entry, $form){
                 $author_id = get_current_user_id();
             }
 
-            //determine if the payment will be processed via ECH or Via Paypal
-            if (isset($first_item['paymentby']) && $first_item['paymentby']=='Paypal') {
-                $post_status = 'draft';
-            } else {
+            if ($payment_method == 'Credit Card') {
                 $post_status = 'publish';
+                $transaction_status = 'Approved';
+            } else {
+                $post_status = 'draft';
+                $transaction_status = 'Pending';
             }
 
             // Create post object
@@ -386,26 +390,124 @@ function bb_cart_post_purchase_actions($entry, $form){
             add_post_meta($post_id, 'donation_amount', $donation_amount);
             add_post_meta($post_id, 'total_amount', $total_amount);
             add_post_meta($post_id, 'cart', serialize($cart_items));
+            add_post_meta($post_id, 'payment_method', $payment_method);
 
             if(isset($deductible)) {
                 add_post_meta($post_id, 'is_tax_deductible', (string)$deductible);
             }
             do_action('bb_cart_post_purchase', $cart_items, $entry, $form, $post_id);
             foreach ($cart_items as $item) {
-        	    $switched = false;
-        	    if (!empty($item['blog_id']) && $item['blog_id'] != $blog_id) {
-        	        switch_to_blog($item['blog_id']);
-        	        $switched = true;
-        	    }
-                RGFormsModel::update_lead_property($item['entry_id'], "payment_status", 'Approved');
-                RGFormsModel::update_lead_property($item['entry_id'], "payment_amount", $item['price']/100);
-                RGFormsModel::update_lead_property($item['entry_id'], "payment_date",   $entry['date_created']);
-                RGFormsModel::update_lead_property($item['entry_id'], "payment_method", 'Credit Card');
-        		if ($switched)
-                    restore_current_blog();
+                if (!empty($item['entry_id'])) {
+            	    $switched = false;
+            	    if (!empty($item['blog_id']) && $item['blog_id'] != $blog_id) {
+            	        switch_to_blog($item['blog_id']);
+            	        $switched = true;
+            	    }
+                    GFAPI::update_entry_property($item['entry_id'], "payment_status", $transaction_status);
+                    GFAPI::update_entry_property($item['entry_id'], "payment_amount", $item['price']/100);
+                    GFAPI::update_entry_property($item['entry_id'], "payment_date", $entry['date_created']);
+                    GFAPI::update_entry_property($item['entry_id'], "payment_method", $payment_method);
+            		if ($switched) {
+                        restore_current_blog();
+            		}
+                }
             }
         }
         bb_cart_end_session();
+    }
+}
+
+/**
+ * Find the transaction for the specified entry
+ * @param int $entry_id
+ * @return mixed
+ */
+function bb_cart_get_transaction_from_entry($entry_id) {
+    $args = array(
+            'post_type' => 'transaction',
+            'post_status' => 'any',
+            'posts_per_page' => 1,
+            'meta_query' => array(
+                    array(
+                            'key' => 'gf_entry_id',
+                            'value' => $entry_id,
+                    ),
+            ),
+    );
+    $transactions = get_posts($args);
+    if (count($transactions)) {
+        return array_shift($transactions);
+    }
+    return false;
+}
+
+/**
+ * Get cart contents for the specified entry
+ * @param array $entry
+ * @return mixed|boolean
+ */
+function bb_cart_get_cart_from_entry($entry) {
+    $transaction = bb_cart_get_transaction_from_entry($entry['id']);
+    if ($transaction) {
+        return maybe_unserialize(get_post_meta($transaction->ID, 'cart', true));
+    }
+    return false;
+}
+
+add_action('gform_paypal_post_ipn', 'bb_maf_sf_complete_paypal_transaction', 10, 4);
+function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) {
+    $now = date('Y-m-d H:i:s');
+    $transaction = bb_cart_get_transaction_from_entry($entry['id']);
+    if ($transaction) {
+        bb_cart_complete_pending_transaction($transaction->ID, $now, $entry);
+    }
+}
+
+/**
+ * Mark a pending transaction (pledge) as complete/paid
+ * @param int $transaction_id Transaction post ID
+ * @param string $date Date of payment (Y-m-d H:i:s)
+ * @param array $entry Optional GF entry. If not specified entry will be loaded from transaction meta
+ */
+function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = null) {
+    if (is_null($entry)) {
+        $entry = GFAPI::get_entry(get_post_meta($transaction_id, 'gf_entry_id', true));
+    }
+    wp_publish_post($transaction_id);
+    GFAPI::update_entry_property($entry['id'], "payment_status", 'Approved');
+    GFAPI::update_entry_property($entry['id'], "payment_date", $date);
+    $form = GFAPI::get_form($entry['form_id']);
+    foreach ($form['fields'] as $field) {
+        if ($field->inputName == 'bb_cart_checkout_items_array') {
+            $item_entries = explode(',', $entry[$field->id]);
+            foreach ($item_entries as $item_entry) {
+                GFAPI::update_entry_property($item_entry['id'], "payment_status", 'Approved');
+                GFAPI::update_entry_property($item_entry['id'], "payment_date", $date);
+            }
+        }
+    }
+}
+
+/**
+ * Mark a pending transaction (pledge) as lost/failed
+ * @param int $transaction_id Transaction post ID
+ * @param array $entry Optional GF entry. If not specified entry will be loaded from transaction meta
+ */
+function bb_cart_cancel_pending_transaction($transaction_id, $message, $entry = null) {
+    if (is_null($entry)) {
+        $entry = GFAPI::get_entry(get_post_meta($transaction_id, 'gf_entry_id', true));
+    }
+    $transaction->post_content .= "\n\nTransaction marked as cancelled. Message: ".$message;
+    wp_trash_post($transaction_id);
+    GFAPI::update_entry_property($entry['id'], "payment_status", 'Failed');
+    $form = GFAPI::get_form($entry['form_id']);
+    foreach ($form['fields'] as $field) {
+        if ($field->inputName == 'bb_cart_checkout_items_array') {
+            $item_entries = explode(',', $entry[$field->id]);
+            foreach ($item_entries as $item_entry) {
+                GFAPI::update_entry_property($item_entry['id'], "payment_status", 'Failed');
+            }
+        }
     }
 }
 
@@ -425,184 +527,173 @@ function is_checkout_form($form) {
 }
 
 add_filter("gform_notification", "bb_cart_configure_notifications", 10, 3);
-function bb_cart_configure_notifications( $notification, $form, $entry ) {
-    // Get the products - this will work if the products are IN the actual credit card form
-    // However if we're using CART and sessions, we'll need to run a secondary process
+function bb_cart_configure_notifications($notification, $form, $entry) {
+        // Get the products - this will work if the products are IN the actual credit card form
+        // However if we're using CART and sessions, we'll need to run a secondary process
     $items = array();
     foreach ($form['fields'] as $field) {
-        if($field['type']=="product"){
-        $clean_price = clean_amount($entry[$field["id"]]); // this will now be the a correctly formatted amount in cents
-            if($clean_price>0){
-
-                if($label==''){
+        if ($field['type'] == "product") {
+            $clean_price = clean_amount($entry[$field["id"]]); // this will now be the a correctly formatted amount in cents
+            if ($clean_price > 0) {
+                if ($label == '') {
                     $label = $field['label'];
                 }
 
                 $items[] = array(
-                    'label' => $label,
-                    'price' => $clean_price,
-                    'form_id' => $form['id'],
-                    'entry_id' => $entry['id']
+                        'label' => $label,
+                        'price' => $clean_price,
+                        'form_id' => $form['id'],
+                        'entry_id' => $entry['id'],
                 );
-            };
-
+            }
         }
     }
 
     // Now we need to ADD the session ones
-    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $item ) {
+    if (bb_cart_total_quantity() > 0) {
+        $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+    } else {
+        $cart_items = bb_cart_get_cart_from_entry($entry);
+    }
+    foreach ($cart_items as $item) {
         $items[] = array(
             'label' => $item['label'],
-            'price' => $item['price']
+            'price' => $item['price'],
         );
     }
 
     foreach ($items as $item) {
-        $item_string .= "<tr><td>" . $item['label'] . "</td><td align='right'>&#8364;" . $item['price']/100 . "</td></tr>";
+        $item_string .= "<tr><td>".$item['label']."</td><td align='right'>$".($item['price']/100)."</td></tr>";
     }
 
     $notification['message'] = str_replace("!!!items!!!", $item_string, $notification['message']);
     return $notification;
 }
 
-// OK SO NOW THAT WE'VE GOT ITEMS SUCCESSFULLY IN THE SESSION, WE NEED TO BUILD THAT CART EXPERIENCE AND HEADER
-
-// CREATE CUSTOM OPTIONS PANELS
-function add_menu_icons_styles(){
-?>
-
-<style>
-#toplevel_page_bb_cart-bb_cart div.wp-menu-image:before {content: "\f174";}
-</style>
-
-<?php
-}
-// add_action( 'admin_head', 'add_menu_icons_styles' );
-
 add_action('admin_menu', 'bb_cart_create_menu');
 function bb_cart_create_menu() {
     //create new top-level menu
-    add_menu_page('CART Settings', 'CART Settings', 'administrator', 'bb_cart_settings', 'bb_cart_settings_page');
-    add_menu_page('CART Orders', 'CART Orders', 'administrator', 'bb_cart_orders', 'bb_cart_orders');
+    add_menu_page('BB Cart', 'BB Cart', 'administrator', 'bb_cart_settings', 'bb_cart_settings_page', 'dashicons-cart');
+    add_submenu_page('bb_cart_settings', 'Settings', 'Settings', 'administrator', 'bb_cart_settings', 'bb_cart_settings_page', 'dashicons-cart');
+    add_submenu_page('bb_cart_settings', 'Pledges', 'Pledges', 'administrator', 'bb_cart_pledges', 'bb_cart_pledges');
 }
 
 //call register settings function
-add_action( 'admin_init', 'register_bb_cart_settings' );
+add_action('admin_init', 'register_bb_cart_settings');
 function register_bb_cart_settings() {
     //register our settings
-    register_setting( 'bb-cart-settings-group', 'bb_cart_checkout_form_id' );
-    register_setting( 'bb-cart-settings-group', 'bb_advanced_form_notification_addresses' );
-    register_setting( 'bb-cart-settings-group', 'bb_cart_envoyrelate_endpoint' );
+    register_setting('bb-cart-settings-group', 'bb_cart_checkout_form_id');
+    register_setting('bb-cart-settings-group', 'bb_advanced_form_notification_addresses');
+    register_setting('bb-cart-settings-group', 'bb_cart_envoyrelate_endpoint');
 }
 
 function bb_cart_settings_page() {
 ?>
 <div class="wrap">
-<h2>CART Settings</h2>
-<form method="post" action="options.php">
+    <h2>CART Settings</h2>
+    <form method="post" action="options.php">
     <?php settings_fields( 'bb-cart-settings-group' ); ?>
     <?php do_settings_sections( 'bb-cart-settings-group' ); ?>
     <table class="form-table">
         <tr valign="top">
-        <th scope="row">Checkout Form ID<br/><em>This won't likely need to be changed and is used for order-details matching</em></th>
-        <td><input type="text" name="bb_cart_checkout_form_id" value="<?php echo get_option('bb_cart_checkout_form_id'); ?>" /></td>
+            <th scope="row">Checkout Form ID<br>
+            <em>This won't likely need to be changed and is used for order-details matching</em></th>
+            <td><input type="text" name="bb_cart_checkout_form_id" value="<?php echo get_option('bb_cart_checkout_form_id'); ?>"></td>
         </tr>
     </table>
     <table class="form-table" width="50%">
         <tr valign="top">
-        <th scope="row">Advanced Form Notification Emails</th>
-        <td><input type="text" name="bb_advanced_form_notification_addresses" value="<?php echo get_option('bb_advanced_form_notification_addresses'); ?>" /></td>
+            <th scope="row">Advanced Form Notification Emails</th>
+            <td><input type="text" name="bb_advanced_form_notification_addresses" value="<?php echo get_option('bb_advanced_form_notification_addresses'); ?>"></td>
         </tr>
         <tr valign="top">
-        <th scope="row" width="20%">EnvoyRelate API Endpoint</th>
-        <td><input type="text" name="bb_cart_envoyrelate_endpoint" value="<?php echo get_option('bb_cart_envoyrelate_endpoint'); ?>" size="50"/></td>
+            <th scope="row" width="20%">EnvoyRelate API Endpoint</th>
+            <td><input type="text" name="bb_cart_envoyrelate_endpoint" value="<?php echo get_option('bb_cart_envoyrelate_endpoint'); ?>" size="50"></td>
         </tr>
-      </table>
+    </table>
     <?php submit_button(); ?>
 </form>
 </div>
 <?php
 }
 
-function bb_cart_orders() {
+function bb_cart_pledges() {
 ?>
 <div class="wrap">
-<h2>CART Orders</h2>
-    <form action="/wp-admin/admin.php" method='get'>
-        <label for='order_id'>Enter order ID for details</label>
-        <input type='text' size='10' name='order_id' id='order_id' value="<?php echo $_GET['order_id']; ?>"/>
-        <input type='hidden' value='bb_cart_orders' name='page' id='page'/>
-        <input type='hidden' value='<?php  echo get_option('bb_cart_checkout_form_id'); ?>' name='form_id' id='form_id'/>
-        <br/>
-        <input type='Submit' value='Retrieve Details' class='button button-primary button-large'>
-    </form>
-    <a href="/wp-admin/admin.php?page=gf_entries&id=<?php echo $_GET['form_id']; ?>">All orders</a>
-</div>
+    <h2>Pledge Management</h2>
 <?php
-    if($_GET['order_id']) {
-        $lead = RGFormsModel::get_lead($_GET['order_id']);
-        $order_meta = RGFormsModel::get_form_meta($lead['form_id']);
-
-        if (!empty($_GET['action']) && $_GET['action'] == 'reissueEmail') {
-            post_to_ocr($lead, $order_meta);
-            echo '<div class="updated">'."\n";
-            echo '    <p>Emails have been resent</p>'."\n";
-            echo '</div>'."\n";
-        }
-
-        echo "<h3>Purchaser Information</h3>";
-        echo "" . $lead["1.3"] . " " . $lead["1.6"];
-        echo "<br/>" . $lead["5.1"] . "<br/>" . $lead["5.3"] . " " . $lead["5.4"] . " " . $lead["5.5"] . "<br/>" . $lead["5.6"];
-        echo "<br/>" . $lead[2];
-        echo "<br/>Payment via: " . $lead["7.4"];
-        echo "<br/>";
-        foreach ($order_meta['fields'] as $field) {
-            if($field['inputName']=="bb_cart_checkout_items_array"){
-                $items = $lead[$field['id']];
-            }
-        }
-        $items_array = explode(",",$items);
-        foreach ($items_array as $item) {
-            $item_detail = RGFormsModel::get_lead($item);
-            $numerickeys = array_filter(array_keys($item_detail), 'is_int');
-?>
-<h3>Order Item Details</h3>
-<table>
-<thead>
-    <tr>
-        <th align='left'>Date</th>
-        <th align='left'>Details</th>
-        <th align='left'>Full Record</th>
-        <th align='left'>Actions</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td><?php
-        echo date('d F Y', strtotime($item_detail["date_created"])) . "&nbsp;&nbsp;&nbsp;";
-        ?></td>
-        <td><?php
-            foreach ($numerickeys as $key) {
-                if(strpos($item_detail[$key], '$')!==false){
-                    echo substr($item_detail[$key], 0, strpos($item_detail[$key], "|")) . " " ;
-                }else{
-                    echo $item_detail[$key] . " ";
-                }
-            }
-            ?>
-        </td>
-        <td>
-            <a href="/wp-admin/admin.php?page=gf_entries&view=entry&id=&lid=<?php echo $item_detail['id']; ?>&filter=&paged=1&pos=0&field_id=&operator=">Full Entry</a>
-        </td>
-        <td>
-            <a href="/wp-admin/admin.php?page=bb_cart_orders&order_id=<?php echo $_GET['order_id'] ?>&form_id=<?php echo $item_detail['form_id']; ?>&action=reissueEmail">Reissue Ezescan Email</a>
-        </td>
-    </tr>
-</tbody>
-</table>
-<?php
+    if (!empty($_GET['pledge_id']) && !empty($_GET['pledge_action'])) {
+        switch ($_GET['pledge_action']) {
+            case 'complete':
+                $date = date('Y-m-d H:i:s'); // @todo let user specify date
+                bb_cart_complete_pending_transaction($_GET['pledge_id'], $date);
+                echo '<div class="notice notice-success"><p>Transaction successfully marked as complete.</p></div>';
+                break;
+            case 'cancel':
+                $message = 'Cancelled'; // @todo let user specify message
+                bb_cart_cancel_pending_transaction($_GET['pledge_id'], $message);
+                echo '<div class="notice notice-success"><p>Transaction successfully marked as cancelled.</p></div>';
+                break;
         }
     }
+    $args = array(
+            'post_type' => 'transaction',
+            'post_status' => 'draft',
+            'posts_per_page' => -1,
+    );
+    $pledges = get_posts($args);
+    if (count($pledges)) {
+?>
+    <table class="bb_cart_table widefat striped">
+        <tr>
+            <th>Pledge Date</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Amount</th>
+            <th>Payment Method</th>
+            <th>Actions</th>
+        </tr>
+<?php
+    foreach ($pledges as $pledge) {
+        if (!empty($pledge->post_author)) {
+            $name = get_user_meta($pledge->post_author, 'display_name', true);
+            $email = get_user_meta($pledge->post_author, 'user_email', true);
+        } else {
+            $entry = GFAPI::get_entry(get_post_meta($pledge->ID, 'gf_entry_id', true));
+            $form = GFAPI::get_form($entry['form_id']);
+            foreach ($form['fields'] as $field) {
+                switch ($field->type) {
+                    case 'name':
+                        $name = $entry[$field['id'].'.3'].' '.$entry[$field['id'].'.6'];
+                        break;
+                    case 'email':
+                        $email = $entry[$field['id']];
+                        break;
+                }
+            }
+        }
+?>
+        <tr>
+            <td><?php echo $pledge->post_date; ?></td>
+            <td><?php echo $name; ?></td>
+            <td><?php echo $email; ?></td>
+            <td style="text-align: right;">$<?php echo number_format(get_post_meta($pledge->ID, 'total_amount', true), 2); ?></td>
+            <td><?php echo get_post_meta($pledge->ID, 'payment_method', true); ?></td>
+            <td><a onclick="return confirm('Are you sure you want to manually mark this transaction as complete?');" href="admin.php?page=bb_cart_pledges&pledge_id=<?php echo $pledge->ID; ?>&pledge_action=complete" class="dashicons dashicons-yes" title="Mark as won"></a> <a onclick="return confirm('Are you sure you want to manually mark this transaction as failed?');" href="admin.php?page=bb_cart_pledges&pledge_id=<?php echo $pledge->ID; ?>&pledge_action=cancel" class="dashicons dashicons-no-alt" title="Mark as lost"></a></td>
+        </tr>
+<?php
+    }
+?>
+    </table>
+<?php
+    } else {
+?>
+    <p>There are no pledges currently pending.</p>
+<?php
+    }
+?>
+</div>
+<?php
 }
 
 function bb_cart_shortcode() {
