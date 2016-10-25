@@ -77,23 +77,24 @@ function bb_remove_item_from_cart() {
         if (strpos($item, ':') !== false) {
             list($section, $item) = explode(':', $item);
             unset($_SESSION[BB_CART_SESSION_ITEM][$section][$item]);
-        } else
+        } else {
             unset($_SESSION[BB_CART_SESSION_ITEM][$item]);
+        }
     }
 }
 
 // THIS IS OUR FUNCTION FOR CLEANING UP THE PRICING AMOUNTS THAT GF SPITS OUT
 function clean_amount($entry) {
     $entry = preg_replace("/\|(.*)/", '',$entry); // replace everything from the pipe symbol forward
-    if(strpos($entry,'.')===false){
+    if (strpos($entry,'.')===false) {
         $entry .= ".00";
     }
-    if(strpos($entry,'$')!==false){
+    if (strpos($entry,'$')!==false) {
         $startsAt = strpos($entry, "$") + strlen("$");
         $endsAt=strlen($entry);
         $amount = substr($entry, 0, $endsAt);
         $amount = preg_replace("/[^0-9,.]/", "", $amount);
-    }else{
+    } else {
         $amount = preg_replace("/[^0-9,.]/", "", $entry);
         $amount = sprintf("%.2f", $amount);
     }
@@ -197,23 +198,24 @@ function check_for_cart_additions($entry, $form){
     $quantity = 1;
     $variation = '';
     $sku = '';
-    if(!empty($form['bb_cart_enable']) && $form['bb_cart_enable']=="cart_enabled"){
+    if (!empty($form['bb_cart_enable']) && $form['bb_cart_enable']=="cart_enabled") {
         // ANNOYINGLY HAVE TO RUN THIS ALL THROUGH ONCE TO SET THE FIELD LABEL IN CASE THERE'S A CUSTOM LABEL SET
         foreach ($form['fields'] as $field) {
-            if ($field['inputName']=='bb_cart_custom_item_label')
+            if ($field['inputName']=='bb_cart_custom_item_label') {
                 $label = $entry[$field['id']];
-            elseif ($field['adminLabel'] == 'bb_donation_frequency')
+            } elseif ($field['adminLabel'] == 'bb_donation_frequency') {
                 $frequency = $entry[$field['id']];
-            elseif ($field['inputName'] == 'bb_tax_status')
+            } elseif ($field['inputName'] == 'bb_tax_status') {
                 $deductible = (boolean)$entry[$field['id']];
-            elseif ($field['inputName'] == 'bb_campaign')
+            } elseif ($field['inputName'] == 'bb_campaign') {
                 $campaign = $entry[$field['id']];
-            elseif ($field['type'] == 'quantity' && !empty($entry[$field['id']]))
+            } elseif ($field['type'] == 'quantity' && !empty($entry[$field['id']])) {
                 $quantity = $entry[$field['id']];
             elseif ($field['inputName'] == 'bb_variations')
                 $variation = $entry[$field['id']];
             elseif ($field['inputName'] == 'bb_sku')
                 $sku = $entry[$field['id']];
+            }
         }
         foreach ($form['fields'] as $field) {
             $amount = '';
