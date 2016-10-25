@@ -145,13 +145,13 @@ function save_bb_cart_form_setting($form) {
     return $form;
 }
 
-
 add_filter("gform_field_value_bb_cart_total_name", "bb_add_total_name");
-function bb_add_total_name($value){
+function bb_add_total_name($value = '') {
     return "Donation";
 }
+
 add_filter("gform_field_value_bb_cart_total_price", "bb_cart_total_price");
-function bb_cart_total_price($value){
+function bb_cart_total_price($value = '') {
     $total = 0;
     if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
         foreach ($_SESSION[BB_CART_SESSION_ITEM] as $item ) {
@@ -161,6 +161,7 @@ function bb_cart_total_price($value){
     $total = $total/100;
     return $total;
 }
+
 add_filter("gform_field_value_bb_cart_total_quantity", "bb_cart_total_quantity");
 function bb_cart_total_quantity($value){
     return "1";
