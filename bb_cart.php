@@ -3,7 +3,7 @@
  * Plugin Name: BB Cart Evolution
  * Plugin URI: n/a
  * Description: A cart to provide some simple session and checkout facilities for GF
- * Version: 2.0.1
+ * Version: 2.1
  * Author: Brown Box
  * Author URI: http://brownbox.net.au
  * License: Proprietary Brown Box
