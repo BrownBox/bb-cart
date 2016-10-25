@@ -52,7 +52,8 @@ add_action('wp_logout', 'bb_cart_end_session');
 // add_action('wp_login', 'bb_cart_end_session');
 
 // Enqueue styles
-add_action( 'wp_enqueue_scripts', 'bb_cart_enqueue' );
+add_action('wp_enqueue_scripts', 'bb_cart_enqueue');
+add_action('admin_enqueue_scripts', 'bb_cart_enqueue');
 function bb_cart_enqueue() {
     wp_enqueue_style('bb_cart', plugin_dir_url(__FILE__).'/assets/css/bb_cart.css');
 }
