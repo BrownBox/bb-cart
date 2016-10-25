@@ -163,8 +163,11 @@ function bb_cart_total_price($value = '') {
 }
 
 add_filter("gform_field_value_bb_cart_total_quantity", "bb_cart_total_quantity");
-function bb_cart_total_quantity($value){
-    return "1";
+function bb_cart_total_quantity($value = '') {
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+        return count($_SESSION[BB_CART_SESSION_ITEM]);
+    }
+    return 0;
 }
 
 add_filter("gform_field_value_bb_cart_checkout_items_array", "bb_cart_checkout_items_array");
