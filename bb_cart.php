@@ -396,6 +396,8 @@ function bb_cart_post_purchase_actions($entry, $form){
                 add_post_meta($post_id, 'is_tax_deductible', (string)$deductible);
             }
             do_action('bb_cart_post_purchase', $cart_items, $entry, $form, $post_id);
+            $_SESSION['last_checkout'] = $entry['id'];
+
             foreach ($cart_items as $item) {
                 if (!empty($item['entry_id'])) {
             	    $switched = false;
