@@ -220,11 +220,12 @@ function check_for_cart_additions($entry, $form){
         $_SESSION['flash_message'] = $form['custom_flash_message'];
     }
 
+    global $post;
     $frequency = 'one-off';
     $deductible = false;
-    $campaign = '';
+    $campaign = $post->ID;
     $quantity = 1;
-    $variation = '';
+    $variations = array();
     $sku = '';
     if (!empty($form['bb_cart_enable']) && $form['bb_cart_enable']=="cart_enabled") {
         // ANNOYINGLY HAVE TO RUN THIS ALL THROUGH ONCE TO SET THE FIELD LABEL IN CASE THERE'S A CUSTOM LABEL SET
@@ -239,9 +240,9 @@ function check_for_cart_additions($entry, $form){
                 $campaign = $entry[$field['id']];
             } elseif ($field['type'] == 'quantity' && !empty($entry[$field['id']])) {
                 $quantity = $entry[$field['id']];
-            elseif ($field['inputName'] == 'bb_variations')
-                $variation = $entry[$field['id']];
-            elseif ($field['inputName'] == 'bb_sku')
+            } elseif (strpos($field->inputName, 'variation') !== false) {
+                $variations[] = $entry[$field['id']];
+            } elseif ($field['inputName'] == 'bb_sku') {
                 $sku = $entry[$field['id']];
             }
         }
@@ -290,7 +291,7 @@ function check_for_cart_additions($entry, $form){
     			            'campaign' => $campaign,
     			            'blog_id' => $blog_id,
                             'quantity' => $quantity,
-                            'variation' => $variation,
+                            'variation' => $variations,
                             'sku' => $sku,
                     );
                 }
