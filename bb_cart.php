@@ -170,6 +170,30 @@ function bb_cart_total_quantity($value = '') {
     return 0;
 }
 
+add_filter('gform_field_value_bb_campaign', 'bb_cart_primary_campaign');
+function bb_cart_primary_campaign($value = '') {
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+        foreach ($_SESSION[BB_CART_SESSION_ITEM] as $item) {
+            if (!empty($item['campaign_id'])) {
+                return $item['campaign_id'];
+            }
+        }
+    }
+    return $value;
+}
+
+add_filter("gform_field_value_bb_donation_frequency", "bb_cart_frequency");
+function bb_cart_frequency($value = '') {
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+        foreach ($_SESSION[BB_CART_SESSION_ITEM] as $item) {
+            if (!empty($item['frequency'])) {
+                return $item['frequency'];
+            }
+        }
+    }
+    return $value;
+}
+
 add_filter("gform_field_value_bb_cart_checkout_items_array", "bb_cart_checkout_items_array");
 function bb_cart_checkout_items_array($value){
     $array_string = '';
