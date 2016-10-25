@@ -70,7 +70,7 @@ function bb_cart_enable_password_field($is_enabled){
     return true;
 }
 
-add_action('wp_head', 'bb_remove_item_from_cart');
+add_action('init', 'bb_remove_item_from_cart');
 function bb_remove_item_from_cart() {
     if(isset($_GET['remove_item'])) {
         $item = $_GET['remove_item'];
