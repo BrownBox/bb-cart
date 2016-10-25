@@ -42,8 +42,9 @@ function bb_cart_start_session() {
         session_start();
     }
 }
+
 function bb_cart_end_session() {
-    session_destroy();
+    unset($_SESSION[BB_CART_SESSION_ITEM]);
 }
 
 add_action('init', 'bb_cart_start_session', 1);
