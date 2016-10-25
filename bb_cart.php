@@ -3,7 +3,7 @@
  * Plugin Name: BB Cart Evolution
  * Plugin URI: n/a
  * Description: A cart to provide some simple session and checkout facilities for GF
- * Version: 2.1
+ * Version: 2.1.1
  * Author: Brown Box
  * Author URI: http://brownbox.net.au
  * License: Proprietary Brown Box
@@ -398,7 +398,19 @@ function bb_cart_post_purchase_actions($entry, $form){
             do_action('bb_cart_post_purchase', $cart_items, $entry, $form, $post_id);
             $_SESSION['last_checkout'] = $entry['id'];
 
+            $gf_line_items = array(
+                    'products' => array(),
+                    'shipping' => array(
+                            'name' => 'Shipping',
+                            'price' => 0,
+                    ),
+            );
             foreach ($cart_items as $item) {
+                $gf_line_items['products'][] = array(
+                        'name' => $item['label'],
+                        'price' => $item['price']/100,
+                        'quantity' => $item['quantity'],
+                );
                 if (!empty($item['entry_id'])) {
             	    $switched = false;
             	    if (!empty($item['blog_id']) && $item['blog_id'] != $blog_id) {
@@ -414,6 +426,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             		}
                 }
             }
+            gform_update_meta($entry['id'], 'gform_product_info__', $gf_line_items);
         }
         bb_cart_end_session();
     }
