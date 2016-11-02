@@ -469,6 +469,20 @@ function bb_cart_get_cart_from_entry($entry) {
     return false;
 }
 
+add_filter('gform_paypal_query', 'bb_cart_paypal_line_items', 10, 5);
+function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submission_data) {
+    parse_str(ltrim($query_string, '&'), $query);
+    $i = 1;
+    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $cart_item) {
+        $query['item_name_'.$i] = $cart_item['label'];
+        $query['amount_'.$i] = $cart_item['price']/100;
+        $query['quantity_'.$i] = $cart_item['quantity'];
+        $i++;
+    }
+    $query_string = '&' . http_build_query($query);
+    return $query_string;
+}
+
 add_action('gform_paypal_post_ipn', 'bb_maf_sf_complete_paypal_transaction', 10, 4);
 function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) {
     $now = date('Y-m-d H:i:s');
