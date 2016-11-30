@@ -592,7 +592,7 @@ function bb_cart_configure_notifications($notification, $form, $entry) {
     }
 
     foreach ($items as $item) {
-        $item_string .= "<tr><td>".$item['label']."</td><td align='right'>$".($item['price']/100)."</td></tr>";
+        $item_string .= "<tr><td>".$item['label']."</td><td align='right'>".GFCommon::to_money($item['price']/100)."</td></tr>";
     }
 
     $notification['message'] = str_replace("!!!items!!!", $item_string, $notification['message']);
@@ -745,7 +745,7 @@ function bb_cart_shortcode() {
             $html .=  '<td>'.$label.'</td>'."\n";
             $item_price = $item['price']/100;
             $frequency = $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
-            $html .=  '<td>$'.number_format($item_price*$item['quantity'], 2).$frequency.'</td>'."\n";
+            $html .=  '<td>'.GFCommon::to_money($item_price*$item['quantity']).$frequency.'</td>'."\n";
             $html .=  '<td><a href="?remove_item='.$idx.'" title="Remove" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a></td>'."\n";
             $html .=  '</tr>'."\n";
         }
