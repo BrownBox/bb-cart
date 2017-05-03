@@ -23,6 +23,7 @@ new \bb_cart\cptClass('Transaction', 'Transactions', array(
         'labels' => array(
                 'name' => 'Transactions',
         ),
+        'menu_icon'		=> 'dashicons-cart',
         'public' => false,
         'has_archive' => false,
         'query_var' => false,
