@@ -1,4 +1,136 @@
 <?php
+new \bb_cart\cptTaxClass('Transaction', 'Transactions', array('transactionlineitem'), array(
+        'rewrite' => array(
+                'with_front' => false,
+                'slug' => 'transaction',
+        ),
+        'labels' => array(
+                'name' => 'Transactions',
+        ),
+        'menu_icon' => 'dashicons-cart',
+        'public' => false,
+        'has_archive' => false,
+        'query_var' => false,
+        'show_ui' => true,
+        'hierarchical' => false,
+        'supports' => array(
+                'title',
+                'editor',
+                'author',
+                'revisions',
+                'page-attributes',
+        ),
+));
+
+new \bb_cart\cptClass('Transaction Line Item', 'Transaction Line Items', array(
+        'rewrite' => array(
+                'with_front' => false,
+                'slug' => 'line-item',
+        ),
+        'menu_icon' => 'dashicons-feedback',
+        'public' => false,
+        'has_archive' => false,
+        'query_var' => false,
+        'show_ui' => true,
+        'hierarchical' => false,
+        'supports' => array(
+                'title',
+                'editor',
+                'author',
+                'revisions',
+        ),
+));
+
+$line_item_meta = array(
+        array(
+                'title' => 'Transaction ID',
+                'description' => '',
+                'field_name' => 'transaction_id',
+                'type' => 'number',
+        ),
+        array(
+                'title' => "Price",
+                'description' => '',
+                'field_name' => 'price',
+                'type' => 'number',
+        ),
+        array(
+                'title' => "Quantity",
+                'description' => '',
+                'field_name' => 'quantity',
+                'type' => 'number',
+        ),
+);
+new \bb_cart\metaClass('Line Item Details', array('transactionlineitem'), $line_item_meta);
+
+new \bb_cart\cptClass('Transaction Batch', 'Transaction Batches', array(
+        'rewrite' => array(
+                'with_front' => false,
+                'slug' => 'batch',
+        ),
+        'menu_icon' => 'dashicons-archive',
+        'public' => false,
+        'has_archive' => false,
+        'query_var' => false,
+        'show_ui' => true,
+        'hierarchical' => false,
+));
+
+$batch_meta = array(
+        array(
+                'title' => 'Batch Type',
+                'description' => '',
+                'field_name' => 'batch_type',
+                'type' => 'text',
+        ),
+        array(
+                'title' => 'Banking Details',
+                'description' => '',
+                'field_name' => 'banking_details',
+                'type' => 'textarea',
+        ),
+);
+new \bb_cart\metaClass('Batch Details', array('transactionbatch'), $batch_meta);
+
+new \bb_cart\cptTaxClass('Fund Code', 'Fund Codes', array('transactionlineitem', 'product', 'give', 'person'), array(
+        'rewrite' => array(
+                'with_front' => false,
+        ),
+        'menu_icon' => 'dashicons-portfolio',
+        'public' => false,
+        'has_archive' => false,
+        'query_var' => false,
+        'show_ui' => true,
+        'hierarchical' => true,
+        'supports' => array(
+                'title',
+                'author',
+                'editor',
+                'page-attributes',
+        ),
+));
+
+$fund_code_meta = array(
+        array(
+                'title' => 'Transaction Type',
+                'description' => '',
+                'field_name' => 'transaction_type',
+                'type' => 'select',
+                'options' => array(
+                        array(
+                                'value' => 'donation',
+                                'label' => 'Donation',
+                        ),
+                        array(
+                                'value' => 'purchase',
+                                'label' => 'Purchase',
+                        ),
+                ),
+        ),
+);
+new \bb_cart\metaClass('Fund Code Details', array('fundcode'), $fund_code_meta);
+
+// @todo rebuild using metaClass
 function transaction_metabox() {
 	add_meta_box( 'cpt_transaction_box', __( 'Transaction Meta', '' ), 'transaction_metabox_content', 'transaction', 'side', 'high' );
 }
@@ -14,9 +146,11 @@ function transaction_metabox_content( $post ) {
 	array_push( $transaction_fields, bbcart_new_field( 'title=GF Entry ID&field_name=gf_entry_id&size=100%&type=text' ) );
 	array_push( $transaction_fields, bbcart_new_field( 'title=Donation Amount&field_name=donation_amount&size=100%&type=text' ) );
 	array_push( $transaction_fields, bbcart_new_field( 'title=Total Amount&field_name=total_amount&size=100%&type=text' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=Cart&field_name=cart&size=100%&type=text' ) );
+	array_push( $transaction_fields, bbcart_new_field( 'title=Cart&field_name=cart&size=100%,10rem&type=textarea' ) );
 	array_push( $transaction_fields, bbcart_new_field( 'title=Gateway Response&field_name=gateway_response&size=100%&type=text' ) );
 	array_push( $transaction_fields, bbcart_new_field( 'title=Tax Deductible&field_name=is_tax_deductible&type=checkbox' ) );
+	array_push( $transaction_fields, bbcart_new_field( 'title=Batch ID&field_name=batch_id&size=100%&type=number' ) );
+	array_push( $transaction_fields, bbcart_new_field( 'title=Subscription ID&field_name=subscription_id&size=100%&type=text' ) );
 
 	set_transient( 'transaction_fields', serialize( $transaction_fields ), 3600 );
 }

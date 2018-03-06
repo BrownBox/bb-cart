@@ -1,0 +1,1119 @@
+<?php
+function bb_cart_get_donate_form(){
+    $donate_form_id = get_option('bb_cart_donate_form_id');
+    $donate_form = array(
+            'title' => '[BB Cart] Donations',
+            'description' => 'Version 1.0',
+            'is_active' => true,
+            'cssClass' => 'bb_cart_donations',
+            'button' => array(
+                    'type' => 'text',
+                    'text' => 'Give Now',
+                    'imageUrl' => ''
+            ),
+            'bb_cart_enable' => 'cart_enabled',
+            'confirmations' => array(
+                    0 => array(
+                            'id' => '597697bdb19ee',
+                            'name' => 'Default Confirmation',
+                            'isDefault' => true,
+                            'type' => 'redirect',
+                            'url' => site_url('/payment/'),
+                            'queryString' => 'payment_method={Payment method:17}&gift_type={Gift type:15}',
+                    ),
+            ),
+            'fields' => array(
+                    array(
+                            'type' => 'checkbox',
+                            'id' => 7,
+                            'label' => 'Form Setup',
+                            'isRequired' => false,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'Simple Giving',
+                                            'value' => 'simple giving',
+                                            'isSelected' => true,
+                                    ),
+                                    1 => array(
+                                            'text' => 'Peer to Peer Campaign',
+                                            'value' => 'peer to peer campaign',
+                                            'isSelected' => false,
+                                    ),
+                                    2 => array(
+                                            'text' => 'Supporting Message',
+                                            'value' => 'supporting message',
+                                            'isSelected' => false,
+                                    ),
+                                    3 => array(
+                                            'text' => 'Donation Target',
+                                            'value' => 'donation target',
+                                            'isSelected' => false,
+                                            'price' => ''
+                                    ),
+                            ),
+                            'inputs' => array(
+                                    0 => array(
+                                            'id' => '7.1',
+                                            'label' => 'Simple Giving',
+                                            'name' => '',
+                                    ),
+                                    1 => array(
+                                            'id' => '7.2',
+                                            'label' => 'Peer to Peer Campaign',
+                                            'name' => '',
+                                    ),
+                                    2 => array(
+                                            'id' => '7.3',
+                                            'label' => 'Supporting Message',
+                                            'name' => '',
+                                    ),
+                                    3 => array(
+                                            'id' => '7.4',
+                                            'label' => 'Donation Target',
+                                            'name' => '',
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_form_setup',
+                            'visibility' => 'hidden',
+                    ),
+                    array(
+                            'type' => 'section',
+                            'id' => 1,
+                            'label' => 'Gift Details',
+                            'isRequired' => false,
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'radio',
+                            'id' => 2,
+                            'label' => 'Donation for',
+                            'isRequired' => true,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'Give to where it is needed most',
+                                            'value' => 'default',
+                                            'isSelected' => true,
+                                    ),
+                                    1 => array(
+                                            'text' => 'Sponsor a member',
+                                            'value' => 'sponsorship',
+                                            'isSelected' => false,
+                                    ),
+                                    2 => array(
+                                            'text' => 'Support a project/campaign/appeal',
+                                            'value' => 'campaign',
+                                            'isSelected' => false,
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'cssClass' => 'tabs',
+                            'inputName' => 'bb_cart_donation_for',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '7',
+                                                    'operator' => 'isnot',
+                                                    'value' => 'peer to peer campaign',
+                                            ),
+                                            1 => array(
+                                                    'fieldId' => '7',
+                                                    'operator' => 'isnot',
+                                                    'value' => 'simple giving',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'select',
+                            'id' => 5,
+                            'label' => 'Sponsor a member',
+                            'isRequired' => false,
+                            'choices' => array(),
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_donation_member',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '2',
+                                                    'operator' => 'is',
+                                                    'value' => 'sponsorship',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'select',
+                            'id' => 6,
+                            'label' => 'Support project/campaign/appeal',
+                            'isRequired' => false,
+                            'choices' => array(),
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_donation_campaign',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '2',
+                                                    'operator' => 'is',
+                                                    'value' => 'campaign',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'radio',
+                            'id' => 3,
+                            'label' => 'Gift Frequency',
+                            'isRequired' => true,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'once only',
+                                            'value' => 'one-off',
+                                            'isSelected' => true,
+                                    ),
+                                    1 => array(
+                                            'text' => 'monthly',
+                                            'value' => 'month',
+                                            'isSelected' => false,
+                                    ),
+                            ),
+                            'description' => '',
+                            'allowsPrepopulate' => true,
+                            'cssClass' => 'frequency horizontal',
+                            'inputName' => 'bb_cart_interval',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 23,
+                            'label' => 'My Donation is for',
+                            'description' => 'Leave blank to let us decide',
+                            'placeholder' => 'program, volunteer',
+                            'cssClass' => 'donation_for',
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'donation_target',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '7',
+                                                    'operator' => 'is',
+                                                    'value' => 'donation target'
+                                            )
+                                    )
+                            ),
+                    ),
+                    array(
+                            'id' => 4,
+                            'label' => 'My donation',
+                            'type' => 'bb_click_array',
+                            'isRequired' => true,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => '',
+                                            'value' => '$35',
+                                            'isSelected' => false,
+                                    ),
+                                    1 => array(
+                                            'text' => '',
+                                            'value' => '$50',
+                                            'isSelected' => true,
+                                    ),
+                                    2 => array(
+                                            'text' => '',
+                                            'value' => '$100',
+                                            'isSelected' => false,
+                                    ),
+                                    3 => array(
+                                            'text' => '',
+                                            'value' => '$250',
+                                            'isSelected' => false,
+                                    ),
+                                    4 => array(
+                                            'text' => '',
+                                            'value' => '$500',
+                                            'isSelected' => false,
+                                    ),
+                                    5 => array(
+                                            'text' => '',
+                                            'value' => '$1000',
+                                            'isSelected' => false,
+                                    ),
+                            ),
+                            'inputs' => array(
+                                    0 => array(
+                                            'id' => '4.1',
+                                            'label' => 'Value',
+                                            'name' => '',
+                                    ),
+                                    1 => array(
+                                            'id' => '4.5',
+                                            'label' => 'Clicked',
+                                            'name' => '',
+                                    )
+                            ),
+                            'inputName' => 'bb_donation_amounts',
+                            'field_bb_click_array_other_label' => 'My Best Gift',
+                            'field_bb_click_array_is_product' => true,
+                    ),
+                    array(
+                            'type' => 'textarea',
+                            'id' => 8,
+                            'label' => 'Supporting message',
+                            'adminLabel' => '',
+                            'isRequired' => false,
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '7',
+                                                    'operator' => 'is',
+                                                    'value' => 'supporting message',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'checkbox',
+                            'id' => 19,
+                            'label' => '',
+                            'adminLabel' => '',
+                            'isRequired' => false,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'I\'d like to appear anonymous',
+                                            'value' => 'I\'d like to appear anonymous',
+                                            'isSelected' => false,
+                                    ),
+                            ),
+                            'inputs' => array(
+                                    0 => array(
+                                            'id' => '19.1',
+                                            'label' => 'I\'d like to appear anonymous',
+                                    ),
+                            ),
+                            'description' => 'Note: your details are always recorded for use internally but will not be displayed publically without your permission. Please see our privacy policy for more details.',
+                            'cssClass' => 'anonymous',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '7',
+                                                    'operator' => 'is',
+                                                    'value' => 'supporting message',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'section',
+                            'id' => 9,
+                            'label' => 'Admin use only',
+                            'isRequired' => false,
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 10,
+                            'label' => 'Fund code',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_fund_code',
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 13,
+                            'label' => 'Gift label',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_custom_item_label',
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 14,
+                            'label' => 'Page ID',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_page_id',
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'email',
+                            'id' => 12,
+                            'label' => 'Notification email',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_notification_email',
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'radio',
+                            'id' => 15,
+                            'label' => 'Gift type',
+                            'isRequired' => false,
+                            'inputs' => NULL,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'Everyday Giving',
+                                            'value' => 'default',
+                                            'isSelected' => false,
+                                    ),
+                                    1 => array(
+                                            'text' => 'Campaign',
+                                            'value' => 'campaign',
+                                            'isSelected' => false,
+                                    ),
+                                    2 => array(
+                                            'text' => 'Sponsorship',
+                                            'value' => 'sponsorship',
+                                            'isSelected' => false,
+                                    ),
+                                    3 => array(
+                                            'text' => 'P2P',
+                                            'value' => 'p2p',
+                                            'isSelected' => false,
+                                    )
+                            ),
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_gift_type',
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 20,
+                            'label' => 'Tax Deductible',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_tax_deductible',
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 21,
+                            'label' => 'Member/Campaign ID',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_campaign_id',
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'section',
+                            'id' => 16,
+                            'label' => 'Payment Details',
+                            'isRequired' => false,
+                            'visibility' => 'administrative',
+                    ),
+                    array(
+                            'type' => 'radio',
+                            'id' => 17,
+                            'label' => 'Payment method',
+                            'isRequired' => false,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'Credit Card',
+                                            'value' => 'Credit Card',
+                                            'isSelected' => false,
+                                    ),
+                                    1 => array(
+                                            'text' => 'Direct Debit',
+                                            'value' => 'Direct Debit',
+                                            'isSelected' => false,
+                                    ),
+                                    2 => array(
+                                            'text' => 'PayPal',
+                                            'value' => 'PayPal',
+                                            'isSelected' => false,
+                                    )
+                            ),
+                            'allowsPrepopulate' => true,
+                            'cssClass' => 'horizontal hide',
+                            'inputName' => 'bb_cart_payment_method',
+                    ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 22,
+                            'label' => 'Page ID',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'page_id',
+                            'visibility' => 'hidden',
+                    ),
+            ),
+    );
+
+    if (!$donate_form_id || !GFAPI::form_id_exists($donate_form_id)) { // If form doesn't exist, create it
+        $donate_form_id = GFAPI::add_form($donate_form);
+        update_option('bb_cart_donate_form_id', $donate_form_id);
+    } else { // Otherwise if we've created it previously, just update it to make sure it hasn't been modified and is the latest version
+        $donate_form['id'] = $donate_form_id;
+        GFAPI::update_form($donate_form);
+    }
+
+    return $donate_form_id;
+}
+
+function bb_cart_get_checkout_form(){
+    $checkout_form_id = get_option('bb_cart_checkout_form_id');
+    $checkout_form = array(
+            'title' => '[BB Cart] Checkout',
+            'description' => 'Version 1.0',
+            'labelPlacement' => 'top_label',
+            'descriptionPlacement' => 'below',
+            'is_active' => true,
+            'cssClass' => 'bb_cart_checkout bb-processing',
+            'button' =>  array(
+                    'type' => 'text',
+                    'text' => 'Submit',
+            ),
+            'confirmations' => array(
+                    0 => array(
+                            'id' => '56ce55c57ef2e',
+                            'name' => 'Default Confirmation',
+                            'isDefault' => true,
+                            'type' => 'page',
+                            'message' => '',
+                            'url' => site_url('/thankyou/'),
+                            'queryString' => 'n={Name (First):1.3}&e={entry_id}&f={form_id}',
+                            'disableAutoformat' => false,
+                            'conditionalLogic' => array(),
+                    ),
+            ),
+            'fields' => array(
+                    array(
+                            'type' => 'checkbox',
+                            'id' => 28,
+                            'label' => 'Checkout Form Setup',
+                            'isRequired' => false,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'Show Address',
+                                            'value' => 'address',
+                                            'isSelected' => false,
+                                    ),
+                                    1 => array(
+                                            'text' => 'Show Phone Number',
+                                            'value' => 'phone',
+                                            'isSelected' => false,
+                                    ),
+                            ),
+                            'inputs' => array(
+                                    0 => array(
+                                            'id' => '28.1',
+                                            'label' => 'show address',
+                                    ),
+                                    1 => array(
+                                            'id' => '28.2',
+                                            'label' => 'show phone',
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_checkout_form_setup',
+                            'visibility' => 'hidden',
+                    ),
+                    array(
+                            'type' => 'radio',
+                            'id' => 12,
+                            'label' => 'Payment Options',
+                            'isRequired' => true,
+                            'inputs' => NULL,
+                            'choices' => array(
+                                    0 =>  array(
+                                            'text' => 'Pay with Credit Card',
+                                            'value' => 'Credit Card',
+                                            'isSelected' => true,
+                                    ),
+                                    1 =>  array(
+                                            'text' => 'Pay with Direct Debit',
+                                            'value' => 'Direct Debit',
+                                            'isSelected' => false,
+                                    ),
+                                    2 =>  array(
+                                            'text' => 'Pay with PayPal',
+                                            'value' => 'PayPal',
+                                            'isSelected' => false,
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'cssClass' => 'gf_list_inline payment_options',
+                            'inputName' => 'payment_method',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'section',
+                            'id' => 6,
+                            'label' => 'Payment Details',
+                            'isRequired' => false,
+                            'cssClass' => 'gform_column',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'creditcard',
+                            'id' => 4,
+                            'label' => 'Credit Card',
+                            'isRequired' => true,
+                            'inputs' => array(
+                                    0 =>  array(
+                                            'id' => '4.1',
+                                            'label' => 'Card Number',
+                                    ),
+                                    1 =>  array(
+                                            'id' => '4.2_month',
+                                            'label' => 'Expiration Month',
+                                            'defaultLabel' => 'Expiration Date',
+                                    ),
+                                    2 =>  array(
+                                            'id' => '4.2_year',
+                                            'label' => 'Expiration Year',
+                                    ),
+                                    3 =>  array(
+                                            'id' => '4.3',
+                                            'label' => 'Security Code',
+                                    ),
+                                    4 =>  array(
+                                            'id' => '4.4',
+                                            'label' => 'Card Type',
+                                    ),
+                                    5 =>  array(
+                                            'id' => '4.5',
+                                            'label' => 'Cardholder Name',
+                                    ),
+                            ),
+                            'conditionalLogic' =>  array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 =>  array(
+                                                    'fieldId' => '12',
+                                                    'operator' => 'is',
+                                                    'value' => 'Credit Card',
+                                            ),
+                                    ),
+                            ),
+                            'creditCards' => array(
+                                    0 => 'visa',
+                                    1 => 'mastercard',
+                            ),
+                            'useRichTextEditor' => false,
+                            'creditCardFundingTypes' => array(
+                                    0 => 'credit',
+                                    1 => 'debit',
+                                    2 => 'prepaid',
+                                    3 => 'unknown',
+                            ),
+                            'displayAllCurrencies' => false,
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 13,
+                            'label' => 'Account BSB',
+                            'isRequired' => true,
+                            'conditionalLogic' =>  array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 =>  array(
+                                                    'fieldId' => '12',
+                                                    'operator' => 'is',
+                                                    'value' => 'Direct Debit',
+                                            ),
+                                    ),
+                            ),
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 14,
+                            'label' => 'Account Number',
+                            'isRequired' => true,
+                            'conditionalLogic' =>  array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 =>  array(
+                                                    'fieldId' => '12',
+                                                    'operator' => 'is',
+                                                    'value' => 'Direct Debit',
+                                            ),
+                                    ),
+                            ),
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'html',
+                            'id' => 27,
+                            'label' => 'PayPal Blurb',
+                            'isRequired' => false,
+                            'visibility' => 'visible',
+                            'conditionalLogic' =>  array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 =>  array(
+                                                    'fieldId' => '12',
+                                                    'operator' => 'is',
+                                                    'value' => 'PayPal',
+                                            ),
+                                    ),
+                            ),
+                            'content' => 'When you click "Submit" you will be directed to PayPal to finalise your donation. Once complete, please follow the link and return to our site so that we know your donation went through successfully and we can thank you. Please note that PayPal is not able to process donations that have both one-off and recurring amounts in the one transaction. In this case please use the credit card or direct debit payment options.',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 15,
+                            'label' => 'Account Name',
+                            'isRequired' => true,
+                            'conditionalLogic' =>  array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 =>  array(
+                                                    'fieldId' => '12',
+                                                    'operator' => 'is',
+                                                    'value' => 'Direct Debit',
+                                            ),
+                                    ),
+                            ),
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'html',
+                            'id' => 25,
+                            'label' => 'Secure Seals',
+                            'isRequired' => false,
+                            'content' => 'This site is secured by Comodo for your protection',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'section',
+                            'id' => 7,
+                            'label' => 'Personal Details',
+                            'isRequired' => false,
+                            'cssClass' => 'gform_column',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'name',
+                            'id' => 1,
+                            'label' => 'Name',
+                            'isRequired' => true,
+                            'nameFormat' => 'advanced',
+                            'inputs' => array(
+                                    0 =>  array(
+                                            'id' => '1.2',
+                                            'label' => 'Prefix',
+                                            'name' => '',
+                                            'choices' => array(
+                                                    0 =>  array(
+                                                            'text' => 'Mr.',
+                                                            'value' => 'Mr.',
+                                                            'isSelected' => false,
+                                                    ),
+                                                    1 =>  array(
+                                                            'text' => 'Mrs.',
+                                                            'value' => 'Mrs.',
+                                                            'isSelected' => false,
+                                                    ),
+                                                    2 =>  array(
+                                                            'text' => 'Miss',
+                                                            'value' => 'Miss',
+                                                            'isSelected' => false,
+                                                    ),
+                                                    3 =>  array(
+                                                            'text' => 'Ms.',
+                                                            'value' => 'Ms.',
+                                                            'isSelected' => false,
+                                                    ),
+                                                    4 =>  array(
+                                                            'text' => 'Dr.',
+                                                            'value' => 'Dr.',
+                                                            'isSelected' => false,
+                                                    ),
+                                                    5 =>  array(
+                                                            'text' => 'Prof.',
+                                                            'value' => 'Prof.',
+                                                            'isSelected' => false,
+                                                    ),
+                                                    6 =>  array(
+                                                            'text' => 'Rev.',
+                                                            'value' => 'Rev.',
+                                                            'isSelected' => false,
+                                                    ),
+                                            ),
+                                            'isHidden' => true,
+                                            'inputType' => 'radio',
+                                    ),
+                                    1 =>  array(
+                                            'id' => '1.3',
+                                            'label' => 'First',
+                                            'name' => 'fname',
+                                            'customLabel' => 'First',
+                                    ),
+                                    2 =>  array(
+                                            'id' => '1.4',
+                                            'label' => 'Middle',
+                                            'name' => '',
+                                            'isHidden' => true,
+                                    ),
+                                    3 =>  array(
+                                            'id' => '1.6',
+                                            'label' => 'Last',
+                                            'name' => 'lname',
+                                    ),
+                                    4 =>  array(
+                                            'id' => '1.8',
+                                            'label' => 'Suffix',
+                                            'name' => '',
+                                            'isHidden' => true,
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'email',
+                            'id' => 3,
+                            'label' => 'Email',
+                            'isRequired' => true,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'email',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'address',
+                            'id' => 2,
+                            'label' => 'Address',
+                            'isRequired' => false,
+                            'inputs' => array(
+                                    0 =>  array(
+                                            'id' => '2.1',
+                                            'label' => 'Street Address',
+                                    ),
+                                    1 =>  array(
+                                            'id' => '2.2',
+                                            'label' => 'Address Line 2',
+                                            'isHidden' => true,
+                                    ),
+                                    2 =>  array(
+                                            'id' => '2.3',
+                                            'label' => 'City',
+                                    ),
+                                    3 =>  array(
+                                            'id' => '2.4',
+                                            'label' => 'State / Province',
+                                    ),
+                                    4 =>  array(
+                                            'id' => '2.5',
+                                            'label' => 'ZIP / Postal Code',
+                                    ),
+                                    5 =>  array(
+                                            'id' => '2.6',
+                                            'label' => 'Country',
+                                            'name' => '',
+                                            'isHidden' => true,
+                                    ),
+                            ),
+                            'description' => '',
+                            'descriptionPlacement' => 'above',
+                            'addressType' => 'australia',
+                            'defaultCountry' => 'Australia',
+                            'visibility' => 'visible',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '28',
+                                                    'operator' => 'is',
+                                                    'value' => 'address',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 19,
+                            'label' => 'Phone Number',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'description' => 'Please use numbers only',
+                            'cssClass' => 'phone-number',
+                            'inputName' => 'phone',
+                            'visibility' => 'visible',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '28',
+                                                    'operator' => 'is',
+                                                    'value' => 'phone',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'product',
+                            'id' => 9,
+                            'label' => 'Product Name',
+                            'isRequired' => false,
+                            'inputs' => array(
+                                    0 =>  array(
+                                            'id' => '9.1',
+                                            'label' => 'Name',
+                                            'name' => 'bb_cart_total_name',
+                                    ),
+                                    1 =>  array(
+                                            'id' => '9.2',
+                                            'label' => 'Price',
+                                            'name' => 'bb_cart_total_price',
+                                    ),
+                                    2 =>  array(
+                                            'id' => '9.3',
+                                            'label' => 'Quantity',
+                                            'name' => 'bb_cart_total_quantity',
+                                    ),
+                            ),
+                            'inputType' => 'hiddenproduct',
+                            'allowsPrepopulate' => true,
+                            'inputName' => '',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 10,
+                            'label' => 'Donation Array',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_checkout_items_array',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 11,
+                            'label' => 'Fund Code',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_fund_code',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 22,
+                            'label' => 'frequency',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_donation_frequency',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 26,
+                            'label' => 'Item Types',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'item_types',
+                            'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 32,
+                            'label' => 'Campaign ID',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'campaign_id',
+                            'visibility' => 'visible'
+                    ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 33,
+                            'label' => 'target',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'donation_target',
+                            'visibility' => 'visible'
+                    ),
+            )
+    );
+    if (!$checkout_form_id || !GFAPI::form_id_exists($checkout_form_id)) { // If form doesn't exist, create it
+        $checkout_form_id = GFAPI::add_form($checkout_form);
+        update_option('bb_cart_checkout_form_id', $checkout_form_id);
+    } else { // Otherwise if we've created it previously, just update it to make sure it hasn't been modified and is the latest version
+        $checkout_form['id'] = $checkout_form_id;
+        GFAPI::update_form($checkout_form);
+    }
+
+    return $checkout_form_id;
+}
+
+function bb_cart_get_cart_user() {
+    $user = get_user_by('login', 'bbcart');
+    if (!$user) {
+        $user = new WP_User();
+        $user->user_login = 'bbcart';
+        $user->user_email = 'dev+bbcart@brownbox.net.au';
+        $user->first_name = 'BB Cart';
+        $user->last_name = 'System User';
+        $user->user_pass = wp_generate_password();
+        $user->ID = wp_insert_user($user);
+    }
+    return $user;
+}
+
+add_action('init', 'bb_cart_form_locking', 9999); // Run as late as possible to make sure GF has inited first
+function bb_cart_form_locking() {
+    if (class_exists('GFFormLocking')) {
+        class BBCartGFFormLocking extends GFFormLocking {
+            private $bb_cart_forms = array();
+
+            public function __construct() {
+                $this->bb_cart_forms[] = bb_cart_get_donate_form();
+                $this->bb_cart_forms[] = bb_cart_get_checkout_form();
+
+                $this->_redirect_url = admin_url('admin.php?page=gf_edit_forms');
+
+//                 add_action('gform_form_list_column_title', array($this, 'form_list_form_title'));  @todo this conflicts with Connexions' corresponding logic, resulting in 2 form titles being displayed
+                add_filter('gform_form_actions', array($this, 'form_list_lock_message'), 999, 2);
+                parent::__construct();
+            }
+
+            protected function check_lock($object_id) {
+                if (in_array($object_id, $this->bb_cart_forms)) {
+                    return bb_cart_get_cart_user()->ID;
+                }
+                return parent::check_lock($object_id);
+            }
+
+            public function get_strings() {
+                if (in_array($this->get_object_id(), $this->bb_cart_forms)) {
+                    $strings = array(
+                            'currently_locked'  => __('This form is managed by BB Cart. You cannot edit this form.', 'bbcart'),
+                            'currently_editing' => __('This form is managed by BB Cart. You cannot edit this form.', 'bbcart'),
+                    );
+
+                    return array_merge(parent::get_strings(), $strings);
+                }
+                return parent::get_strings();
+            }
+
+            public function get_lock_ui($user_id) {
+                if (in_array($this->get_object_id(), $this->bb_cart_forms)) {
+                    $html = '<div id="gform-lock-dialog" class="notification-dialog-wrap">
+                            <div class="notification-dialog-background"></div>
+                            <div class="notification-dialog">
+                                <div class="gform-locked-message">
+                                    <div class="gform-locked-avatar"><!--img src="'.trailingslashit(BB_CART_URL).'assets/brand.png" alt=""--></div>
+                                    <p class="currently-editing" tabindex="0">'.$this->get_string('currently_locked').'</p>
+                                    <p><a class="button" href="'.esc_url($this->_redirect_url).'">'.$this->get_string('cancel').'</a></p>
+                                </div>
+                            </div>
+                         </div>';
+                    return $html;
+                }
+                return parent::get_lock_ui($user_id);
+            }
+
+            public function form_list_form_title($form) {
+                if (in_array($form->id, $this->bb_cart_forms)) {
+                    echo '<strong>'.esc_html($form->title).'</strong>';
+                } else {
+                    echo '<strong><a href="?page=gf_edit_forms&id='.absint($form->id).'">'.esc_html($form->title).'</a></strong>';
+                }
+            }
+
+            public function form_list_lock_message($form_actions, $form_id) {
+                if (in_array($form_id, $this->bb_cart_forms)) {
+                    echo __('This form is managed by BB Cart. You cannot edit this form.<br>', 'bbcart');
+                    // Block access to edit/delete functions
+                    unset($form_actions['edit'], $form_actions['trash']);
+                    // Rewrite settings link to point to notifications
+                    $form_actions['settings']['url'] = add_query_arg('subview', 'notification', $form_actions['settings']['url']);
+                }
+                return $form_actions;
+            }
+        }
+
+        class BBCartGFFormSettingsLocking extends GFFormSettingsLocking {
+            private $bb_cart_forms = array();
+            private $locked_subviews = array(
+                    'settings',
+                    'confirmation',
+            );
+
+            public function __construct() {
+                $this->bb_cart_forms[] = bb_cart_get_donate_form();
+                $this->bb_cart_forms[] = bb_cart_get_checkout_form();
+
+                $this->_redirect_url = admin_url('admin.php?page=gf_edit_forms&view=settings&id='.rgget('id').'&subview=notification');
+
+                add_filter('gform_form_settings_menu', array($this, 'form_settings_hide_locked_subviews'), 10, 2);
+
+                parent::__construct();
+            }
+
+            public function form_settings_hide_locked_subviews($setting_tabs, $form_id) {
+                if (in_array($form_id, $this->bb_cart_forms)) {
+                    foreach ($setting_tabs as $pos => $tab) {
+                        if (in_array($tab['name'], $this->locked_subviews)) {
+                            unset($setting_tabs[$pos]);
+                        }
+                    }
+                }
+                return $setting_tabs;
+            }
+
+            protected function check_lock($object_id) {
+                list($subview, $form_id) = explode('-', $object_id);
+                if (in_array($form_id, $this->bb_cart_forms) && (empty($subview) || in_array($subview, $this->locked_subviews))) {
+                    return bb_cart_get_cart_user()->ID;
+                }
+                return parent::check_lock($object_id);
+            }
+
+            public function get_strings() {
+                $object_id = $this->get_object_id();
+                list($subview, $form_id) = explode('-', $object_id);
+                if (in_array($form_id, $this->bb_cart_forms) && (empty($subview) || in_array($subview, $this->locked_subviews))) {
+                    $strings = array(
+                            'currently_locked'  => __( 'This form is managed by BB Cart. You cannot edit this form.', 'gravityforms' ),
+                            'currently_editing' => 'This form is managed by BB Cart. You cannot edit this form.',
+                    );
+
+                    return array_merge(parent::get_strings(), $strings);
+                }
+                return parent::get_strings();
+            }
+
+            public function get_lock_ui($user_id) {
+                $object_id = $this->get_object_id();
+                list($subview, $form_id) = explode('-', $object_id);
+                if (in_array($form_id, $this->bb_cart_forms) && (empty($subview) || in_array($subview, $this->locked_subviews))) {
+                    $html = '<div id="gform-lock-dialog" class="notification-dialog-wrap">
+                            <div class="notification-dialog-background"></div>
+                            <div class="notification-dialog">
+                                <div class="gform-locked-message">
+                                    <div class="gform-locked-avatar"><!--img src="'.trailingslashit(BB_CART_URL).'assets/brand.png" alt=""--></div>
+                                    <p class="currently-editing" tabindex="0">'.$this->get_string('currently_locked').'</p>
+                                    <p><a class="button" href="'.esc_url($this->_redirect_url).'">'.$this->get_string('cancel').'</a></p>
+                                </div>
+                            </div>
+                         </div>';
+                    return $html;
+                }
+                return parent::get_lock_ui($user_id);
+            }
+        }
+        $form_lock = new BBCartGFFormLocking();
+        $form_settings_lock = new BBCartGFFormSettingsLocking();
+    }
+}
