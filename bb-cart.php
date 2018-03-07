@@ -74,8 +74,9 @@ function bb_cart_start_session() {
                 if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
                     foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as &$cart_item) {
                         if ($cart_item['cart_item_key'] == $woo_idx) { // Found it - let's make sure the details are the same
+                            $label = !empty($woo_item['variation_id']) ? get_the_title($woo_item['variation_id']) : get_the_title($woo_item['product_id']);
                             $cart_item = array(
-                                    'name' => get_the_title($woo_item['product_id']),
+                                    'name' => $label,
                                     'cart_item_key' => $woo_idx,
                                     'product_id' => $woo_item['product_id'],
                                     'quantity' => $woo_item['quantity'],
@@ -90,8 +91,9 @@ function bb_cart_start_session() {
                 }
 
                 // Not found - add it
+                $label = !empty($woo_item['variation_id']) ? get_the_title($woo_item['variation_id']) : get_the_title($woo_item['product_id']);
                 $_SESSION[BB_CART_SESSION_ITEM]['woo'][] = array(
-                        'name' => get_the_title($woo_item['product_id']),
+                        'name' => $label,
                         'cart_item_key' => $woo_idx,
                         'product_id' => $woo_item['product_id'],
                         'quantity' => $woo_item['quantity'],
@@ -230,7 +232,7 @@ function bb_cart_total_price($value = '', $include_shipping = true) {
     $total = 0;
     $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
     foreach ($cart_items as $type => $items) {
-        $total += bb_cart_section_total($type);
+        $total += bb_cart_section_total($type, $include_shipping);
     }
     return $total;
 }
@@ -250,7 +252,7 @@ function bb_cart_products_total($include_shipping = true) {
 
         // Calculate shipping
         if ($include_shipping) {
-            $woo_total += bb_cart_calculate_shipping()*100;
+            $woo_total += bb_cart_calculate_shipping($woo_total)*100;
         }
     }
     $woo_total = $woo_total/100;
@@ -575,10 +577,13 @@ function bb_cart_add_woo_to_bb_cart($cart_item_key, $product_id, $quantity, $var
     );
 }
 
-function bb_cart_calculate_shipping() {
+function bb_cart_calculate_shipping($total_price = null) {
+    if (empty($total_price)) {
+        $total_price = bb_cart_total_price(null, false);
+    }
     $shipping = 0;
 
-    return apply_filters('bb_cart_calculate_shipping', $shipping, bb_cart_total_price('', false), $_SESSION[BB_CART_SESSION_ITEM]);
+    return apply_filters('bb_cart_calculate_shipping', $shipping, $total_price, $_SESSION[BB_CART_SESSION_ITEM]);
 }
 
 /**
@@ -692,6 +697,42 @@ function bb_cart_post_purchase_actions($entry, $form){
                 $transaction_status = 'Pending';
             }
 
+            // Create post object
+            $transaction = array(
+                    'post_title' => $firstname . '-' . $lastname . '-' . $total_amount,
+                    'post_content' => serialize($entry),
+                    'post_status' => $post_status,
+                    'post_author' => $author_id,
+                    'post_type' => 'transaction',
+            );
+
+            //check if transaction date exists
+            if (isset($transaction_date) && !empty($transaction_date)) {
+                $transaction['post_date'] = $transaction_date;
+            } else {
+                $transaction['post_date'] = date('Y-m-d');
+            }
+
+            // Insert the post into the database
+            $transaction_id = wp_insert_post($transaction);
+
+            $batch_id = bb_cart_get_web_batch($transaction['post_date']);
+
+            update_post_meta($transaction_id, 'frequency', $frequency);
+            update_post_meta($transaction_id, 'gf_entry_id', $entry['id']);
+            update_post_meta($transaction_id, 'batch_id', $batch_id);
+            update_post_meta($transaction_id, 'donation_amount', $donation_amount);
+            update_post_meta($transaction_id, 'total_amount', $total_amount);
+            update_post_meta($transaction_id, 'cart', serialize($_SESSION[BB_CART_SESSION_ITEM]));
+            update_post_meta($transaction_id, 'payment_method', $payment_method);
+
+            if (isset($deductible)) {
+                update_post_meta($transaction_id, 'is_tax_deductible', (string)$deductible);
+            }
+            if (!empty($GLOBALS['subscription_id'])) {
+                update_post_meta($transaction_id, 'subscription_id', $GLOBALS['subscription_id']);
+            }
+
             foreach ($cart_items as $section => $items) {
                 switch ($section) {
                     case 'woo':
@@ -699,6 +740,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                         WC()->cart->calculate_totals();
                         $WCCheckout = new WC_Checkout();
                         $order_id = $WCCheckout->create_order();
+                        update_post_meta($transaction_id, 'woocommerce_order_id', $order_id);
 
                         if (!empty($author_id)) {
                             // Have to hack this as WooCommerce won't set the user unless we go through their checkout process
@@ -751,7 +793,9 @@ function bb_cart_post_purchase_actions($entry, $form){
                         $order->set_total($shipping, 'shipping');
                         $grand_total = $total+$shipping;
                         $order->set_total($grand_total);
-                        $order->payment_complete();
+                        if ($transaction_status == 'Approved') {
+                            $order->payment_complete($transaction_id);
+                        }
                         break;
                     case 'event':
                         foreach ($items as $event) {
@@ -782,42 +826,6 @@ function bb_cart_post_purchase_actions($entry, $form){
                         }
                         break;
                 }
-            }
-
-            // Create post object
-            $transaction = array(
-                    'post_title' => $firstname . '-' . $lastname . '-' . $total_amount,
-                    'post_content' => serialize($entry),
-                    'post_status' => $post_status,
-                    'post_author' => $author_id,
-                    'post_type' => 'transaction',
-            );
-
-            //check if transaction date exists
-            if (isset($transaction_date) && !empty($transaction_date)) {
-                $transaction['post_date'] = $transaction_date;
-            } else {
-                $transaction['post_date'] = date('Y-m-d');
-            }
-
-            // Insert the post into the database
-            $transaction_id = wp_insert_post($transaction);
-
-            $batch_id = bb_cart_get_web_batch($transaction['post_date']);
-
-            update_post_meta($transaction_id, 'frequency', $frequency);
-            update_post_meta($transaction_id, 'gf_entry_id', $entry['id']);
-            update_post_meta($transaction_id, 'batch_id', $batch_id);
-            update_post_meta($transaction_id, 'donation_amount', $donation_amount);
-            update_post_meta($transaction_id, 'total_amount', $total_amount);
-            update_post_meta($transaction_id, 'cart', serialize($_SESSION[BB_CART_SESSION_ITEM]));
-            update_post_meta($transaction_id, 'payment_method', $payment_method);
-
-            if (isset($deductible)) {
-                update_post_meta($transaction_id, 'is_tax_deductible', (string)$deductible);
-            }
-            if (!empty($GLOBALS['subscription_id'])) {
-                update_post_meta($transaction_id, 'subscription_id', $GLOBALS['subscription_id']);
             }
 
             foreach ($bb_line_items as $bb_line_item) {
@@ -1104,6 +1112,11 @@ function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = n
         }
         do_action('bb_cart_complete_pending_transaction', $transaction_id, $date, $entry, $form);
     }
+    $order_id = get_post_meta($transaction_id, 'woocommerce_order_id', true);
+    if ($order_id) {
+        $order = new WC_Order($order_id);
+        $order->payment_complete($transaction_id);
+    }
 }
 
 /**
@@ -1128,6 +1141,11 @@ function bb_cart_cancel_pending_transaction($transaction_id, $message, $entry = 
                 }
             }
         }
+    }
+    $order_id = get_post_meta($transaction_id, 'woocommerce_order_id', true);
+    if ($order_id) {
+        $order = new WC_Order($order_id);
+        $order->update_status('failed');
     }
 }
 
@@ -1154,7 +1172,9 @@ function bb_cart_configure_notifications($notification, $form, $entry) {
         $cart_items = bb_cart_get_cart_from_entry($entry);
     }
 
-    $notification['message'] = str_replace("!!!items!!!", bb_cart_table('email', $cart_items), $notification['message']);
+    if (!empty($cart_items)) {
+        $notification['message'] = str_replace("!!!items!!!", bb_cart_table('email', $cart_items), $notification['message']);
+    }
     return $notification;
 }
 
@@ -1176,7 +1196,7 @@ function bb_cart_register_settings() {
 }
 
 function bb_cart_settings_page() {
-?>
+    ?>
 <div class="wrap">
     <h2>CART Settings</h2>
     <form method="post" action="options.php">
@@ -1310,24 +1330,29 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
             $html .= '<table class="bb-table" width="100%">'."\n";
             switch ($section) {
                 case 'woo':
-                    $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Products</th></tr>';
-                    foreach ($items as $idx => $product) {
-                        $meta = get_post_meta($product['product_id']);
-                        $price = $meta['_price'][0] * $product['quantity'];
-                        $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.$product['name'].'</a></td>'."\n";
-                        $html .= '<td class="text-right">$'.number_format($price, 2).'</td>'."\n";
-                        if ($purpose != 'email') {
-                            $html .= '<td style="width: 15px;"><a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a></td>'."\n";
+                    if (function_exists('WC')) {
+                        $wc_session = WC()->session;
+                        if (is_object($wc_session)) {
+                            $woo_cart = $wc_session->get('cart', array());
+                            $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Products</th></tr>';
+                            foreach ($items as $idx => $product) {
+                                $price = $woo_cart[$product['cart_item_key']]['line_total'];
+                                $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.$product['name'].'</a></td>'."\n";
+                                $html .= '<td class="text-right">$'.number_format($price, 2).'</td>'."\n";
+                                if ($purpose != 'email') {
+                                    $html .= '<td style="width: 15px;"><a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a></td>'."\n";
+                                }
+                                $html .= '</tr>';
+                            }
+                            $shipping = bb_cart_calculate_shipping();
+                            if ($shipping > 0) {
+                                $html .= '<tr><td>Shipping</td><td style="text-align: right;">$'.number_format($shipping, 2).'</td>';
+                                if ($purpose != 'email') {
+                                    $html .= '<td>&nbsp;</td>';
+                                }
+                                $html .= '</tr>'."\n";
+                            }
                         }
-                        $html .= '</tr>';
-                    }
-                    $shipping = bb_cart_calculate_shipping();
-                    if ($shipping > 0) {
-                        $html .= '<tr><td>Shipping</td><td style="text-align: right;">$'.number_format($shipping, 2).'</td>';
-                        if ($purpose != 'email') {
-                            $html .= '<td>&nbsp;</td>';
-                        }
-                        $html .= '</tr>'."\n";
                     }
                     break;
                 case 'events':
