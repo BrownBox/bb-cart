@@ -505,6 +505,11 @@ function bb_cart_get_checkout_form(){
                                             'value' => 'phone',
                                             'isSelected' => false,
                                     ),
+                                    2 => array(
+                                            'text' => 'Show Company',
+                                            'value' => 'company',
+                                            'isSelected' => false,
+                                    ),
                             ),
                             'inputs' => array(
                                     0 => array(
@@ -514,6 +519,10 @@ function bb_cart_get_checkout_form(){
                                     1 => array(
                                             'id' => '28.2',
                                             'label' => 'show phone',
+                                    ),
+                                    2 => array(
+                                            'id' => '28.3',
+                                            'label' => 'show company',
                                     ),
                             ),
                             'allowsPrepopulate' => true,
@@ -788,6 +797,26 @@ function bb_cart_get_checkout_form(){
                             'allowsPrepopulate' => true,
                             'inputName' => 'email',
                             'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'text',
+                            'id' => 34,
+                            'label' => 'Company/Organisation',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'company',
+                            'visibility' => 'visible',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '28',
+                                                    'operator' => 'is',
+                                                    'value' => 'company',
+                                            ),
+                                    ),
+                            ),
                     ),
                     array(
                             'type' => 'address',

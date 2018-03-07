@@ -22,6 +22,7 @@ class BB_Cart {
     public static $checkout_form_setup_choices = array(
             'address',
             'phone',
+            'company',
     );
 
     /**
