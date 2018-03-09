@@ -1115,12 +1115,12 @@ function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = n
                 }
             }
         }
+        $order_id = get_post_meta($transaction_id, 'woocommerce_order_id', true);
+        if ($order_id) {
+            $order = new WC_Order($order_id);
+            $order->payment_complete($transaction_id);
+        }
         do_action('bb_cart_complete_pending_transaction', $transaction_id, $date, $entry, $form);
-    }
-    $order_id = get_post_meta($transaction_id, 'woocommerce_order_id', true);
-    if ($order_id) {
-        $order = new WC_Order($order_id);
-        $order->payment_complete($transaction_id);
     }
 }
 
