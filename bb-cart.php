@@ -734,65 +734,70 @@ function bb_cart_post_purchase_actions($entry, $form){
             foreach ($cart_items as $section => $items) {
                 switch ($section) {
                     case 'woo':
-                        define('WOOCOMMERCE_CHECKOUT',true);
-                        WC()->cart->calculate_totals();
-                        $WCCheckout = new WC_Checkout();
-                        $order_id = $WCCheckout->create_order();
-                        update_post_meta($transaction_id, 'woocommerce_order_id', $order_id);
+                        if (function_exists('WC')) {
+                            $wc_session = WC()->session;
+                            if (is_object($wc_session)) {
+                                define('WOOCOMMERCE_CHECKOUT',true);
+                                WC()->cart->calculate_totals();
+                                $woo_cart = $wc_session->get('cart', array());
+                                $WCCheckout = new WC_Checkout();
+                                $order_id = $WCCheckout->create_order();
+                                update_post_meta($transaction_id, 'woocommerce_order_id', $order_id);
 
-                        if (!empty($author_id)) {
-                            // Have to hack this as WooCommerce won't set the user unless we go through their checkout process
-                            wp_update_post(array('ID' => $order_id, 'post_author' => $author_id));
-                            update_post_meta($order_id, '_customer_user', $author_id);
-                        }
+                                if (!empty($author_id)) {
+                                    // Have to hack this as WooCommerce won't set the user unless we go through their checkout process
+                                    wp_update_post(array('ID' => $order_id, 'post_author' => $author_id));
+                                    update_post_meta($order_id, '_customer_user', $author_id);
+                                }
 
-                        $order = wc_get_order($order_id);
+                                $order = wc_get_order($order_id);
 
-                        // Get user address details for WooCommerce order
-                        foreach ($form['fields'] as $field) {
-                            if ($field['type'] == 'address') {
-                                $customer_address = array(
-                                        'country'    => rgpost("input_".$field["id"]."_6"),
-                                        'state'      => rgpost("input_".$field["id"]."_4"),
-                                        'postcode'   => rgpost("input_".$field["id"]."_5"),
-                                        'city'       => rgpost("input_".$field["id"]."_3"),
-                                        'address_1'  => rgpost("input_".$field["id"]."_1"),
-                                        'address_2'  => rgpost("input_".$field["id"]."_2"),
-                                );
+                                // Get user address details for WooCommerce order
+                                foreach ($form['fields'] as $field) {
+                                    if ($field['type'] == 'address') {
+                                        $customer_address = array(
+                                                'country'    => rgpost("input_".$field["id"]."_6"),
+                                                'state'      => rgpost("input_".$field["id"]."_4"),
+                                                'postcode'   => rgpost("input_".$field["id"]."_5"),
+                                                'city'       => rgpost("input_".$field["id"]."_3"),
+                                                'address_1'  => rgpost("input_".$field["id"]."_1"),
+                                                'address_2'  => rgpost("input_".$field["id"]."_2"),
+                                        );
+                                    }
+                                }
+
+                                $order->set_address($customer_address, 'shipping');
+                                $order->set_address($customer_address); // billing
+                                $order->add_order_note('Customer name: ' . $firstname . ' ' . $lastname, true);
+                                $total = 0;
+                                foreach ($items as $product) {
+                                    $price = $woo_cart[$product['cart_item_key']]['line_total'];
+                                    $total += $price;
+                                    $line_item = array(
+                                            'name' => $product['name'],
+                                            'price' => $price/$product['quantity'],
+                                            'quantity' => $product['quantity'],
+                                    );
+                                    $gf_line_items['products'][] = $line_item;
+                                    $line_item['fund_code'] = $product['fund_code'];
+                                    $bb_line_items[] = $line_item;
+                                }
+                                $shipping = bb_cart_calculate_shipping($total);
+                                if ($shipping > 0) {
+                                    $bb_line_items[] = array(
+                                            'name' => 'Shipping',
+                                            'price' => $shipping,
+                                            'quantity' => '1',
+                                            'fund_code' => 'Postage',
+                                    );
+                                }
+                                $order->set_total($shipping, 'shipping');
+                                $grand_total = $total+$shipping;
+                                $order->set_total($grand_total);
+                                if ($transaction_status == 'Approved') {
+                                    $order->payment_complete($transaction_id);
+                                }
                             }
-                        }
-
-                        $order->set_address($customer_address, 'shipping');
-                        $order->set_address($customer_address); // billing
-                        $order->add_order_note('Customer name: ' . $firstname . ' ' . $lastname, true);
-                        $total = 0;
-                        foreach ($items as $product) {
-                            $meta = get_post_meta($product['product_id']);
-                            $price = $meta['_price'][0]*$product['quantity'];
-                            $total += $price;
-                            $line_item = array(
-                                    'name' => $product['name'],
-                                    'price' => $meta['_price'][0],
-                                    'quantity' => $product['quantity'],
-                            );
-                            $gf_line_items['products'][] = $line_item;
-                            $line_item['fund_code'] = $product['fund_code'];
-                            $bb_line_items[] = $line_item;
-                        }
-                        $shipping = bb_cart_calculate_shipping();
-                        if ($shipping > 0) {
-                            $bb_line_items[] = array(
-                                    'name' => 'Shipping',
-                                    'price' => $shipping,
-                                    'quantity' => '1',
-                                    'fund_code' => 'Postage',
-                            );
-                        }
-                        $order->set_total($shipping, 'shipping');
-                        $grand_total = $total+$shipping;
-                        $order->set_total($grand_total);
-                        if ($transaction_status == 'Approved') {
-                            $order->payment_complete($transaction_id);
                         }
                         break;
                     case 'event':
@@ -1333,8 +1338,10 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                         if (is_object($wc_session)) {
                             $woo_cart = $wc_session->get('cart', array());
                             $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Products</th></tr>';
+                            $total = 0;
                             foreach ($items as $idx => $product) {
                                 $price = $woo_cart[$product['cart_item_key']]['line_total'];
+                                $total += $price;
                                 $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.$product['name'].'</a></td>'."\n";
                                 $html .= '<td class="text-right">$'.number_format($price, 2).'</td>'."\n";
                                 if ($purpose != 'email') {
@@ -1342,7 +1349,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                                 }
                                 $html .= '</tr>';
                             }
-                            $shipping = bb_cart_calculate_shipping();
+                            $shipping = bb_cart_calculate_shipping($total);
                             if ($shipping > 0) {
                                 $html .= '<tr><td>Shipping</td><td style="text-align: right;">$'.number_format($shipping, 2).'</td>';
                                 if ($purpose != 'email') {
@@ -1368,8 +1375,12 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                     $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">'.ucwords($section).'</th></tr>';
                     foreach ($items as $idx => $item) {
                         $html .= '<tr>'."\n";
-                        $html .= '<td>'.$item['label'].'</td>'."\n";
-                        $item_price = $item['price']/100;
+                        $label = $item['label'];
+                        if ($item['quantity'] > 1) {
+                            $label = $item['quantity'].'x '.$label;
+                        }
+                        $html .= '<td>'.$label.'</td>'."\n";
+                        $item_price = ($item['price']*$item['quantity'])/100;
                         $total_price += $item_price;
                         $frequency = $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
                         $html .= '<td style="text-align: right;">$'.number_format($item_price, 2).$frequency.'</td>'."\n";
