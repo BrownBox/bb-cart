@@ -530,6 +530,14 @@ function bb_cart_get_checkout_form(){
                             'visibility' => 'hidden',
                     ),
                     array(
+                            'type' => 'section',
+                            'id' => 6,
+                            'label' => 'Payment Details',
+                            'isRequired' => false,
+                            'cssClass' => 'gform_column',
+                            'visibility' => 'visible',
+                    ),
+                    array(
                             'type' => 'radio',
                             'id' => 12,
                             'label' => 'Payment Options',
@@ -555,14 +563,6 @@ function bb_cart_get_checkout_form(){
                             'allowsPrepopulate' => true,
                             'cssClass' => 'gf_list_inline payment_options',
                             'inputName' => 'payment_method',
-                            'visibility' => 'visible',
-                    ),
-                    array(
-                            'type' => 'section',
-                            'id' => 6,
-                            'label' => 'Payment Details',
-                            'isRequired' => false,
-                            'cssClass' => 'gform_column',
                             'visibility' => 'visible',
                     ),
                     array(
