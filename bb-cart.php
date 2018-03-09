@@ -3,7 +3,7 @@
  * Plugin Name: BB Cart
  * Plugin URI: n/a
  * Description: A cart system to extend Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
- * Version: 3.0.1
+ * Version: 3.0.2
  * Author: Brown Box
  * Author URI: http://brownbox.net.au
  * License: Proprietary Brown Box
