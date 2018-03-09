@@ -661,7 +661,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                 } else if($field['type']== 'date' && !empty($entry[$field['id']])) {
                     $transaction_date = $entry[$field['id']];
                     $transaction_date = date('Y-m-d', strtotime($transaction_date));
-                } else if ($field->inputName == 'bb_cart_payment_method') {
+                } else if ($field->inputName == 'payment_method') {
                     $payment_method = $entry[$field->id];
                 }
             }
