@@ -245,17 +245,15 @@ function bb_cart_products_total($include_shipping = true) {
         if (is_object($wc_session)) {
             $cart = $wc_session->get('cart', array());
             foreach ($cart as $product) {
-                $woo_total += $product['line_total']*100;
+                $woo_total += $product['line_total'];
             }
         }
-        unset($cart_items['woo']);
 
         // Calculate shipping
         if ($include_shipping) {
-            $woo_total += bb_cart_calculate_shipping($woo_total)*100;
+            $woo_total += bb_cart_calculate_shipping($woo_total);
         }
     }
-    $woo_total = $woo_total/100;
     return $woo_total;
 }
 
@@ -264,7 +262,7 @@ function bb_cart_events_total() {
     $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
     if (!empty($cart_items['event'])) {
         foreach ($cart_items['event'] as $event) {
-            $events_total += $event['booking']->booking_price*100;
+            $events_total += $event['booking']->booking_price;
         }
     }
     return $events_total;
