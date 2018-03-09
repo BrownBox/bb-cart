@@ -524,7 +524,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
                     $fund_code = apply_filters('bb_cart_fund_code', $fund_code, $entry);
 
                     global $blog_id;
-                    $_SESSION[BB_CART_SESSION_ITEM][] = array(
+                    $_SESSION[BB_CART_SESSION_ITEM][$type][] = array(
                             'label' => $label,
                             'price' => $clean_price,
                             'form_id' => $form['id'],
@@ -1068,11 +1068,13 @@ add_filter('gform_paypal_query', 'bb_cart_paypal_line_items', 10, 5);
 function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submission_data) {
     parse_str(ltrim($query_string, '&'), $query);
     $i = 1;
-    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $cart_item) {
-        $query['item_name_'.$i] = $cart_item['label'];
-        $query['amount_'.$i] = $cart_item['price']/100;
-        $query['quantity_'.$i] = $cart_item['quantity'];
-        $i++;
+    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
+        foreach ($items as $cart_item) {
+            $query['item_name_'.$i] = $cart_item['label'];
+            $query['amount_'.$i] = $cart_item['price']/100;
+            $query['quantity_'.$i] = $cart_item['quantity'];
+            $i++;
+        }
     }
     $query_string = '&' . http_build_query($query);
     return $query_string;
