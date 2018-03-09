@@ -708,7 +708,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             if (isset($transaction_date) && !empty($transaction_date)) {
                 $transaction['post_date'] = $transaction_date;
             } else {
-                $transaction['post_date'] = date('Y-m-d');
+                $transaction['post_date'] = current_time('mysql');
             }
 
             // Insert the post into the database
