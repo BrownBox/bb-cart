@@ -1408,7 +1408,7 @@ function bb_cart_fraud_detection($validation_result) {
     if (bb_cart_is_checkout_form($form)) {
         global $bb_cart_fraud_score;
         $bb_cart_fraud_score = 0;
-        if (bb_cart_total_price() < 2) {
+        if (bb_cart_total_price() > 0 && bb_cart_total_price() < 2) {
             $bb_cart_fraud_score += 1;
         }
         $entry = GFFormsModel::get_current_lead();
