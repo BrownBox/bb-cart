@@ -41,7 +41,9 @@ function bb_cart_start_session() {
             $domain = network_site_url();
             $domain = substr($domain, strpos($domain, '//')+2);
             $domain = substr($domain, 0, strrpos($domain, '/'));
-            session_set_cookie_params(0, '/', '.'.$domain);
+            if (strpos($_SERVER['HTTP_HOST'], $domain) !== false) { // Basic check to avoid issues with domain mapping
+                session_set_cookie_params(0, '/', '.'.$domain);
+            }
         }
         session_start();
     }
