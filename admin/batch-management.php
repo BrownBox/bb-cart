@@ -160,11 +160,10 @@ class bb_cart_batch_management {
                     echo '                    <input id="cb-select-'.$batch->ID.'" name="batch[]" value="'.$batch->ID.'" type="checkbox">';
                 }
                 echo '                </th>'."\n";
-                echo '                <td class="post-title has-row-actions page-title column-title"><strong>'.$batch->post_title.'</strong>'."\n";
-//                 $edit_url = add_query_arg(array('batch' => urlencode($batch->ID), 'action' => 'edit', '_wpnonce' => $nonce), $clean_url);
-//                 echo '                <td class="post-title has-row-actions page-title column-title"><a href="'.$edit_url.'"><strong>'.$batch->post_title.'</strong></a>'."\n";
+                $edit_url = add_query_arg(array('batch' => urlencode($batch->ID), 'action' => 'edit', '_wpnonce' => $nonce), $clean_url);
+                echo '                <td class="post-title has-row-actions page-title column-title"><a href="'.$edit_url.'"><strong>'.$batch->post_title.'</strong></a>'."\n";
                 echo '                    <div class="row-actions">'."\n";
-//                 echo '                        <span class="edit"><a href="'.$edit_url.'" data-batch="'.$batch->ID.'">View Details</a> | </span>'."\n";
+                echo '                        <span class="edit"><a href="'.$edit_url.'" data-batch="'.$batch->ID.'" target="_blank">View Details</a> | </span>'."\n";
                 if ($batch->post_status == 'pending') {
                     $confirm_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'confirm', '_wpnonce' => $nonce), $clean_url);
                     echo '                        <span class="publish"><a href="'.$confirm_url.'" class="submitpublish" data-batch="'.$batch->ID.'">Confirm</a> | </span>'."\n";
@@ -210,6 +209,7 @@ class bb_cart_batch_management {
         echo '            </tr>'."\n";
         echo '        </thead>'."\n";
         echo '        <tbody id="the-list">'."\n";
+        $total = 0;
         foreach ($transactions as $transaction) {
             $author = new WP_User($transaction->post_author);
             $args = array(
@@ -237,6 +237,7 @@ class bb_cart_batch_management {
                         $fund_code = 'Blank/Unknown';
                     }
                     $amount = get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
+                    $total += $amount;
                     echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="lineitem-'.$line_item->ID.'">'."\n";
                     echo '                <td class="post-author has-row-actions page-author column-author"><strong>'.$author->display_name.'</strong>'."\n";
                     echo '                    <div class="row-actions">'."\n";
@@ -259,6 +260,11 @@ class bb_cart_batch_management {
             }
         }
         echo '        </tbody>'."\n";
+        echo '        <tfoot>'."\n";
+        echo '            <tr>'."\n";
+        echo '                <th colspan="4" style="text-align: right;" class="manage-column" id="amount" scope="col"><span style="border-top: 1px solid black;">Total: $'.number_format($total, 2).'</span></th>'."\n";
+        echo '            </tr>'."\n";
+        echo '        </tfoot>'."\n";
         echo '    </table>'."\n";
         echo '</div>'."\n";
     }
