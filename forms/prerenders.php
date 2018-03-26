@@ -14,8 +14,14 @@ function bb_cart_setup_filters_to_populate_field($form) {
                 $field->choices = apply_filters('bb_cart_interval_choices', $field->choices, $form, $field);
             } elseif ($field->inputName == 'bb_cart_donation_member') {
                 $field->choices = apply_filters('bb_cart_donation_member_choices', $field->choices, $form, $field);
+                if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices['member'])) {
+                    $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['member'];
+                }
             } elseif ($field->inputName == 'bb_cart_donation_campaign') {
                 $field->choices = apply_filters('bb_cart_donation_campaign_choices', $field->choices, $form, $field);
+                if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices['campaign'])) {
+                    $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['campaign'];
+                }
             } elseif ($field->inputName == 'bb_cart_payment_method') {
                 $field->choices = apply_filters('bb_cart_payment_method_choices', $field->choices, $form, $field);
             } elseif ($field->inputName == 'bb_donation_amounts') {
