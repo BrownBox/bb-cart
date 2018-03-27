@@ -3,17 +3,15 @@ namespace bb_cart;
 class metaClass {
     function __construct($label, array $posttypes, array $fields) {
         $this->label = $label;
-		$this->slug = str_replace(' ','',strtolower($label));
+        $this->slug = str_replace(' ','',strtolower($label));
         $this->posttypes = $posttypes;
         $this->fields = $fields;
-        add_action('add_meta_boxes', array(
-            $this,
-            'bb_metabox'
-        ));
-        add_action('save_post', array(
-            $this,
-            'bb_metabox_save'
-        ));
+        add_action('add_meta_boxes', array($this, 'bb_metabox'));
+        add_action('save_post', array($this, 'bb_metabox_save'));
+        foreach ($this->posttypes as $post_type) {
+            add_filter('manage_'.$post_type.'_posts_columns', array($this, 'bb_meta_columns'));
+            add_action('manage_'.$post_type.'_posts_custom_column', array($this, 'bb_meta_table_content'), 10, 2);
+        }
     }
 
     function bb_metabox() {
@@ -47,6 +45,39 @@ class metaClass {
         $meta_fields = unserialize(get_transient($this->slug.'_meta_fields'));
         foreach($meta_fields as $meta_field) {
             update_post_meta($post_id, $meta_field, sanitize_text_field($_POST[$meta_field]));
+        }
+    }
+
+    function bb_meta_columns($columns) {
+        foreach ($this->fields as $field) {
+            if ($field['show_in_admin']) {
+                $columns[$field['field_name']] = $field['title'];
+            }
+        }
+        return $columns;
+    }
+
+    function bb_meta_table_content($column_name, $post_id) {
+        foreach ($this->fields as $field) {
+            if ($field['field_name'] == $column_name) {
+                $value = get_post_meta($post_id, $field['field_name'], true);
+                switch ($field['type']) {
+                    case 'checkbox':
+                        $value = $value == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
+                        break;
+                    case 'select':
+                    case 'radio':
+                        foreach ($field['options'] as $option) {
+                            if ($option['value'] == $value) {
+                                $value = $option['label'];
+                                break;
+                            }
+                        }
+                        break;
+                }
+                echo $value;
+                return;
+            }
         }
     }
 
