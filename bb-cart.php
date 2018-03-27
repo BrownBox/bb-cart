@@ -436,6 +436,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
     global $post;
     $frequency = 'one-off';
     $section = 'donations';
+    $transaction_type = 'donation';
     $deductible = false;
     $campaign = $post->ID;
     $quantity = 1;
@@ -526,6 +527,13 @@ function bb_cart_check_for_cart_additions($entry, $form){
 
                     $fund_code = apply_filters('bb_cart_fund_code', $fund_code, $entry);
 
+                    $fund_code_post = bb_cart_load_fund_code($fund_code);
+                    if ($fund_code_post instanceof WP_Post) {
+                        $fund_code_deductible = get_post_meta($fund_code_post, 'deductible', true);
+                        $deductible = $fund_code_deductible == 'true';
+                        $transaction_type = get_post_meta($fund_code_post, 'transaction_type', true);
+                    }
+
                     global $blog_id;
                     $_SESSION[BB_CART_SESSION_ITEM][$section][] = array(
                             'label' => $label,
@@ -533,9 +541,10 @@ function bb_cart_check_for_cart_additions($entry, $form){
                             'form_id' => $form['id'],
                             'entry_id' => $entry['id'],
                             'frequency' => $frequency,
-                            'deductible' => $deductible,
                             'campaign' => $campaign,
                             'fund_code' => $fund_code,
+                            'deductible' => $deductible,
+                            'transaction_type' => $transaction_type,
                             'original_fund_code' => $original_fund_code,
                             'blog_id' => $blog_id,
                             'quantity' => $quantity,
@@ -1453,4 +1462,11 @@ function bb_cart_get_fund_code($id) {
 function bb_cart_get_default_fund_code() {
     $fund_code = 'WMN';
     return apply_filters('bb_cart_default_fund_code', $fund_code);
+}
+
+function bb_cart_load_fund_code($fund_code) {
+    if (is_numeric($fund_code)) {
+        return get_post($fund_code);
+    }
+    return get_page_by_title($fund_code, OBJECT, 'fundcode');
 }
