@@ -138,6 +138,27 @@ $fund_code_meta = array(
 );
 new \bb_cart\metaClass('Fund Code Details', array('fundcode'), $fund_code_meta);
 
+// Create default fund code if none exists
+add_action('admin_init', 'bb_cart_create_default_fund_code');
+function bb_cart_create_default_fund_code() {
+    $fund_code_count = wp_count_posts('fundcode');
+    if ($fund_code_count->publish == 0) {
+        $default_fund_code = get_page_by_title('WMN', OBJECT, 'fundcode');
+        if ($default_fund_code) {
+            wp_publish_post($default_fund_code);
+            $fund_code_id = $default_fund_code->ID;
+        } else {
+            $fund_code = array(
+                    'post_title' => 'WMN',
+                    'post_type' => 'fundcode',
+            );
+            $fund_code_id = wp_insert_post($fund_code);
+            update_post_meta($fund_code_id, 'transaction_type', 'donation');
+        }
+        update_option('bb_cart_default_fund_code', $fund_code_id);
+    }
+}
+
 // @todo rebuild using metaClass
 function transaction_metabox() {
 	add_meta_box( 'cpt_transaction_box', __( 'Transaction Meta', '' ), 'transaction_metabox_content', 'transaction', 'side', 'high' );
