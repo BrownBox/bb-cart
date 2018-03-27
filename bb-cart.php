@@ -234,8 +234,8 @@ add_filter("gform_field_value_bb_cart_total_price", "bb_cart_total_price");
 function bb_cart_total_price($value = '', $include_shipping = true) {
     $total = 0;
     $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
-    foreach ($cart_items as $type => $items) {
-        $total += bb_cart_section_total($type, $include_shipping);
+    foreach ($cart_items as $section => $items) {
+        $total += bb_cart_section_total($section, $include_shipping);
     }
     return $total;
 }
@@ -435,7 +435,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
 
     global $post;
     $frequency = 'one-off';
-    $type = 'donations';
+    $section = 'donations';
     $deductible = false;
     $campaign = $post->ID;
     $quantity = 1;
@@ -467,7 +467,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
                 $campaign = $entry[$field['id']];
                 list($fund_code, $campaign) = explode(':', $campaign);
             } elseif ($field['inputName'] == 'bb_cart_purchase_type' && !empty($entry[$field['id']])) {
-                $type = $entry[$field['id']];
+                $section = $entry[$field['id']];
             } elseif ($field['inputName'] == 'page_id') {
                 $campaign = $entry[$field['id']];
             } elseif ($field['inputName'] == 'donation_target') {
@@ -527,7 +527,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
                     $fund_code = apply_filters('bb_cart_fund_code', $fund_code, $entry);
 
                     global $blog_id;
-                    $_SESSION[BB_CART_SESSION_ITEM][$type][] = array(
+                    $_SESSION[BB_CART_SESSION_ITEM][$section][] = array(
                             'label' => $label,
                             'price' => $clean_price,
                             'form_id' => $form['id'],
