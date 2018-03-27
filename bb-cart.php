@@ -1397,7 +1397,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                         $html .= '<td>'.$label.'</td>'."\n";
                         $item_price = ($item['price']*$item['quantity'])/100;
                         $total_price += $item_price;
-                        $frequency = $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
+                        $frequency = empty($item['frequency']) || $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
                         $html .= '<td style="text-align: right;">$'.number_format($item_price, 2).$frequency.'</td>'."\n";
                         if ($purpose != 'email') {
                             $html .= '<td style="width: 15px;"><a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a></td>'."\n";
