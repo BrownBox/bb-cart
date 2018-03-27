@@ -337,6 +337,58 @@ function bb_cart_total_quantity($value = '') {
     return $count;
 }
 
+add_filter("gform_field_value_bb_cart_deductible_donation_total", "bb_cart_deductible_donation_total");
+function bb_cart_deductible_donation_total($value = '') {
+    $value = 0;
+    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $cart_items) {
+        foreach ($cart_items as $item) {
+            if ($item['deductible'] && $item['transaction_type'] == 'donation') {
+                $value += ($item['price']/100)*$item['quantity'];
+            }
+        }
+    }
+    return $value;
+}
+
+add_filter("gform_field_value_bb_cart_non_deductible_donation_total", "bb_cart_non_deductible_donation_total");
+function bb_cart_non_deductible_donation_total($value = '') {
+    $value = 0;
+    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $cart_items) {
+        foreach ($cart_items as $item) {
+            if (!$item['deductible'] && $item['transaction_type'] == 'donation') {
+                $value += ($item['price']/100)*$item['quantity'];
+            }
+        }
+    }
+    return $value;
+}
+
+add_filter("gform_field_value_bb_cart_deductible_purchase_total", "bb_cart_deductible_purchase_total");
+function bb_cart_deductible_purchase_total($value = '') {
+    $value = 0;
+    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $cart_items) {
+        foreach ($cart_items as $item) {
+            if ($item['deductible'] && $item['transaction_type'] == 'purchase') {
+                $value += ($item['price']/100)*$item['quantity'];
+            }
+        }
+    }
+    return $value;
+}
+
+add_filter("gform_field_value_bb_cart_non_deductible_purchase_total", "bb_cart_non_deductible_purchase_total");
+function bb_cart_non_deductible_purchase_total($value = '') {
+    $value = 0;
+    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $cart_items) {
+        foreach ($cart_items as $item) {
+            if (!$item['deductible'] && $item['transaction_type'] == 'purchase') {
+                $value += ($item['price']/100)*$item['quantity'];
+            }
+        }
+    }
+    return $value;
+}
+
 function bb_cart_has_donation() {
     return bb_cart_section_total('donations') > 0;
 }

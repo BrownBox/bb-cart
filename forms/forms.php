@@ -972,6 +972,42 @@ function bb_cart_get_checkout_form(){
                             'inputName' => 'donation_target',
                             'visibility' => 'visible'
                     ),
+                    array(
+                            'type' => 'number',
+                            'id' => 35,
+                            'label' => 'Deductible Donations',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_deductible_donation_total',
+                            'visibility' => 'hidden'
+                    ),
+                    array(
+                            'type' => 'number',
+                            'id' => 36,
+                            'label' => 'Non-Deductible Donations',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_non_deductible_donation_total',
+                            'visibility' => 'hidden'
+                    ),
+                    array(
+                            'type' => 'number',
+                            'id' => 37,
+                            'label' => 'Deductible Purchases',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_deductible_purchase_total',
+                            'visibility' => 'hidden'
+                    ),
+                    array(
+                            'type' => 'number',
+                            'id' => 38,
+                            'label' => 'Non-Deductible Purchases',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_non_deductible_purchase_total',
+                            'visibility' => 'hidden'
+                    ),
             )
     );
     if (!$checkout_form_id || !GFAPI::form_id_exists($checkout_form_id)) { // If form doesn't exist, create it
