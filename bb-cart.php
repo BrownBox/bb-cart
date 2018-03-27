@@ -735,6 +735,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             update_post_meta($transaction_id, 'total_amount', $total_amount);
             update_post_meta($transaction_id, 'cart', serialize($_SESSION[BB_CART_SESSION_ITEM]));
             update_post_meta($transaction_id, 'payment_method', $payment_method);
+            update_post_meta($transaction_id, 'is_receipted', true);
 
             if (isset($deductible)) {
                 update_post_meta($transaction_id, 'is_tax_deductible', (string)$deductible);

@@ -126,6 +126,14 @@ $fund_code_meta = array(
                                 'label' => 'Purchase',
                         ),
                 ),
+                'show_in_admin' => true,
+        ),
+        array(
+                'title' => 'Tax Deductible',
+                'description' => '',
+                'field_name' => 'deductible',
+                'type' => 'checkbox',
+                'show_in_admin' => true,
         ),
 );
 new \bb_cart\metaClass('Fund Code Details', array('fundcode'), $fund_code_meta);
@@ -136,33 +144,42 @@ function transaction_metabox() {
 }
 add_action( 'add_meta_boxes', 'transaction_metabox' );
 
-function transaction_metabox_content( $post ) {
-	if( !is_array( $transaction_fields) ) $transaction_fields = array();
-	wp_nonce_field( plugin_basename( __FILE__ ), 'transaction_metabox_content_nonce' );
+function transaction_metabox_content($post) {
+	if(!is_array($transaction_fields)) {
+	    $transaction_fields = array();
+	}
+	wp_nonce_field(plugin_basename(__FILE__), 'transaction_metabox_content_nonce');
 
-	// custom fields here! new line for each field
-	// array_push( $transaction_fields, bb_new_field( 'title=entry_id&field_name=entry_id&size=100%&type=text' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=Frequency&field_name=frequency&size=100%&type=text' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=GF Entry ID&field_name=gf_entry_id&size=100%&type=text' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=Donation Amount&field_name=donation_amount&size=100%&type=text' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=Total Amount&field_name=total_amount&size=100%&type=text' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=Cart&field_name=cart&size=100%,10rem&type=textarea' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=Gateway Response&field_name=gateway_response&size=100%&type=text' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=Tax Deductible&field_name=is_tax_deductible&type=checkbox' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=Batch ID&field_name=batch_id&size=100%&type=number' ) );
-	array_push( $transaction_fields, bbcart_new_field( 'title=Subscription ID&field_name=subscription_id&size=100%&type=text' ) );
+	array_push($transaction_fields, bbcart_new_field('title=Frequency&field_name=frequency&size=100%&type=text'));
+	array_push($transaction_fields, bbcart_new_field('title=GF Entry ID&field_name=gf_entry_id&size=100%&type=text'));
+	array_push($transaction_fields, bbcart_new_field('title=Donation Amount&field_name=donation_amount&size=100%&type=text'));
+	array_push($transaction_fields, bbcart_new_field('title=Total Amount&field_name=total_amount&size=100%&type=text'));
+	array_push($transaction_fields, bbcart_new_field('title=Cart&field_name=cart&size=100%,10rem&type=textarea'));
+	array_push($transaction_fields, bbcart_new_field('title=Gateway Response&field_name=gateway_response&size=100%&type=text'));
+	array_push($transaction_fields, bbcart_new_field('title=Tax Deductible&field_name=is_tax_deductible&type=checkbox'));
+	array_push($transaction_fields, bbcart_new_field('title=Batch ID&field_name=batch_id&size=100%&type=number'));
+	array_push($transaction_fields, bbcart_new_field('title=Subscription ID&field_name=subscription_id&size=100%&type=text'));
+	array_push($transaction_fields, bbcart_new_field('title=Receipted&field_name=is_receipted&type=checkbox'));
 
-	set_transient( 'transaction_fields', serialize( $transaction_fields ), 3600 );
+	set_transient('transaction_fields', serialize($transaction_fields), 3600);
 }
 
-function transaction_metabox_save( $post_id ) {
-	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
-	if ( !wp_verify_nonce( $_POST['transaction_metabox_content_nonce'], plugin_basename( __FILE__ ) ) ) 	return;
-	if ( 'page' == $_POST['post_type'] && ( !current_user_can( 'edit_page', $post_id ) || !current_user_can( 'edit_post', $post_id ) ) ) return;
-	$transaction_fields = unserialize( get_transient( 'transaction_fields' ) );
-	foreach( $transaction_fields as $meta_field ) update_post_meta( $post_id, $meta_field, sanitize_text_field( $_POST[$meta_field] ) );
+function transaction_metabox_save($post_id) {
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+	    return;
+	}
+	if (!wp_verify_nonce($_POST['transaction_metabox_content_nonce'], plugin_basename(__FILE__))) {
+	    return;
+	}
+	if ('page' == $_POST['post_type'] && (!current_user_can('edit_page', $post_id) || !current_user_can('edit_post', $post_id))) {
+	    return;
+	}
+	$transaction_fields = unserialize(get_transient('transaction_fields'));
+	foreach($transaction_fields as $meta_field) {
+	    update_post_meta($post_id, $meta_field, sanitize_text_field( $_POST[$meta_field]));
+	}
 }
-add_action( 'save_post', 'transaction_metabox_save' );
+add_action('save_post', 'transaction_metabox_save');
 
 function bbcart_new_field( $args ){
 	// last updated 19/07/2014
