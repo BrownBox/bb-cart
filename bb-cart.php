@@ -20,6 +20,8 @@ require_once(BB_CART_DIR.'ia/ia.php');
 require_once(BB_CART_DIR.'forms/forms.php');
 require_once(BB_CART_DIR.'forms/prerenders.php');
 require_once(BB_CART_DIR.'forms/presubmission.php');
+require_once(BB_CART_DIR.'admin/settings.php');
+require_once(BB_CART_DIR.'admin/pledges.php');
 require_once(BB_CART_DIR.'admin/import.php');
 require_once(BB_CART_DIR.'admin/export.php');
 require_once(BB_CART_DIR.'admin/fund-code-report.php');
@@ -1196,133 +1198,6 @@ function bb_cart_configure_notifications($notification, $form, $entry) {
     return $notification;
 }
 
-add_action('admin_menu', 'bb_cart_create_menu');
-function bb_cart_create_menu() {
-    //create new top-level menu
-    add_menu_page('BB Cart', 'BB Cart', 'administrator', 'bb_cart_settings', 'bb_cart_settings_page', 'dashicons-cart');
-    add_submenu_page('bb_cart_settings', 'Settings', 'Settings', 'administrator', 'bb_cart_settings', 'bb_cart_settings_page', 'dashicons-cart');
-    add_submenu_page('bb_cart_settings', 'Pledges', 'Pledges', 'administrator', 'bb_cart_pledges', 'bb_cart_pledges');
-}
-
-//call register settings function
-add_action('admin_init', 'bb_cart_register_settings');
-function bb_cart_register_settings() {
-    //register our settings
-    register_setting('bb-cart-settings-group', 'bb_cart_checkout_form_id');
-    register_setting('bb-cart-settings-group', 'bb_advanced_form_notification_addresses');
-    register_setting('bb-cart-settings-group', 'bb_cart_envoyrelate_endpoint');
-}
-
-function bb_cart_settings_page() {
-    ?>
-<div class="wrap">
-    <h2>CART Settings</h2>
-    <form method="post" action="options.php">
-    <?php settings_fields( 'bb-cart-settings-group' ); ?>
-    <?php do_settings_sections( 'bb-cart-settings-group' ); ?>
-    <table class="form-table">
-        <tr valign="top">
-            <th scope="row">Checkout Form ID<br>
-            <em>This won't likely need to be changed and is used for order-details matching</em></th>
-            <td><input type="text" name="bb_cart_checkout_form_id" value="<?php echo get_option('bb_cart_checkout_form_id'); ?>"></td>
-        </tr>
-    </table>
-    <table class="form-table" width="50%">
-        <tr valign="top">
-            <th scope="row">Advanced Form Notification Emails</th>
-            <td><input type="text" name="bb_advanced_form_notification_addresses" value="<?php echo get_option('bb_advanced_form_notification_addresses'); ?>"></td>
-        </tr>
-        <tr valign="top">
-            <th scope="row" width="20%">EnvoyRelate API Endpoint</th>
-            <td><input type="text" name="bb_cart_envoyrelate_endpoint" value="<?php echo get_option('bb_cart_envoyrelate_endpoint'); ?>" size="50"></td>
-        </tr>
-    </table>
-    <?php submit_button(); ?>
-</form>
-</div>
-<?php
-}
-
-function bb_cart_pledges() {
-?>
-<div class="wrap">
-    <h2>Pledge Management</h2>
-<?php
-    if (!empty($_GET['pledge_id']) && !empty($_GET['pledge_action'])) {
-        switch ($_GET['pledge_action']) {
-            case 'complete':
-                $date = current_time('mysql'); // @todo let user specify date
-                bb_cart_complete_pending_transaction($_GET['pledge_id'], $date);
-                echo '<div class="notice notice-success"><p>Transaction successfully marked as complete.</p></div>';
-                break;
-            case 'cancel':
-                $message = 'Cancelled'; // @todo let user specify message
-                bb_cart_cancel_pending_transaction($_GET['pledge_id'], $message);
-                echo '<div class="notice notice-success"><p>Transaction successfully marked as cancelled.</p></div>';
-                break;
-        }
-    }
-    $args = array(
-            'post_type' => 'transaction',
-            'post_status' => 'draft',
-            'posts_per_page' => -1,
-    );
-    $pledges = get_posts($args);
-    if (count($pledges)) {
-?>
-    <table class="bb_cart_table widefat striped">
-        <tr>
-            <th>Pledge Date</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Amount</th>
-            <th>Payment Method</th>
-            <th>Actions</th>
-        </tr>
-<?php
-    foreach ($pledges as $pledge) {
-        if (!empty($pledge->post_author)) {
-            $name = get_user_meta($pledge->post_author, 'display_name', true);
-            $email = get_user_meta($pledge->post_author, 'user_email', true);
-        } else {
-            $entry = GFAPI::get_entry(get_post_meta($pledge->ID, 'gf_entry_id', true));
-            $form = GFAPI::get_form($entry['form_id']);
-            foreach ($form['fields'] as $field) {
-                switch ($field->type) {
-                    case 'name':
-                        $name = $entry[$field['id'].'.3'].' '.$entry[$field['id'].'.6'];
-                        break;
-                    case 'email':
-                        $email = $entry[$field['id']];
-                        break;
-                }
-            }
-        }
-?>
-        <tr>
-            <td><?php echo $pledge->post_date; ?></td>
-            <td><?php echo $name; ?></td>
-            <td><?php echo $email; ?></td>
-            <td style="text-align: right;">$<?php echo number_format(get_post_meta($pledge->ID, 'total_amount', true), 2); ?></td>
-            <td><?php echo get_post_meta($pledge->ID, 'payment_method', true); ?></td>
-            <td><a onclick="return confirm('Are you sure you want to manually mark this transaction as complete?');" href="admin.php?page=bb_cart_pledges&pledge_id=<?php echo $pledge->ID; ?>&pledge_action=complete" class="dashicons dashicons-yes" title="Mark as won"></a> <a onclick="return confirm('Are you sure you want to manually mark this transaction as failed?');" href="admin.php?page=bb_cart_pledges&pledge_id=<?php echo $pledge->ID; ?>&pledge_action=cancel" class="dashicons dashicons-no-alt" title="Mark as lost"></a></td>
-        </tr>
-<?php
-    }
-?>
-    </table>
-<?php
-    } else {
-?>
-    <p>There are no pledges currently pending.</p>
-<?php
-    }
-?>
-</div>
-<?php
-}
-
-
 function bb_cart_shortcode() {
     return bb_cart_table();
 }
@@ -1452,17 +1327,21 @@ function bb_cart_fraud_detection($validation_result) {
     return $validation_result;
 }
 
+/**
+ * Get selected fund code for the specified post
+ * @param integer $id Post ID
+ * @return integer Fund Code ID (will return default fund code if none specified on post)
+ */
 function bb_cart_get_fund_code($id) {
     $fund_codes = wp_get_object_terms($id, 'fundcode');
     if (count($fund_codes)) {
         return $fund_codes[0]->slug;
     }
-    return null;
+    return bb_cart_get_default_fund_code();
 }
 
 function bb_cart_get_default_fund_code() {
-    $fund_code = 'WMN';
-    return apply_filters('bb_cart_default_fund_code', $fund_code);
+    return get_option('bb_cart_default_fund_code');
 }
 
 function bb_cart_load_fund_code($fund_code) {
