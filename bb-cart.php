@@ -531,9 +531,9 @@ function bb_cart_check_for_cart_additions($entry, $form){
 
                     $fund_code_post = bb_cart_load_fund_code($fund_code);
                     if ($fund_code_post instanceof WP_Post) {
-                        $fund_code_deductible = get_post_meta($fund_code_post, 'deductible', true);
+                        $fund_code_deductible = get_post_meta($fund_code_post->ID, 'deductible', true);
                         $deductible = $fund_code_deductible == 'true';
-                        $transaction_type = get_post_meta($fund_code_post, 'transaction_type', true);
+                        $transaction_type = get_post_meta($fund_code_post->ID, 'transaction_type', true);
                     }
 
                     global $blog_id;
