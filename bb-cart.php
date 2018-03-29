@@ -650,6 +650,10 @@ function bb_cart_calculate_shipping($total_price = null) {
     return apply_filters('bb_cart_calculate_shipping', $shipping, $total_price, $_SESSION[BB_CART_SESSION_ITEM]);
 }
 
+function bb_cart_shipping_label() {
+    return apply_filters('bb_cart_shipping_label', 'Shipping');
+}
+
 /**
  * Add a column to the List of Orders page in WordPress admin
  *
@@ -712,7 +716,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             $gf_line_items = array(
                     'products' => array(),
                     'shipping' => array(
-                            'name' => 'Shipping',
+                            'name' => bb_cart_shipping_label(),
                             'price' => bb_cart_calculate_shipping(),
                     ),
             );
@@ -852,7 +856,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                                 $shipping = bb_cart_calculate_shipping($total);
                                 if ($shipping > 0) {
                                     $bb_line_items[] = array(
-                                            'name' => 'Shipping',
+                                            'name' => bb_cart_shipping_label(),
                                             'price' => $shipping,
                                             'quantity' => '1',
                                             'fund_code' => 'Postage',
@@ -1293,7 +1297,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                             }
                             $shipping = bb_cart_calculate_shipping($total);
                             if ($shipping > 0) {
-                                $html .= '<tr><td>Shipping</td><td style="text-align: right;">$'.number_format($shipping, 2).'</td>';
+                                $html .= '<tr><td>'.bb_cart_shipping_label().'</td><td style="text-align: right;">$'.number_format($shipping, 2).'</td>';
                                 if ($purpose != 'email') {
                                     $html .= '<td>&nbsp;</td>';
                                 }
