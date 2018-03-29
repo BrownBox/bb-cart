@@ -114,7 +114,9 @@ class bb_cart_export {
         $csv = array(
                 array(
                         'Date',
-                        'Donor Name',
+                        'Donor ID',
+                        'First Name',
+                        'Last Name',
                         'Address Line 1',
                         'Address Line 2',
                         'Suburb',
@@ -134,14 +136,21 @@ class bb_cart_export {
             $line_items = bb_cart_get_transaction_line_items($transaction->ID);
             foreach ($line_items as $line_item) {
                 $fund_code = wp_get_post_terms($line_item->ID, 'fundcode');
-                $donor_name = $user->display_name;
-                if ($donor_name == 'Unknown Unknown' && !empty($user_meta['organization'][0])) {
-                    // Temporary hack for badly imported organisations
-                    $donor_name = $user_meta['organization'][0];
+                $first_name = $user->first_name;
+                if ($first_name == 'Unknown') {
+                    if (!empty($user_meta['organization'][0])) {
+                        // Temporary hack for badly imported organisations
+                        $first_name = $user_meta['organization'][0];
+                    } else {
+                        $first_name = 'Friend';
+                    }
                 }
+                $last_name = $user->last_name == 'Unknown' ? '' : $user->last_name;
                 $csv[] = array(
                         'Date' => $transaction->post_date,
-                        'Donor Name' => $donor_name,
+                        'Donor ID' => $user->ID,
+                        'First Name' => $first_name,
+                        'Last Name' => $last_name,
                         'Address Line 1' => $user_meta['bbconnect_address_one_1'][0],
                         'Address Line 2' => $user_meta['bbconnect_address_two_1'][0],
                         'Suburb' => $user_meta['bbconnect_address_city_1'][0],
