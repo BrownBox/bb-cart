@@ -12,12 +12,12 @@ function bb_cart_pre_submission_handler($form) {
                 foreach (Brownbox\Config\BB_Cart::$member as $type => $value) {
                     if ($type == 'post_type') {
                         $label = get_the_title($id);
-                        $email = get_post_meta($member,'bb_email_notification', true);
+                        $notification_email = get_post_meta($member,'bb_email_notification', true);
                         $deductible = get_post_meta($id, 'bb_give_tax_deductible', true);
                     } elseif($type == 'user') {
                         $user = get_userdata($id);
                         $label = $user->first_name.' '.$user->last_name;
-                        $email = $user->user_email;
+                        $notification_email = $user->user_email;
                         $deductible = get_user_meta($id, 'bb_give_tax_deductible', true);
                     }
                 }
@@ -26,15 +26,17 @@ function bb_cart_pre_submission_handler($form) {
         } elseif ($target == 'campaign') {
             list($fund_code, $id) = explode(':',rgpost('input_6',true));
             $label = 'Donation to '.get_the_title($id);
-            $email = get_post_meta($project,'bb_email_notification', true);
+            $notification_email = get_post_meta($project,'bb_email_notification', true);
             $deductible = get_post_meta($id, 'bb_give_tax_deductible', true);
         }
 
         foreach ($form['fields'] as $field) {
-            if ($field->inputName == 'bb_cart_custom_item_label') {
+            if ($field->type == 'email') {
+                $email = $_POST['input_'.$field->id];
+            } elseif ($field->inputName == 'bb_cart_custom_item_label') {
                 $_POST['input_'.$field->id] = $label;
-            } elseif ($field->inputName == 'bb_cart_notification_email' && !empty($email)) {
-                $_POST['input_'.$field->id] = $email;
+            } elseif ($field->inputName == 'bb_cart_notification_email' && !empty($notification_email)) {
+                $_POST['input_'.$field->id] = $notification_email;
             } elseif ($field->inputName == 'bb_cart_fund_code') {
                 $_POST['input_'.$field->id] = $fund_code;
             } elseif ($field->inputName == 'bb_cart_page_id') {
@@ -49,6 +51,9 @@ function bb_cart_pre_submission_handler($form) {
                 }
             } elseif ($field->inputName == 'bb_cart_tax_deductible') {
                 $_POST['input_'.$field->id] = $deductible;
+            } elseif ($field->inputName == 'bb_cart_new_contact' && !empty($email)) {
+                $new_contact = email_exists($email) ? 'false' : 'true';
+                $_POST['input_'.$field->id] = $new_contact;
             }
         }
     }

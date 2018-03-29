@@ -1008,6 +1008,15 @@ function bb_cart_get_checkout_form(){
                             'inputName' => 'bb_cart_non_deductible_purchase_total',
                             'visibility' => 'hidden'
                     ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 39,
+                            'label' => 'New Contact',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_new_contact',
+                            'visibility' => 'hidden'
+                    ),
             )
     );
     if (!$checkout_form_id || !GFAPI::form_id_exists($checkout_form_id)) { // If form doesn't exist, create it
