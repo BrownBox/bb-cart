@@ -617,32 +617,6 @@ function bb_cart_check_for_cart_additions($entry, $form){
     }
 }
 
-/**
- * Add WooCommerce items to BB Cart
- */
-add_action('woocommerce_add_to_cart', 'bb_cart_add_woo_to_bb_cart', 1, 6);
-function bb_cart_add_woo_to_bb_cart($cart_item_key, $product_id, $quantity, $variation_id, $variation, $cart_item_data) {
-    // Check if it's already in the cart and if so, update
-    foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as &$cart_item) {
-        if ($cart_item['cart_item_key'] == $cart_item_key) {
-            $cart_item['quantity'] += $quantity;
-            return;
-        }
-    }
-
-    // Not already in cart - add new item
-    $_SESSION[BB_CART_SESSION_ITEM]['woo'][] = array(
-            'name' => get_the_title($product_id),
-            'cart_item_key' => $cart_item_key,
-            'product_id' => $product_id,
-            'quantity' => $quantity,
-            'variation_id' => $variation_id,
-            'variation' => $variation,
-            'cart_item_data' => $cart_item_data,
-            'fund_code' => bb_cart_get_fund_code($product_id),
-    );
-}
-
 function bb_cart_calculate_shipping($total_price = null) {
     if (empty($total_price)) {
         $total_price = bb_cart_total_price(null, false);
