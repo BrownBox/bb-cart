@@ -1030,6 +1030,94 @@ function bb_cart_get_checkout_form(){
     return $checkout_form_id;
 }
 
+function bb_cart_get_shipping_form() {
+    $shipping_form_id = get_option('bbcart_shipping_form_id');
+    $shipping_form = array(
+            'title' => '[BB Cart] Shipping',
+            'description' => '',
+            'labelPlacement' => 'top_label',
+            'descriptionPlacement' => 'below',
+            'is_active' => true,
+            'cssClass' => 'bb_cart_shipping bb-processing',
+            'button' =>  array(
+                    'type' => 'text',
+                    'text' => 'Proceed',
+            ),
+            'confirmations' => array(
+                    0 =>  array(
+                            'id' => '597237bdb19ee',
+                            'name' => 'Default Confirmation',
+                            'isDefault' => true,
+                            'type' => 'redirect',
+                            'url' => site_url('/payment/'),
+                            'queryString' => '',
+                    ),
+            ),
+            'pagination' => array(
+                    'type' => 'none',
+            ),
+            'fields' => array(
+                    array(
+                            'type' => 'text',
+                            'id' => 1,
+                            'label' => 'Postcode',
+                            'isRequired' => true,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'postcode',
+                            'visibility' => 'visible',
+                            'inputMask' => true,
+                            'maskText' => '9999',
+                            'inputMaskValue' => '9999',
+                            'description' => 'Please enter your postcode so we can calculate your shipping costs',
+                    ),
+                    array(
+                            'type' => 'page',
+                            'id' => 2,
+                            'visibility' => 'visible',
+                            'displayOnly' => true,
+                            'inputs' => null,
+                            'previousButton' => array(
+                                    'type' => 'text',
+                                    'text' => 'Previous',
+                                    'imageUrl' => '',
+                            ),
+                            'nextButton' => array(
+                                    'type' => 'text',
+                                    'text' => 'Next',
+                                    'imageUrl' => '',
+                            ),
+                    ),
+                    array(
+                            'type' => 'radio',
+                            'id' => 3,
+                            'label' => 'Shipping Method',
+                            'isRequired' => false,
+                            'inputs' => NULL,
+                            'choices' => array(
+                                    0 =>  array(
+                                            'text' => 'No Shipping',
+                                            'value' => '',
+                                            'isSelected' => true,
+                                            'price' => '',
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'cssClass' => 'gf_list_inline shipping_method',
+                            'inputName' => 'shipping_method',
+                    ),
+            ),
+    );
+    if (!$shipping_form_id || !GFAPI::form_id_exists($shipping_form_id)) { // If form doesn't exist, create it
+        $shipping_form_id = GFAPI::add_form($shipping_form);
+        update_option('bbcart_shipping_form_id', $shipping_form_id);
+    } else { // Otherwise if we've created it previously, just update it to make sure it hasn't been modified and is the latest version
+        $shipping_form['id'] = $shipping_form_id;
+        GFAPI::update_form($shipping_form);
+    }
+
+    return $shipping_form_id;
+}
+
 function bb_cart_get_cart_user() {
     $user = get_user_by('login', 'bbcart');
     if (!$user) {
@@ -1053,6 +1141,7 @@ function bb_cart_form_locking() {
             public function __construct() {
                 $this->bb_cart_forms[] = bb_cart_get_donate_form();
                 $this->bb_cart_forms[] = bb_cart_get_checkout_form();
+                $this->bb_cart_forms[] = bb_cart_get_shipping_form();
 
                 $this->_redirect_url = admin_url('admin.php?page=gf_edit_forms');
 
@@ -1127,6 +1216,7 @@ function bb_cart_form_locking() {
             public function __construct() {
                 $this->bb_cart_forms[] = bb_cart_get_donate_form();
                 $this->bb_cart_forms[] = bb_cart_get_checkout_form();
+                $this->bb_cart_forms[] = bb_cart_get_shipping_form();
 
                 $this->_redirect_url = admin_url('admin.php?page=gf_edit_forms&view=settings&id='.rgget('id').'&subview=notification');
 

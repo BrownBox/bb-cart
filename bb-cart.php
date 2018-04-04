@@ -35,6 +35,8 @@ if (is_admin()) {
 }
 
 define('BB_CART_SESSION_ITEM', 'bb_cart_item');
+define('BB_CART_SESSION_SHIPPING_TYPE', 'bb_cart_shipping_type');
+define('BB_CART_SESSION_SHIPPING_POSTCODE', 'bb_cart_shipping_postcode');
 
 // JUST DO SOME SESSION STUFF HERE TO KEEP IT CLEAN + NOT CREATE ANY SESSION PROBLEMS
 add_action('init', 'bb_cart_start_session', 1);

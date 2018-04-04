@@ -56,5 +56,7 @@ function bb_cart_pre_submission_handler($form) {
                 $_POST['input_'.$field->id] = $new_contact;
             }
         }
+    } elseif ($form['id'] == bb_cart_get_shipping_form()) {
+        $_SESSION[BB_CART_SESSION_SHIPPING_TYPE] = rgpost('input_3');
     }
 }
