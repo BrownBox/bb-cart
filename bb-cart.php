@@ -1293,7 +1293,13 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                                 $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.$product['name'].'</a></td>'."\n";
                                 $html .= '<td class="text-right">$'.number_format($price, 2).'</td>'."\n";
                                 if ($purpose != 'email') {
-                                    $html .= '<td style="width: 15px;"><a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a></td>'."\n";
+                                    $html .= '<td style="width: 15px;">'."\n";
+                                    if ($item['removable'] !== false) {
+                                        $html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
+                                    } else {
+                                        $html .= '&nbsp;';
+                                    }
+                                    $html .= '</td>'."\n";
                                 }
                                 $html .= '</tr>';
                             }
@@ -1314,7 +1320,13 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                         $html .= '<tr><td>'.$event['booking']->booking_spaces.' registration/s for '.$event['event']->event_name.' ('.$event['event']->event_start_date.')</td>'."\n";
                         $html .= '<td style="text-align: right;">$'.number_format($event['booking']->booking_price, 2).'</td>'."\n";
                         if ($purpose != 'email') {
-                            $html .= '<td style="width: 15px;"><a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a></td>'."\n";
+                            $html .= '<td style="width: 15px;">'."\n";
+                            if ($item['removable'] !== false) {
+                                $html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
+                            } else {
+                                $html .= '&nbsp;';
+                            }
+                            $html .= '</td>'."\n";
                         }
                         $html .= '</tr>';
                     }
@@ -1333,7 +1345,13 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                         $frequency = empty($item['frequency']) || $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
                         $html .= '<td style="text-align: right;">$'.number_format($item_price, 2).$frequency.'</td>'."\n";
                         if ($purpose != 'email') {
-                            $html .= '<td style="width: 15px;"><a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a></td>'."\n";
+                            $html .= '<td style="width: 15px;">'."\n";
+                            if ($item['removable'] !== false) {
+                                $html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
+                            } else {
+                                $html .= '&nbsp;';
+                            }
+                            $html .= '</td>'."\n";
                         }
                         $html .= '</tr>'."\n";
                     }
