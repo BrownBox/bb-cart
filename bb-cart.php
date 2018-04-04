@@ -445,7 +445,7 @@ function bb_cart_frequency($value = '') {
     return $value;
 }
 
-add_filter("gform_field_value_bb_tax_status", "bb_cart_tax_status");
+add_filter("gform_field_value_bb_cart_tax_deductible", "bb_cart_tax_status");
 function bb_cart_tax_status($value = '') {
     if (!empty($_SESSION[BB_CART_SESSION_ITEM]['donations'])) {
         foreach ($_SESSION[BB_CART_SESSION_ITEM]['donations'] as $item) {
