@@ -149,7 +149,7 @@ function bb_cart_enable_password_field($is_enabled){
     return true;
 }
 
-add_action('init', 'bb_cart_remove_item_from_cart');
+add_action('template_redirect', 'bb_cart_remove_item_from_cart');
 function bb_cart_remove_item_from_cart() {
     if(isset($_GET['remove_item'])) {
         $item = $_GET['remove_item'];
@@ -157,7 +157,7 @@ function bb_cart_remove_item_from_cart() {
             list($section, $item) = explode(':', $item);
             if ($section == 'woo' && function_exists('WC')) {
                 $woo_cart_item = $_SESSION[BB_CART_SESSION_ITEM][$section][$item]['cart_item_key'];
-                WC()->cart->set_quantity($woo_cart_item, 0); // We remove items from the WooCommerce cart by setting quantity to zero
+                WC()->cart->remove_cart_item($woo_cart_item);
             }
             unset($_SESSION[BB_CART_SESSION_ITEM][$section][$item]);
 
