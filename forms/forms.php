@@ -700,7 +700,7 @@ function bb_cart_get_checkout_form(){
                             'id' => 25,
                             'label' => 'Secure Seals',
                             'isRequired' => false,
-                            'content' => 'This site is secured by Comodo for your protection',
+                            'content' => '<img src="'.BB_CART_URL.'assets/images/trusted-site-seal.png" alt="This site is secured by Comodo for your protection">',
                             'visibility' => 'visible',
                     ),
                     array(
