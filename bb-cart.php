@@ -77,11 +77,15 @@ function bb_cart_start_session() {
 
         // And now make sure all the WC cart items are also in BB Cart
         if (!empty($wc_cart)) {
+            $currency = get_option('woocommerce_currency');
+            if (empty($currency)) {
+                $currency = bb_cart_get_default_currency();
+            }
             foreach ($wc_cart as $woo_idx => $woo_item) {
+                $label = !empty($woo_item['variation_id']) ? get_the_title($woo_item['variation_id']) : get_the_title($woo_item['product_id']);
                 if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
                     foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as &$cart_item) {
                         if ($cart_item['cart_item_key'] == $woo_idx) { // Found it - let's make sure the details are the same
-                            $label = !empty($woo_item['variation_id']) ? get_the_title($woo_item['variation_id']) : get_the_title($woo_item['product_id']);
                             $cart_item = array(
                                     'name' => $label,
                                     'cart_item_key' => $woo_idx,
@@ -91,6 +95,7 @@ function bb_cart_start_session() {
                                     'variation' => $woo_item['variation'],
                                     'cart_item_data' => $woo_item['cart_item_data'],
                                     'fund_code' => bb_cart_get_fund_code($woo_item['product_id']),
+                                    'currency' => $currency,
                             );
                             continue(2); // Found it - go to next $woo_item
                         }
@@ -98,7 +103,6 @@ function bb_cart_start_session() {
                 }
 
                 // Not found - add it
-                $label = !empty($woo_item['variation_id']) ? get_the_title($woo_item['variation_id']) : get_the_title($woo_item['product_id']);
                 $_SESSION[BB_CART_SESSION_ITEM]['woo'][] = array(
                         'name' => $label,
                         'cart_item_key' => $woo_idx,
@@ -108,6 +112,7 @@ function bb_cart_start_session() {
                         'variation' => $woo_item['variation'],
                         'cart_item_data' => $woo_item['cart_item_data'],
                         'fund_code' => bb_cart_get_fund_code($woo_item['product_id']),
+                        'currency' => $currency,
                 );
             }
         }
@@ -455,6 +460,16 @@ function bb_cart_tax_status($value = '') {
     return $value;
 }
 
+add_filter("gform_field_value_bb_cart_currency", "bb_cart_currency");
+function bb_cart_currency($value = '') {
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM]['donations'])) {
+        foreach ($_SESSION[BB_CART_SESSION_ITEM]['donations'] as $item) {
+            return $item['currency'];
+        }
+    }
+    return $value;
+}
+
 add_filter("gform_field_value_bb_item_types", "bb_cart_item_types");
 function bb_cart_item_types($value = '') {
     if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
@@ -481,6 +496,19 @@ function bb_cart_add_custom_label($value) {
     return $post->post_title;
 }
 
+function bb_cart_get_default_currency() {
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+        foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
+            foreach ($items as $item) {
+                if (!empty($item['currency'])) {
+                    return $item['currency'];
+                }
+            }
+        }
+    }
+    return GFCommon::get_currency();
+}
+
 // OK NOW WE NEED A POST-SUBMISSION HOOK TO CATCH ANY SUBMISSIONS FROM FORMS WITH 'bb_cart_enable' CHECKED
 // MUST happen before the post_purchase function below
 add_action("gform_after_submission", "bb_cart_check_for_cart_additions", 5, 2);
@@ -499,6 +527,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
     $variations = array();
     $sku = $donation_target = $fund_code = '';
     $label = 'Where Most Needed';
+    $currency = bb_cart_get_default_currency();
     if (!empty($form['bb_cart_enable']) && $form['bb_cart_enable']=="cart_enabled") {
         // ANNOYINGLY HAVE TO RUN THIS ALL THROUGH ONCE TO SET THE FIELD LABEL IN CASE THERE'S A CUSTOM LABEL SET
         foreach ($form['fields'] as $field) {
@@ -529,6 +558,8 @@ function bb_cart_check_for_cart_additions($entry, $form){
                 $campaign = $entry[$field['id']];
             } elseif ($field['inputName'] == 'donation_target') {
                 $donation_for = $entry[$field['id']];
+            } elseif ($field['inputName'] == 'bb_cart_currency') {
+                $currency = $entry[$field['id']];
             }
         }
         foreach ($form['fields'] as $field) {
@@ -593,6 +624,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
                     global $blog_id;
                     $_SESSION[BB_CART_SESSION_ITEM][$section][] = array(
                             'label' => $label,
+                            'currency' => $currency,
                             'price' => $clean_price,
                             'form_id' => $form['id'],
                             'entry_id' => $entry['id'],
@@ -688,6 +720,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
             $donation_amount = 0;
             $payment_method = 'Credit Card';
+            $currency = bb_cart_get_default_currency();
             $bb_line_items = array();
             $gf_line_items = array(
                     'products' => array(),
@@ -869,6 +902,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                             );
                             $gf_line_items['products'][] = $line_item;
                             $line_item['fund_code'] = $item['fund_code'];
+                            $currency = $item['currency'];
                             if (get_post_meta($item['fund_code'], 'transaction_type', true) == 'donation') {
                                 $donation_amount += $item['price']*$item['quantity']/100;
                             }
@@ -877,6 +911,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                         break;
                 }
             }
+            update_post_meta($transaction_id, 'currency', $currency);
 
             foreach ($bb_line_items as $bb_line_item) {
                 $line_item = array(

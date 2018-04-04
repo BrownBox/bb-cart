@@ -28,6 +28,7 @@ switch($data['event']) {
             $receipt_no = $data['data']['transactions'][0]['_id'];
             $amount = $data['data']['amount'];
             $email = $data['data']['customer']['email'];
+            $currency = $data['data']['currency'];
             $user = get_user_by('email', $email);
 
             $transaction_check = array(
@@ -60,6 +61,7 @@ switch($data['event']) {
                 update_post_meta($transaction_id, 'frequency', $frequency);
                 update_post_meta($transaction_id, 'donation_amount', $amount);
                 update_post_meta($transaction_id, 'total_amount', $amount);
+                update_post_meta($transaction_id, 'currency', $currency);
 
                 $batch_id = bb_cart_get_web_batch();
                 update_post_meta($transaction_id, 'batch_id', $batch_id);

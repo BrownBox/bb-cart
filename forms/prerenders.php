@@ -24,6 +24,9 @@ function bb_cart_setup_filters_to_populate_field($form) {
                 }
             } elseif ($field->inputName == 'bb_cart_payment_method') {
                 $field->choices = apply_filters('bb_cart_payment_method_choices', $field->choices, $form, $field);
+            } elseif ($field->inputName == 'bb_cart_currency') {
+                $field->choices = apply_filters('bb_cart_currency_choices', $field->choices, $form, $field);
+                $field->visibility = count($field->choices) > 1 ? 'visible' : 'hidden';
             } elseif ($field->inputName == 'bb_donation_amounts') {
                 $field->choices = apply_filters('bb_cart_donation_amount_choices', $field->choices, $form, $field);
                 $field->enableOtherChoice = apply_filters('bb_cart_donation_amount_enable_other', $field->enableOtherChoice, $form, $field);
@@ -102,6 +105,33 @@ function bb_cart_populate_interval_choices($choices, $form, $field) {
                     'text' => $text,
                     'value' => $value,
                     'isSelected' => $value == 'one-off',
+            );
+        }
+    }
+    return $choices;
+}
+
+/*
+ * Populate currency field
+ */
+add_filter('bb_cart_currency_choices', 'bb_cart_populate_currency_choices', 1, 3);
+function bb_cart_populate_currency_choices($choices, $form, $field) {
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+        // If cart not empty, always use the previously selected currency
+        $choices = array(
+                array(
+                        'text' => bb_cart_get_default_currency(),
+                        'value' => bb_cart_get_default_currency(),
+                        'isSelected' => $value == bb_cart_get_default_currency(),
+                ),
+        );
+    } elseif (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$currencies)) {
+        $choices = array();
+        foreach (Brownbox\Config\BB_Cart::$currencies as $value => $text) {
+            $choices[] = array(
+                    'text' => $text,
+                    'value' => $value,
+                    'isSelected' => $value == bb_cart_get_default_currency(),
             );
         }
     }

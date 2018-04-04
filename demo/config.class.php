@@ -66,6 +66,15 @@ class BB_Cart {
     );
 
     /**
+     * Currency options.
+     * @var array
+     */
+    public static $currencies = array(
+            'AUD' => 'Australian Dollar',
+            'USD' => 'US Dollar',
+    );
+
+    /**
      * Click array options. Text is impact statement, value is amount
      * @var array
      */

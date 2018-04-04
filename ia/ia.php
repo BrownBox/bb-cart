@@ -175,6 +175,7 @@ function transaction_metabox_content($post) {
 	array_push($transaction_fields, bbcart_new_field('title=GF Entry ID&field_name=gf_entry_id&size=100%&type=text'));
 	array_push($transaction_fields, bbcart_new_field('title=Donation Amount&field_name=donation_amount&size=100%&type=text'));
 	array_push($transaction_fields, bbcart_new_field('title=Total Amount&field_name=total_amount&size=100%&type=text'));
+	array_push($transaction_fields, bbcart_new_field('title=Currency&field_name=currency&size=100%&type=text'));
 	array_push($transaction_fields, bbcart_new_field('title=Cart&field_name=cart&size=100%,10rem&type=textarea'));
 	array_push($transaction_fields, bbcart_new_field('title=Gateway Response&field_name=gateway_response&size=100%&type=text'));
 	array_push($transaction_fields, bbcart_new_field('title=Tax Deductible&field_name=is_tax_deductible&type=checkbox'));

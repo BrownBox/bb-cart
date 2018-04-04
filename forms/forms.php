@@ -210,6 +210,21 @@ function bb_cart_get_donate_form(){
                             ),
                     ),
                     array(
+                            'type' => 'select',
+                            'id' => 24,
+                            'label' => 'Currency',
+                            'isRequired' => false,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => RGCurrency::get_currency(bb_cart_get_default_currency())['name'],
+                                            'value' => bb_cart_get_default_currency(),
+                                            'isSelected' => true,
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_currency',
+                    ),
+                    array(
                             'id' => 4,
                             'label' => 'My donation',
                             'type' => 'bb_click_array',
@@ -961,7 +976,7 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => false,
                             'allowsPrepopulate' => true,
                             'inputName' => 'campaign_id',
-                            'visibility' => 'visible'
+                            'visibility' => 'visible',
                     ),
                     array(
                             'type' => 'hidden',
@@ -970,7 +985,7 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => false,
                             'allowsPrepopulate' => true,
                             'inputName' => 'donation_target',
-                            'visibility' => 'visible'
+                            'visibility' => 'visible',
                     ),
                     array(
                             'type' => 'number',
@@ -979,7 +994,7 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => false,
                             'allowsPrepopulate' => true,
                             'inputName' => 'bb_cart_deductible_donation_total',
-                            'visibility' => 'hidden'
+                            'visibility' => 'hidden',
                     ),
                     array(
                             'type' => 'number',
@@ -988,7 +1003,7 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => false,
                             'allowsPrepopulate' => true,
                             'inputName' => 'bb_cart_non_deductible_donation_total',
-                            'visibility' => 'hidden'
+                            'visibility' => 'hidden',
                     ),
                     array(
                             'type' => 'number',
@@ -997,7 +1012,7 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => false,
                             'allowsPrepopulate' => true,
                             'inputName' => 'bb_cart_deductible_purchase_total',
-                            'visibility' => 'hidden'
+                            'visibility' => 'hidden',
                     ),
                     array(
                             'type' => 'number',
@@ -1006,7 +1021,7 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => false,
                             'allowsPrepopulate' => true,
                             'inputName' => 'bb_cart_non_deductible_purchase_total',
-                            'visibility' => 'hidden'
+                            'visibility' => 'hidden',
                     ),
                     array(
                             'type' => 'hidden',
@@ -1015,7 +1030,16 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => false,
                             'allowsPrepopulate' => true,
                             'inputName' => 'bb_cart_new_contact',
-                            'visibility' => 'hidden'
+                            'visibility' => 'hidden',
+                    ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 40,
+                            'label' => 'Currency',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_currency',
+                            'visibility' => 'hidden',
                     ),
             )
     );
