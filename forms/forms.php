@@ -395,7 +395,7 @@ function bb_cart_get_donate_form(){
                                     ),
                                     3 => array(
                                             'text' => 'P2P',
-                                            'value' => 'p2p',
+                                            'value' => 'peer to peer campaign',
                                             'isSelected' => false,
                                     )
                             ),

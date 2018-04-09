@@ -490,12 +490,6 @@ function bb_cart_checkout_items_array($value){
     return $array_string;
 }
 
-add_filter("gform_field_value_bb_cart_custom_item_label", "bb_cart_add_custom_label");
-function bb_cart_add_custom_label($value) {
-    global $post;
-    return $post->post_title;
-}
-
 function bb_cart_get_default_currency() {
     if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
         foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
@@ -526,7 +520,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
     $quantity = 1;
     $variations = array();
     $sku = $donation_target = $fund_code = '';
-    $label = 'Where Most Needed';
+    $label = 'My Donation';
     $currency = bb_cart_get_default_currency();
     if (!empty($form['bb_cart_enable']) && $form['bb_cart_enable']=="cart_enabled") {
         // ANNOYINGLY HAVE TO RUN THIS ALL THROUGH ONCE TO SET THE FIELD LABEL IN CASE THERE'S A CUSTOM LABEL SET
@@ -551,7 +545,6 @@ function bb_cart_check_for_cart_additions($entry, $form){
                 $donation_target = $entry[$field['id']];
             } elseif (($field['inputName'] == 'bb_cart_donation_member' || $field['inputName'] == 'bb_cart_donation_campaign') && !empty($entry[$field['id']])) {
                 $campaign = $entry[$field['id']];
-                list($fund_code, $campaign) = explode(':', $campaign);
             } elseif ($field['inputName'] == 'bb_cart_purchase_type' && !empty($entry[$field['id']])) {
                 $section = $entry[$field['id']];
             } elseif ($field['inputName'] == 'page_id') {
@@ -581,10 +574,11 @@ function bb_cart_check_for_cart_additions($entry, $form){
                         }
                     }
                 }
-            } elseif ($field['type'] == 'envoyrecharge') {
+            } elseif ($field['type'] == 'envoyrecharge') { // @deprecated
                 $amount = $entry[$field["id"].'.1'];
-                if ($entry[$field["id"].'.5'] == 'recurring')
+                if ($entry[$field["id"].'.5'] == 'recurring') {
                     $frequency = $entry[$field["id"].'.2'];
+                }
             } elseif ($field['type'] == 'bb_click_array') {
                 $amount = $entry[$field["id"].'.1'];
             }
