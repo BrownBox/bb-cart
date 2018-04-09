@@ -78,15 +78,25 @@ function bb_cart_populate_checkout_form_setup_choices($choices, $form, $field) {
 /*
  * Populate "donation for" field in the donation form
  */
-add_filter('bb_cart_donation_for_choices', 'bb_cart_populate_donation_form_choices', 1, 3);
-function bb_cart_populate_donation_form_choices($choices, $form, $field){
+add_filter('bb_cart_donation_for_choices', 'bb_cart_populate_donation_for_choices', 1, 3);
+function bb_cart_populate_donation_for_choices($choices, $form, $field) {
     if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices)) {
         $choices = array();
+        global $post;
+        if (isset(Brownbox\Config\BB_Cart::$member) && !empty(Brownbox\Config\BB_Cart::$member['post_type']) && Brownbox\Config\BB_Cart::$member['post_type'] == $post->post_type) {
+            $default = 'sponsorship';
+        } elseif (isset(Brownbox\Config\BB_Cart::$member) && !empty(Brownbox\Config\BB_Cart::$member['user'])) {
+            $default = 'sponsorship';
+        } elseif (isset(Brownbox\Config\BB_Cart::$project) && in_array($post->post_type, Brownbox\Config\BB_Cart::$project)) {
+            $default = 'campaign';
+        } else {
+            $default = 'default';
+        }
         foreach (Brownbox\Config\BB_Cart::$donation_for_choices as $value => $text) {
             $choices[] = array(
                     'text' => $text,
                     'value' => $value,
-                    'isSelected' => $value == 'default',
+                    'isSelected' => $value == $default,
             );
         }
     }
@@ -186,7 +196,7 @@ function bb_cart_populate_donation_member_choices($choices, $form, $field){
                         'value' => ''
                 ),
         );
-        foreach (Brownbox\Config\BB_Cart::$member as $type => $value){
+        foreach (Brownbox\Config\BB_Cart::$member as $type => $value) {
             if ($type == 'post_type') {
                 $args = array(
                         'post_type' => $value,
@@ -242,9 +252,14 @@ function bb_cart_populate_donation_campaign_choices($choices, $form, $field) {
 
         $projects = get_posts($project_args);
 
+        global $post;
         foreach ($projects as $project) {
             $label = $project->post_title;
-            $choices[] = array('text' => $label, 'value' => $project->ID);
+            $choices[] = array(
+                    'text' => $label,
+                    'value' => $project->ID,
+                    'isSelected' => $post->ID == $project->ID,
+            );
         }
     }
     return $choices;
