@@ -2,42 +2,40 @@
 add_filter('gform_pre_render', 'bb_cart_setup_filters_to_populate_field');
 function bb_cart_setup_filters_to_populate_field($form) {
     global $post;
-    if (in_array($form['id'], array(bb_cart_get_donate_form(), bb_cart_get_checkout_form()))) {
-        foreach($form['fields'] as &$field) {
-            if ($field->inputName == 'bb_cart_form_setup') {
-                $field->choices = apply_filters('bb_cart_form_setup_choices', $field->choices, $form, $field);
-            } elseif ($field->inputName == 'bb_cart_checkout_form_setup') {
-                $field->choices = apply_filters('bb_cart_checkout_form_setup_choices', $field->choices, $form, $field);
-            } elseif ($field->inputName == 'bb_cart_donation_for') {
-                $field->choices = apply_filters('bb_cart_donation_for_choices', $field->choices, $form, $field);
-            } elseif ($field->inputName == 'bb_cart_interval') {
-                $field->choices = apply_filters('bb_cart_interval_choices', $field->choices, $form, $field);
-            } elseif ($field->inputName == 'bb_cart_donation_member') {
-                $field->choices = apply_filters('bb_cart_donation_member_choices', $field->choices, $form, $field);
-                if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices['member'])) {
-                    $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['member'];
-                }
-            } elseif ($field->inputName == 'bb_cart_donation_campaign') {
-                $field->choices = apply_filters('bb_cart_donation_campaign_choices', $field->choices, $form, $field);
-                if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices['campaign'])) {
-                    $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['campaign'];
-                }
-            } elseif ($field->inputName == 'bb_cart_payment_method') {
-                $field->choices = apply_filters('bb_cart_payment_method_choices', $field->choices, $form, $field);
-            } elseif ($field->inputName == 'bb_cart_currency') {
-                $field->choices = apply_filters('bb_cart_currency_choices', $field->choices, $form, $field);
-                $field->visibility = count($field->choices) > 1 ? 'visible' : 'hidden';
-            } elseif ($field->inputName == 'bb_donation_amounts') {
-                $field->choices = apply_filters('bb_cart_donation_amount_choices', $field->choices, $form, $field);
-                $field->enableOtherChoice = apply_filters('bb_cart_donation_amount_enable_other', $field->enableOtherChoice, $form, $field);
-                if ($field->enableOtherChoice) {
-                    $field->field_bb_click_array_other_label = apply_filters('bb_cart_donation_amount_other_label', $field->field_bb_click_array_other_label, $form, $field);
-                }
-            } elseif ($field->inputName == 'payment_method') {
-                $field->choices = apply_filters('bb_cart_checkout_payment_method_choices', $field->choices, $form, $field);
-            } elseif ($field->inputName == 'page_id') {
-                $field->defaultValue = $post->ID;
+    foreach ($form['fields'] as &$field) {
+        if ($field->inputName == 'bb_cart_form_setup') {
+            $field->choices = apply_filters('bb_cart_form_setup_choices', $field->choices, $form, $field);
+        } elseif ($field->inputName == 'bb_cart_checkout_form_setup') {
+            $field->choices = apply_filters('bb_cart_checkout_form_setup_choices', $field->choices, $form, $field);
+        } elseif ($field->inputName == 'bb_cart_donation_for') {
+            $field->choices = apply_filters('bb_cart_donation_for_choices', $field->choices, $form, $field);
+        } elseif ($field->inputName == 'bb_cart_interval') {
+            $field->choices = apply_filters('bb_cart_interval_choices', $field->choices, $form, $field);
+        } elseif ($field->inputName == 'bb_cart_donation_member') {
+            $field->choices = apply_filters('bb_cart_donation_member_choices', $field->choices, $form, $field);
+            if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices) && isset(Brownbox\Config\BB_Cart::$donation_for_choices['member'])) {
+                $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['member'];
             }
+        } elseif ($field->inputName == 'bb_cart_donation_campaign') {
+            $field->choices = apply_filters('bb_cart_donation_campaign_choices', $field->choices, $form, $field);
+            if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices) && isset(Brownbox\Config\BB_Cart::$donation_for_choices['campaign'])) {
+                $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['campaign'];
+            }
+        } elseif ($field->inputName == 'bb_cart_payment_method') {
+            $field->choices = apply_filters('bb_cart_payment_method_choices', $field->choices, $form, $field);
+        } elseif ($field->inputName == 'bb_cart_currency') {
+            $field->choices = apply_filters('bb_cart_currency_choices', $field->choices, $form, $field);
+            $field->visibility = count($field->choices) > 1 ? 'visible' : 'hidden';
+        } elseif ($field->inputName == 'bb_donation_amounts') {
+            $field->choices = apply_filters('bb_cart_donation_amount_choices', $field->choices, $form, $field);
+            $field->enableOtherChoice = apply_filters('bb_cart_donation_amount_enable_other', $field->enableOtherChoice, $form, $field);
+            if ($field->enableOtherChoice) {
+                $field->field_bb_click_array_other_label = apply_filters('bb_cart_donation_amount_other_label', $field->field_bb_click_array_other_label, $form, $field);
+            }
+        } elseif ($field->inputName == 'payment_method') {
+            $field->choices = apply_filters('bb_cart_checkout_payment_method_choices', $field->choices, $form, $field);
+        } elseif ($field->inputName == 'page_id') {
+            $field->defaultValue = $post->ID;
         }
     }
     return $form;
