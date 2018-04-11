@@ -21,6 +21,7 @@ require_once(BB_CART_DIR.'ia/ia.php');
 require_once(BB_CART_DIR.'forms/forms.php');
 require_once(BB_CART_DIR.'forms/prerenders.php');
 require_once(BB_CART_DIR.'forms/presubmission.php');
+require_once(BB_CART_DIR.'forms/confirmation.php');
 require_once(BB_CART_DIR.'admin/settings.php');
 require_once(BB_CART_DIR.'admin/pledges.php');
 require_once(BB_CART_DIR.'admin/import.php');
@@ -84,6 +85,9 @@ function bb_cart_start_session() {
             }
             foreach ($wc_cart as $woo_idx => $woo_item) {
                 $label = !empty($woo_item['variation_id']) ? get_the_title($woo_item['variation_id']) : get_the_title($woo_item['product_id']);
+                $fund_code_id = bb_cart_get_fund_code($woo_item['product_id']);
+                $fund_code_deductible = get_post_meta($fund_code_id, 'deductible', true);
+                $deductible = $fund_code_deductible == 'true';
                 if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
                     foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as &$cart_item) {
                         if ($cart_item['cart_item_key'] == $woo_idx) { // Found it - let's make sure the details are the same
@@ -91,11 +95,14 @@ function bb_cart_start_session() {
                                     'name' => $label,
                                     'cart_item_key' => $woo_idx,
                                     'product_id' => $woo_item['product_id'],
+                                    'price' => 100*$woo_item['line_total']/$woo_item['quantity'],
                                     'quantity' => $woo_item['quantity'],
                                     'variation_id' => $woo_item['variation_id'],
                                     'variation' => $woo_item['variation'],
                                     'cart_item_data' => $woo_item['cart_item_data'],
-                                    'fund_code' => bb_cart_get_fund_code($woo_item['product_id']),
+                                    'fund_code' => $fund_code_id,
+                                    'transaction_type' => 'purchase',
+                                    'deductible' => $deductible,
                                     'currency' => $currency,
                             );
                             continue(2); // Found it - go to next $woo_item
@@ -108,11 +115,14 @@ function bb_cart_start_session() {
                         'name' => $label,
                         'cart_item_key' => $woo_idx,
                         'product_id' => $woo_item['product_id'],
+                        'price' => 100*$woo_item['line_total']/$woo_item['quantity'],
                         'quantity' => $woo_item['quantity'],
                         'variation_id' => $woo_item['variation_id'],
                         'variation' => $woo_item['variation'],
                         'cart_item_data' => $woo_item['cart_item_data'],
-                        'fund_code' => bb_cart_get_fund_code($woo_item['product_id']),
+                        'fund_code' => $fund_code_id,
+                        'transaction_type' => 'purchase',
+                        'deductible' => $deductible,
                         'currency' => $currency,
                 );
             }
@@ -394,6 +404,7 @@ function bb_cart_non_deductible_purchase_total($value = '') {
             }
         }
     }
+    $value += bb_cart_calculate_shipping();
     return $value;
 }
 
@@ -534,7 +545,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
                 $deductible = (boolean)$entry[$field['id']];
             } elseif ($field['inputName'] == 'bb_campaign' && !empty($entry[$field['id']])) {
                 $campaign = $entry[$field['id']];
-            } elseif ($field['inputName'] == 'bb_fund_code' && !empty($entry[$field['id']])) {
+            } elseif ($field['inputName'] == 'bb_cart_fund_code' && !empty($entry[$field['id']])) {
                 $fund_code = $entry[$field['id']];
             } elseif ($field['type'] == 'quantity' && !empty($entry[$field['id']])) {
                 $quantity = $entry[$field['id']];
@@ -1363,7 +1374,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
             }
             $html .= '</table>'."\n";
         }
-        $html .= '<p class="h5" style="text-align: right; font-weight: bold;">Total: $'.number_format(bb_cart_total_price(), 2).'</p>'."\n";
+        $html .= '<p class="bb_cart_total" style="text-align: right;"><strong>Total: $'.number_format(bb_cart_total_price(), 2).'</strong></p>'."\n";
     }
     return $html;
 }
