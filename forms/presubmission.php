@@ -1,5 +1,5 @@
 <?php
-add_action('gform_pre_submission', 'bb_cart_pre_submission_handler');
+add_action('gform_pre_submission', 'bb_cart_pre_submission_handler', 1);
 function bb_cart_pre_submission_handler($form) {
     if ($form['id'] == bb_cart_get_donate_form()) {
         global $post;
