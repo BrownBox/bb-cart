@@ -495,12 +495,9 @@ function bb_cart_get_checkout_form(){
                             'id' => '56ce55c57ef2e',
                             'name' => 'Default Confirmation',
                             'isDefault' => true,
-                            'type' => 'page',
-                            'message' => '',
+                            'type' => 'redirect',
                             'url' => site_url('/thankyou/'),
                             'queryString' => 'n={Name (First):1.3}&e={entry_id}&f={form_id}',
-                            'disableAutoformat' => false,
-                            'conditionalLogic' => array(),
                     ),
             ),
             'fields' => array(
