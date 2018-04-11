@@ -11,6 +11,7 @@
 
 define('BB_CART_DIR', plugin_dir_path(__FILE__));
 define('BB_CART_URL', plugin_dir_url(__FILE__));
+define('BB_CART_VERSION', '3.1');
 
 require_once(BB_CART_DIR.'ia/cpt_.php');
 require_once(BB_CART_DIR.'ia/meta_.php');

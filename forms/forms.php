@@ -3,7 +3,7 @@ function bb_cart_get_donate_form(){
     $donate_form_id = get_option('bb_cart_donate_form_id');
     $donate_form = array(
             'title' => '[BB Cart] Donations',
-            'description' => 'Version 1.0',
+            'description' => 'Version '.BB_CART_VERSION,
             'is_active' => true,
             'cssClass' => 'bb_cart_donations',
             'button' => array(
