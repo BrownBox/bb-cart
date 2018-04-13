@@ -3,7 +3,7 @@
  * Plugin Name: BB Cart
  * Plugin URI: n/a
  * Description: A cart system to extend Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
- * Version: 3.1.1
+ * Version: 3.1.2
  * Author: Brown Box
  * Author URI: http://brownbox.net.au
  * License: Proprietary Brown Box
@@ -652,6 +652,37 @@ function bb_cart_check_for_cart_additions($entry, $form){
             $quantity = $old_quantity;
             $label = $old_label;
         }
+    }
+}
+
+add_action('wp', 'bb_cart_add_from_querystring', 99);
+function bb_cart_add_from_querystring() {
+    if (!empty($_GET['add_to_cart'])) {
+        $price = clean_amount((int)$_GET['add_to_cart']);
+        if ($price > 0) {
+            global $blog_id;
+            $fund_code = bb_cart_get_default_fund_code();
+            $fund_code_post = bb_cart_load_fund_code($fund_code);
+            if ($fund_code_post instanceof WP_Post) {
+                $fund_code_deductible = get_post_meta($fund_code_post->ID, 'deductible', true);
+                $deductible = $fund_code_deductible == 'true';
+                $transaction_type = get_post_meta($fund_code_post->ID, 'transaction_type', true);
+            }
+            $_SESSION[BB_CART_SESSION_ITEM][] = array(
+                    'label' => 'My Donation',
+                    'currency' =>  bb_cart_get_default_currency(),
+                    'price' => $price,
+                    'frequency' => 'month',
+                    'blog_id' => $blog_id,
+                    'fund_code' => $fund_code,
+                    'deductible' => $deductible,
+                    'transaction_type' => $transaction_type,
+                    'quantity' => 1,
+                    'sku' => $_GET['sku'],
+            );
+        }
+        wp_redirect(remove_query_arg(array('add_to_cart', 'sku')));
+        exit;
     }
 }
 
