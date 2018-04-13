@@ -3,7 +3,7 @@
  * Plugin Name: BB Cart
  * Plugin URI: n/a
  * Description: A cart system to extend Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
- * Version: 3.1.2
+ * Version: 3.1.3
  * Author: Brown Box
  * Author URI: http://brownbox.net.au
  * License: Proprietary Brown Box
@@ -11,7 +11,7 @@
 
 define('BB_CART_DIR', plugin_dir_path(__FILE__));
 define('BB_CART_URL', plugin_dir_url(__FILE__));
-define('BB_CART_VERSION', '3.1.1');
+define('BB_CART_VERSION', '3.1.3');
 
 require_once(BB_CART_DIR.'ia/cpt_.php');
 require_once(BB_CART_DIR.'ia/meta_.php');
@@ -658,9 +658,13 @@ function bb_cart_check_for_cart_additions($entry, $form){
 add_action('wp', 'bb_cart_add_from_querystring', 99);
 function bb_cart_add_from_querystring() {
     if (!empty($_GET['add_to_cart'])) {
-        $price = clean_amount((int)$_GET['add_to_cart']);
+        $price = bb_cart_clean_amount((int)$_GET['add_to_cart']);
         if ($price > 0) {
             global $blog_id;
+            $frequency = $_GET['frequency'];
+            if (empty($frequency)) {
+                $frequency = 'one-off';
+            }
             $fund_code = bb_cart_get_default_fund_code();
             $fund_code_post = bb_cart_load_fund_code($fund_code);
             if ($fund_code_post instanceof WP_Post) {
@@ -668,11 +672,11 @@ function bb_cart_add_from_querystring() {
                 $deductible = $fund_code_deductible == 'true';
                 $transaction_type = get_post_meta($fund_code_post->ID, 'transaction_type', true);
             }
-            $_SESSION[BB_CART_SESSION_ITEM][] = array(
+            $_SESSION[BB_CART_SESSION_ITEM]['donations'][] = array(
                     'label' => 'My Donation',
                     'currency' =>  bb_cart_get_default_currency(),
                     'price' => $price,
-                    'frequency' => 'month',
+                    'frequency' => $frequency,
                     'blog_id' => $blog_id,
                     'fund_code' => $fund_code,
                     'deductible' => $deductible,
@@ -681,7 +685,7 @@ function bb_cart_add_from_querystring() {
                     'sku' => $_GET['sku'],
             );
         }
-        wp_redirect(remove_query_arg(array('add_to_cart', 'sku')));
+        wp_redirect(remove_query_arg(array('add_to_cart', 'sku', 'frequency')));
         exit;
     }
 }
