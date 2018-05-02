@@ -539,7 +539,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
         foreach ($form['fields'] as $field) {
             if ($field['inputName']=='bb_cart_custom_item_label' && !empty($entry[$field['id']])) {
                 $label = $entry[$field['id']];
-            } elseif (($field['adminLabel'] == 'bb_cart_interval' || $field['adminLabel'] == 'bb_donation_frequency') && !empty($entry[$field['id']])) {
+            } elseif (($field['inputName'] == 'bb_cart_interval' || $field['adminLabel'] == 'bb_donation_frequency') && !empty($entry[$field['id']])) {
                 $frequency = $entry[$field['id']];
             } elseif ($field['inputName'] == 'bb_cart_tax_deductible' || $field['inputName'] == 'bb_tax_status') {
                 $deductible = (boolean)$entry[$field['id']];
