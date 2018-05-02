@@ -198,10 +198,14 @@ class bb_cart_fund_code_report {
                         'Date',
                         'Fund Code',
                         'Amount',
+                        'Batch',
                 ),
         );
         $transactions = $this->get_transactions();
+        $nonce = wp_create_nonce('bb_cart_batches');
         foreach ($transactions as $transaction) {
+            $batch_id = get_post_meta($transaction->ID, 'batch_id', true);
+            $batch = '<a href="?page=bb_cart_batch_management&amp;batch='.urlencode($batch_id).'&amp;action=edit&amp;_wpnonce='.$nonce.'">'.get_the_title($batch_id).'</a>';
             $line_items = $this->get_line_items($transaction->ID);
             if (count($line_items) > 0) {
                 foreach ($line_items as $line_item) {
@@ -231,6 +235,7 @@ class bb_cart_fund_code_report {
                                 $transaction->post_date,
                                 $fund_code,
                                 '$'.number_format($amount, 2),
+                                $batch,
                         );
                     }
                 }
@@ -264,6 +269,7 @@ class bb_cart_fund_code_report {
                             $transaction->post_date,
                             $fund_code,
                             '$'.number_format($amount, 2),
+                            $batch,
                     );
                 }
             }
