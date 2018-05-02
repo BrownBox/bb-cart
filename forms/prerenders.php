@@ -253,9 +253,14 @@ function bb_cart_populate_donation_campaign_choices($choices, $form, $field) {
         global $post;
         foreach ($projects as $project) {
             $label = $project->post_title;
+            $campaign_id = $project->ID;
+            $terms = wp_get_object_terms($campaign_id, 'give');
+            if ($terms && !is_wp_error($terms)) {
+                $campaign_id = $terms[0]->term_id;
+            }
             $choices[] = array(
                     'text' => $label,
-                    'value' => $project->ID,
+                    'value' => $campaign_id,
                     'isSelected' => $post->ID == $project->ID,
             );
         }
