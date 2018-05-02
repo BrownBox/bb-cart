@@ -623,6 +623,7 @@ function bb_cart_get_checkout_form(){
                             'creditCards' => array(
                                     0 => 'visa',
                                     1 => 'mastercard',
+                                    2 => 'amex',
                             ),
                             'useRichTextEditor' => false,
                             'creditCardFundingTypes' => array(
