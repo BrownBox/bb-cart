@@ -1302,6 +1302,19 @@ function bb_cart_configure_notifications($notification, $form, $entry) {
 
     if (!empty($cart_items)) {
         $notification['message'] = str_replace("!!!items!!!", bb_cart_table('email', $cart_items), $notification['message']);
+        if ($form['id'] == bb_cart_get_checkout_form()) {
+            $campaign = $fund_code = '';
+            $fund_code_id = $entry[11];
+            $campaign_id = $entry[32];
+            if (!empty($fund_code_id)) {
+                $fund_code = get_the_title($fund_code_id);
+            }
+            if (!empty($campaign_id)) {
+                $campaign = get_the_title($campaign_id);
+            }
+            $notification['subject'] = str_replace('!!!fund!!!', $campaign.' ('.$fund_code.')', $notification['subject']);
+            $notification['message'] = str_replace('!!!fund!!!', $campaign.' ('.$fund_code.')', $notification['message']);
+        }
     }
     return $notification;
 }
