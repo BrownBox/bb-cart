@@ -862,12 +862,11 @@ function bb_cart_get_checkout_form(){
                                             'id' => '2.6',
                                             'label' => 'Country',
                                             'name' => '',
-                                            'isHidden' => true,
                                     ),
                             ),
                             'description' => '',
                             'descriptionPlacement' => 'above',
-                            'addressType' => 'australia',
+                            'addressType' => 'international',
                             'defaultCountry' => 'Australia',
                             'visibility' => 'visible',
                             'conditionalLogic' => array(
