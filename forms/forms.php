@@ -963,7 +963,7 @@ function bb_cart_get_checkout_form(){
                             'label' => 'Item Types',
                             'isRequired' => false,
                             'allowsPrepopulate' => true,
-                            'inputName' => 'item_types',
+                            'inputName' => 'bb_item_types',
                             'visibility' => 'visible',
                     ),
                     array(
