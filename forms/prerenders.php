@@ -1,5 +1,6 @@
 <?php
 add_filter('gform_pre_render', 'bb_cart_setup_filters_to_populate_field');
+add_filter('gform_admin_pre_render', 'bb_cart_setup_filters_to_populate_field');
 function bb_cart_setup_filters_to_populate_field($form) {
     global $post;
     foreach ($form['fields'] as &$field) {
