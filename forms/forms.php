@@ -1081,6 +1081,24 @@ function bb_cart_get_checkout_form(){
                             'inputName' => 'bb_cart_currency',
                             'visibility' => 'hidden',
                     ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 41,
+                            'label' => 'External Reference - Contact',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_external_reference_contact',
+                            'visibility' => 'hidden',
+                    ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 42,
+                            'label' => 'External Reference - Entry',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_external_reference_entry',
+                            'visibility' => 'hidden',
+                    ),
             )
     );
     if (!$checkout_form_id || !GFAPI::form_id_exists($checkout_form_id)) { // If form doesn't exist, create it
