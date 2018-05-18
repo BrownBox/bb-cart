@@ -507,34 +507,43 @@ function bb_cart_get_checkout_form(){
                             'label' => 'Checkout Form Setup',
                             'isRequired' => false,
                             'choices' => array(
-                                    0 => array(
+                                    array(
                                             'text' => 'Show Address',
                                             'value' => 'address',
                                             'isSelected' => false,
                                     ),
-                                    1 => array(
+                                    array(
                                             'text' => 'Show Phone Number',
                                             'value' => 'phone',
                                             'isSelected' => false,
                                     ),
-                                    2 => array(
+                                    array(
                                             'text' => 'Show Company',
                                             'value' => 'company',
                                             'isSelected' => false,
                                     ),
+                                    array(
+                                            'text' => 'Show Subscribe',
+                                            'value' => 'subscribe',
+                                            'isSelected' => false,
+                                    ),
                             ),
                             'inputs' => array(
-                                    0 => array(
+                                    array(
                                             'id' => '28.1',
                                             'label' => 'show address',
                                     ),
-                                    1 => array(
+                                    array(
                                             'id' => '28.2',
                                             'label' => 'show phone',
                                     ),
-                                    2 => array(
+                                    array(
                                             'id' => '28.3',
                                             'label' => 'show company',
+                                    ),
+                                    array(
+                                            'id' => '28.4',
+                                            'label' => 'show subscribe',
                                     ),
                             ),
                             'allowsPrepopulate' => true,
@@ -899,6 +908,40 @@ function bb_cart_get_checkout_form(){
                                                     'fieldId' => '28',
                                                     'operator' => 'is',
                                                     'value' => 'phone',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'checkbox',
+                            'id' => 43,
+                            'label' => 'Subscribe',
+                            'isRequired' => false,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'Yes, please send me news and updates',
+                                            'value' => 'subscribe',
+                                            'isSelected' => true,
+                                    ),
+                            ),
+                            'inputs' => array(
+                                    0 => array(
+                                            'id' => '7.1',
+                                            'label' => 'Yes, please send me news and updates',
+                                            'name' => 'subscribe',
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_subscribe',
+                            'visibility' => 'visible',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '28',
+                                                    'operator' => 'is',
+                                                    'value' => 'subscribe',
                                             ),
                                     ),
                             ),

@@ -23,6 +23,7 @@ class BB_Cart {
             'address',
             'phone',
             'company',
+            'subscribe',
     );
 
     /**
