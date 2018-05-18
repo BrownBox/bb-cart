@@ -214,6 +214,11 @@ class bb_cart_export {
                             'value' => '',
                             'compare' => '!=',
                     );
+                    $meta_query[] = array(
+                            'key' => 'subscription_id',
+                            'value' => '',
+                            'compare' => '!=',
+                    );
                     break;
                 case 'offline_receipted':
                     $meta_query[] = array(
@@ -224,6 +229,17 @@ class bb_cart_export {
                                     ),
                                     array(
                                             'key' => 'gf_entry_id',
+                                            'compare' => 'NOT EXISTS',
+                                    ),
+                                    'relation' => 'OR',
+                            ),
+                            array(
+                                    array(
+                                            'key' => 'subscription_id',
+                                            'value' => '',
+                                    ),
+                                    array(
+                                            'key' => 'subscription_id',
                                             'compare' => 'NOT EXISTS',
                                     ),
                                     'relation' => 'OR',
@@ -244,6 +260,17 @@ class bb_cart_export {
                                     ),
                                     array(
                                             'key' => 'gf_entry_id',
+                                            'compare' => 'NOT EXISTS',
+                                    ),
+                                    'relation' => 'OR',
+                            ),
+                            array(
+                                    array(
+                                            'key' => 'subscription_id',
+                                            'value' => '',
+                                    ),
+                                    array(
+                                            'key' => 'subscription_id',
                                             'compare' => 'NOT EXISTS',
                                     ),
                                     'relation' => 'OR',
