@@ -29,6 +29,7 @@ require_once(BB_CART_DIR.'admin/export.php');
 require_once(BB_CART_DIR.'admin/fund-code-report.php');
 require_once(BB_CART_DIR.'admin/batch-management.php');
 require_once(BB_CART_DIR.'admin/donor-history.php');
+require_once(BB_CART_DIR.'admin/offline-email-receipts.php');
 // require_once(BB_CART_DIR.'demo/config.class.php');
 
 require_once(BB_CART_DIR.'admin/updates.php');
@@ -843,7 +844,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             update_post_meta($transaction_id, 'total_amount', $total_amount);
             update_post_meta($transaction_id, 'cart', serialize($_SESSION[BB_CART_SESSION_ITEM]));
             update_post_meta($transaction_id, 'payment_method', $payment_method);
-            update_post_meta($transaction_id, 'is_receipted', true);
+            update_post_meta($transaction_id, 'is_receipted', 'true');
 
             if (isset($deductible)) {
                 update_post_meta($transaction_id, 'is_tax_deductible', (string)$deductible);

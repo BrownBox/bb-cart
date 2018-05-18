@@ -24,6 +24,8 @@ class bb_cart_batch_management {
                         $this->delete_batches($_GET['batch']);
                         echo '<div class="notice notice-success"><p>Deleted successfully.</p></div>';
                         break;
+                    case 'email_receipts':
+                        $this->email_receipts($_GET['batch']);
                     case 'edit':
                         return $this->edit_batch_page($clean_url);
                         break;
@@ -197,6 +199,7 @@ class bb_cart_batch_management {
             return;
         }
         echo '<div class="wrap">'."\n";
+        echo '<p style="float: right;"><a href="'.add_query_arg(array('action' => 'email_receipts')).'" class="button" onclick="return confirm(\'This will email receipts for all transactions in this batch which have not yet been receipted and where the donor has a valid email address. Are you sure you wish to continue?\');">Email Receipts</a></p>'."\n";
         echo '<h2>Batch Details: '.$batch->post_title.'</h2>'."\n";
         $transactions = $this->get_batch_transactions($batch_id);
         echo '    <table class="wp-list-table widefat fixed striped action_items">'."\n";
@@ -205,6 +208,7 @@ class bb_cart_batch_management {
         echo '                <th style="" class="manage-column column-author column-primary" id="author" scope="col">Donor Name</th>'."\n";
         echo '                <th style="" class="manage-column" id="fundcode" scope="col">Fund Code</th>'."\n";
         echo '                <th style="" class="manage-column" id="comments" scope="col">Description</th>'."\n";
+        echo '                <th style="text-align: center;" class="manage-column" id="receipted" scope="col">Receipted</th>'."\n";
         echo '                <th style="text-align: right;" class="manage-column" id="amount" scope="col">Amount</th>'."\n";
         echo '            </tr>'."\n";
         echo '        </thead>'."\n";
@@ -212,6 +216,7 @@ class bb_cart_batch_management {
         $total = 0;
         foreach ($transactions as $transaction) {
             $author = new WP_User($transaction->post_author);
+            $receipted = get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
             $args = array(
                     'post_type' => 'transactionlineitem',
                     'posts_per_page' => -1,
@@ -254,6 +259,7 @@ class bb_cart_batch_management {
                     echo '                </td>'."\n";
                     echo '                <td class="">'.$fund_code.'</td>'."\n";
                     echo '                <td class="">'.apply_filters('the_content', $line_item->post_content).'</td>'."\n";
+                    echo '                <td style="text-align: center;">'.$receipted.'</td>'."\n";
                     echo '                <td style="text-align: right;">$'.number_format($amount, 2).'</td>'."\n";
                     echo '            </tr>'."\n";
                 }
@@ -262,7 +268,7 @@ class bb_cart_batch_management {
         echo '        </tbody>'."\n";
         echo '        <tfoot>'."\n";
         echo '            <tr>'."\n";
-        echo '                <th colspan="4" style="text-align: right;" class="manage-column" id="amount" scope="col"><span style="border-top: 1px solid black;">Total: $'.number_format($total, 2).'</span></th>'."\n";
+        echo '                <th colspan="5" style="text-align: right;" class="manage-column" id="amount" scope="col"><span style="border-top: 1px solid black;">Total: $'.number_format($total, 2).'</span></th>'."\n";
         echo '            </tr>'."\n";
         echo '        </tfoot>'."\n";
         echo '    </table>'."\n";
@@ -348,6 +354,19 @@ class bb_cart_batch_management {
             }
             wp_trash_post($batch_id);
         }
+    }
+
+    private function email_receipts($batch_id) {
+        $transactions = $this->get_batch_transactions($batch_id);
+        $count = 0;
+        foreach ($transactions as $transaction) {
+            if (get_post_meta($transaction->ID, 'is_receipted', true) != 'true') {
+                if (bb_cart_offline_email_receipts::send_email_receipt($transaction)) {
+                    $count++;
+                }
+            }
+        }
+        echo '<div class="notice notice-success"><p>'.$count.' emails sent.</p></div>';
     }
 
     private function get_batch_transactions($batch_id) {
