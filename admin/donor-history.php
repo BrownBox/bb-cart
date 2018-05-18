@@ -20,11 +20,13 @@ function bb_cart_donor_history_profile_tab() {
     echo '                <th style="" class="manage-column" id="fundcode" scope="col">Fund Code</th>'."\n";
     echo '                <th style="" class="manage-column" id="comments" scope="col">Description</th>'."\n";
     echo '                <th style="text-align: right;" class="manage-column" id="amount" scope="col">Amount</th>'."\n";
+    echo '                <th style="text-align: center;" class="manage-column" id="tax_deductible" scope="col">Tax Deductible</th>'."\n";
     echo '            </tr>'."\n";
     echo '        </thead>'."\n";
     echo '        <tbody id="the-list">'."\n";
     foreach ($transactions as $transaction) {
         $author = new WP_User($transaction->post_author);
+        $deductible = get_post_meta($transaction->ID, 'is_tax_deductible', true) == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
         $args = array(
                 'post_type' => 'transactionlineitem',
                 'posts_per_page' => -1,
@@ -55,6 +57,7 @@ function bb_cart_donor_history_profile_tab() {
                 echo '                <td class="">'.$fund_code.'</td>'."\n";
                 echo '                <td class="">'.apply_filters('the_content', $line_item->post_content).'</td>'."\n";
                 echo '                <td style="text-align: right;">$'.number_format($amount, 2).'</td>'."\n";
+                echo '                <td style="text-align: center;">'.$deductible.'</td>'."\n";
                 echo '            </tr>'."\n";
             }
         }
