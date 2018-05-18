@@ -2,7 +2,7 @@
 add_action('admin_menu', 'bb_cart_pledges_menu');
 function bb_cart_pledges_menu() {
     //create new top-level menu
-    add_submenu_page('bb_cart_settings', 'Pledges', 'Pledges', 'administrator', 'bb_cart_pledges', 'bb_cart_pledges');
+    add_submenu_page('bb_cart_settings', 'Pledges', 'Pledges', 'manage_options', 'bb_cart_pledges', 'bb_cart_pledges');
 }
 
 function bb_cart_pledges() {
