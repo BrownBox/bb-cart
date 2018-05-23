@@ -454,15 +454,6 @@ function bb_cart_get_donate_form(){
                             'cssClass' => 'horizontal hide',
                             'inputName' => 'bb_cart_payment_method',
                     ),
-                    array(
-                            'type' => 'hidden',
-                            'id' => 22,
-                            'label' => 'Page ID',
-                            'isRequired' => false,
-                            'allowsPrepopulate' => true,
-                            'inputName' => 'page_id',
-                            'visibility' => 'hidden',
-                    ),
             ),
     );
 

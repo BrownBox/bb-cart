@@ -35,8 +35,6 @@ function bb_cart_setup_filters_to_populate_field($form) {
             }
         } elseif ($field->inputName == 'payment_method') {
             $field->choices = apply_filters('bb_cart_checkout_payment_method_choices', $field->choices, $form, $field);
-        } elseif ($field->inputName == 'page_id') {
-            $field->defaultValue = $post->ID;
         }
     }
     return $form;

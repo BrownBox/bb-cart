@@ -529,7 +529,8 @@ function bb_cart_check_for_cart_additions($entry, $form){
     $section = 'donations';
     $transaction_type = 'donation';
     $deductible = false;
-    $campaign = $post->ID;
+    $page_id = $post->ID;
+    $campaign = null;
     $quantity = 1;
     $variations = array();
     $sku = $donation_target = $fund_code = '';
@@ -560,8 +561,8 @@ function bb_cart_check_for_cart_additions($entry, $form){
                 $campaign = $entry[$field['id']];
             } elseif ($field['inputName'] == 'bb_cart_purchase_type' && !empty($entry[$field['id']])) {
                 $section = $entry[$field['id']];
-            } elseif ($field['inputName'] == 'page_id') {
-                $campaign = $entry[$field['id']];
+            } elseif ($field['inputName'] == 'bb_cart_page_id') {
+                $page_id = $entry[$field['id']];
             } elseif ($field['inputName'] == 'donation_target') {
                 $donation_for = $entry[$field['id']];
             } elseif ($field['inputName'] == 'bb_cart_currency') {
@@ -636,6 +637,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
                             'form_id' => $form['id'],
                             'entry_id' => $entry['id'],
                             'frequency' => $frequency,
+                            'page_id' => $page_id,
                             'campaign' => $campaign,
                             'fund_code' => $fund_code,
                             'deductible' => $deductible,
