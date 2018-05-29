@@ -10,11 +10,23 @@ class bb_cart_offline_email_receipts {
             '{{fund_code}}',
     );
 
+    var $demo_content = array();
+
     public function __construct() {
         if (is_admin()) {
             add_action('admin_menu', array($this, 'add_plugin_page'), 15);
             add_action('admin_init', array($this, 'init'));
         }
+        $current_user = wp_get_current_user();
+        $this->demo_content = array(
+                '{{today_date}}' => current_time(get_option('date_format')),
+                '{{transaction_date}}' => current_time(get_option('date_format')),
+                '{{donor_name}}' => $current_user->display_name,
+                '{{donor_address}}' => '123 A Street<br>City State 9999<br>Country',
+                '{{donor_id}}' => '1234',
+                '{{transaction_amount}}' => '123.45',
+                '{{fund_code}}' => 'Where Most Needed',
+        );
     }
 
     public function add_plugin_page() {
@@ -40,9 +52,24 @@ class bb_cart_offline_email_receipts {
     }
 
     public function create_admin_page() {
-?>
+        $user_email = wp_get_current_user()->user_email;
+        if ($_GET['test_email'] == 'true') {
+            $subject = str_replace(array_keys($this->demo_content), $this->demo_content, get_option('bb_cart_offline_receipt_subject'));
+            $message = str_replace(array_keys($this->demo_content), $this->demo_content, get_option('bb_cart_offline_receipt_template'));
+            $headers = array(
+                    'From: '.get_option('bb_cart_offline_receipt_sender_name').' <'.get_option('bb_cart_offline_receipt_sender_email').'>',
+                    'Content-Type: text/html; charset=UTF-8',
+            );
+            if (wp_mail($user_email, $subject, wpautop($message), $headers)) {
+                echo '<div class="notice notice-success"><p>Test email sent successfully.</p></div>';
+            } else {
+                echo '<div class="notice notice-error"><p>Test email sending failed.</p></div>';
+            }
+        }
+        ?>
 <div class="wrap">
     <h2>Offline Email Receipts</h2>
+    <p><a href="<?php echo add_query_arg('test_email', 'true'); ?>" class="button-primary" onclick="return confirm('Send sample receipt email to <?php echo $user_email; ?> now? Please ensure you have saved your changes first.');">Send Test Email</a></p>
     <form method="post" action="options.php">
 <?php
     settings_fields('bb-cart-offline-receipt-settings-group');
@@ -180,4 +207,5 @@ EOR;
         return str_replace($merge_tag, $replace, $content);
     }
 }
-new bb_cart_offline_email_receipts();
+
+add_action('init', function() {new bb_cart_offline_email_receipts();});
