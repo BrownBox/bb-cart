@@ -475,6 +475,7 @@ function bb_cart_get_checkout_form(){
             'description' => 'Version 1.0',
             'labelPlacement' => 'top_label',
             'descriptionPlacement' => 'below',
+            'subLabelPlacement' => 'above',
             'is_active' => true,
             'cssClass' => 'bb_cart_checkout bb-processing',
             'button' =>  array(
