@@ -115,6 +115,7 @@ class bb_cart_export {
                 array(
                         'Date',
                         'Donor ID',
+                        'Receipt Number',
                         'First Name',
                         'Last Name',
                         'Address Line 1',
@@ -149,6 +150,7 @@ class bb_cart_export {
                 $csv[] = array(
                         'Date' => $transaction->post_date,
                         'Donor ID' => $user->ID,
+                        'Receipt Number' => $transaction->ID,
                         'First Name' => $first_name,
                         'Last Name' => $last_name,
                         'Address Line 1' => $user_meta['bbconnect_address_one_1'][0],

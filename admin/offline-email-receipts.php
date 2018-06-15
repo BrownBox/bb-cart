@@ -8,6 +8,7 @@ class bb_cart_offline_email_receipts {
             '{{donor_id}}',
             '{{transaction_amount}}',
             '{{fund_code}}',
+            '{{receipt_number}}',
     );
 
     var $demo_content = array();
@@ -26,6 +27,7 @@ class bb_cart_offline_email_receipts {
                 '{{donor_id}}' => '1234',
                 '{{transaction_amount}}' => '123.45',
                 '{{fund_code}}' => 'Where Most Needed',
+                '{{receipt_number}}' => '98765',
         );
     }
 
@@ -202,6 +204,9 @@ EOR;
                 } else {
                     $replace = $fund_codes[0];
                 }
+                break;
+            case '{{receipt_number}}':
+                $replace = $transaction->ID;
                 break;
         }
         return str_replace($merge_tag, $replace, $content);
