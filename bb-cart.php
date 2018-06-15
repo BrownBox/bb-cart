@@ -190,24 +190,13 @@ function bb_cart_remove_item_from_cart() {
 }
 
 // THIS IS OUR FUNCTION FOR CLEANING UP THE PRICING AMOUNTS THAT GF SPITS OUT
-function bb_cart_clean_amount($entry) {
-    $entry = preg_replace("/\|(.*)/", '',$entry); // replace everything from the pipe symbol forward
-    if (strpos($entry,'.') === false) {
-        $entry .= ".00";
+function bb_cart_clean_amount($amount, $currency_code = null) {
+    $amount = preg_replace("/\|(.*)/", '', $amount); // Replace everything from the pipe symbol forward
+    if (is_null($currency_code)) {
+        $currency_code = bb_cart_get_default_currency();
     }
-    if (strpos($entry,'$') !== false) {
-        $startsAt = strpos($entry, "$") + strlen("$");
-        $endsAt=strlen($entry);
-        $amount = substr($entry, 0, $endsAt);
-        $amount = preg_replace("/[^0-9,.]/", "", $amount);
-    } else {
-        $amount = preg_replace("/[^0-9,.]/", "", $entry);
-        $amount = sprintf("%.2f", $amount);
-    }
-
-    $amount = str_replace('.', '', $amount);
-    $amount = str_replace(',', '', $amount);
-    return $amount;
+    $currency = new RGCurrency($currency_code);
+    return $currency->to_number($amount)*100;
 }
 
 // WE NEED TO ADD THE OPTION TO GRAVITY FORMS SETTINGS TO SELECT WHICH FORMS WILL ADD ITEMS TO THE CART
@@ -599,7 +588,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
             if (!empty($amount)) {
                 // now we can add products to our session
                 // only problem is that the 'price' field is a joke in GF so many different formats.. so we need to clean that
-                $clean_price = bb_cart_clean_amount($amount); // this will now be the correctly formatted amount in cents
+                $clean_price = bb_cart_clean_amount($amount, $currency); // this will now be the correctly formatted amount in cents
                 if ($clean_price>0) {
                     if ($label == '') {
                         if (is_numeric($campaign)) {
