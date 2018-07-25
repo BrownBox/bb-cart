@@ -14,8 +14,8 @@ function bb_cart_setup_filters_to_populate_field($form) {
             $field->choices = apply_filters('bb_cart_interval_choices', $field->choices, $form, $field);
         } elseif ($field->inputName == 'bb_cart_donation_member') {
             $field->choices = apply_filters('bb_cart_donation_member_choices', $field->choices, $form, $field);
-            if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices) && isset(Brownbox\Config\BB_Cart::$donation_for_choices['member'])) {
-                $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['member'];
+            if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices) && isset(Brownbox\Config\BB_Cart::$donation_for_choices['sponsorship'])) {
+                $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['sponsorship'];
             }
         } elseif ($field->inputName == 'bb_cart_donation_campaign') {
             $field->choices = apply_filters('bb_cart_donation_campaign_choices', $field->choices, $form, $field);
@@ -233,10 +233,11 @@ function bb_cart_populate_donation_member_choices($choices, $form, $field){
 add_filter('bb_cart_donation_campaign_choices', 'bb_cart_populate_donation_campaign_choices', 1, 3);
 function bb_cart_populate_donation_campaign_choices($choices, $form, $field) {
     if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$project)) {
+        global $post;
         $choices = array(
                 array(
                         'text' => '-- Please select --',
-                        'value' => ''
+                        'value' => '',
                 ),
         );
         $project_args = array(
@@ -244,12 +245,10 @@ function bb_cart_populate_donation_campaign_choices($choices, $form, $field) {
                 'post_status' => 'publish',
                 'posts_per_page' => -1,
                 'orderby' => 'title',
-                'order' => 'ASC'
+                'order' => 'ASC',
         );
-
         $projects = get_posts($project_args);
 
-        global $post;
         foreach ($projects as $project) {
             $label = $project->post_title;
             $campaign_id = $project->ID;
