@@ -1088,7 +1088,6 @@ function bb_cart_transaction_exists(array $data) {
                         ),
                 );
                 $line_items = get_posts($line_args);
-                echo '<pre>'; var_dump($line_args, $line_items); echo '</pre>';
                 if (count($line_items) > 0) {
                     // Matching transaction and line item found
                     return true;
@@ -1196,7 +1195,7 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
     return $query_string;
 }
 
-add_action('gform_paypal_post_ipn', 'bb_maf_sf_complete_paypal_transaction', 10, 4);
+add_action('gform_paypal_post_ipn', 'bb_cart_complete_paypal_transaction', 10, 4);
 function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) {
     $now = date('Y-m-d H:i:s');
     $transaction = bb_cart_get_transaction_from_entry($entry['id']);
