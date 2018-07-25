@@ -619,7 +619,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
                     }
 
                     global $blog_id;
-                    $_SESSION[BB_CART_SESSION_ITEM][$section][] = array(
+                    $cart_item = array(
                             'label' => $label,
                             'currency' => $currency,
                             'price' => $clean_price,
@@ -639,6 +639,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
                             'target' => $donation_target,
                             'donation_for' => $donation_for,
                     );
+                    $_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section);
                 }
             }
             $quantity = $old_quantity;
