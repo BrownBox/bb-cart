@@ -519,7 +519,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
     $transaction_type = 'donation';
     $deductible = false;
     $page_id = $post->ID;
-    $campaign = null;
+    $campaign = $post->ID;
     $quantity = 1;
     $variations = array();
     $sku = $donation_target = $fund_code = '';
