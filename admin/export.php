@@ -205,96 +205,71 @@ class bb_cart_export {
                 ),
         );
 
-        $meta_query = array(
-                'relation' => 'OR',
-        );
-        foreach ($search['input_filters'] as $filter) {
-            switch ($filter) {
-                case 'online':
-                    $meta_query[] = array(
-                            'key' => 'gf_entry_id',
-                            'value' => '',
-                            'compare' => '!=',
-                    );
-                    $meta_query[] = array(
-                            'key' => 'subscription_id',
-                            'value' => '',
-                            'compare' => '!=',
-                    );
-                    break;
-                case 'offline_receipted':
-                    $meta_query[] = array(
-                            array(
-                                    array(
-                                            'key' => 'gf_entry_id',
-                                            'value' => '',
-                                    ),
-                                    array(
-                                            'key' => 'gf_entry_id',
-                                            'compare' => 'NOT EXISTS',
-                                    ),
-                                    'relation' => 'OR',
-                            ),
-                            array(
-                                    array(
-                                            'key' => 'subscription_id',
-                                            'value' => '',
-                                    ),
-                                    array(
-                                            'key' => 'subscription_id',
-                                            'compare' => 'NOT EXISTS',
-                                    ),
-                                    'relation' => 'OR',
-                            ),
-                            array(
-                                    'key' => 'is_receipted',
-                                    'value' => 'true',
-                            ),
-                            'relation' => 'AND',
-                    );
-                    break;
-                case 'offline_unreceipted':
-                    $meta_query[] = array(
-                            array(
-                                    array(
-                                            'key' => 'gf_entry_id',
-                                            'value' => '',
-                                    ),
-                                    array(
-                                            'key' => 'gf_entry_id',
-                                            'compare' => 'NOT EXISTS',
-                                    ),
-                                    'relation' => 'OR',
-                            ),
-                            array(
-                                    array(
-                                            'key' => 'subscription_id',
-                                            'value' => '',
-                                    ),
-                                    array(
-                                            'key' => 'subscription_id',
-                                            'compare' => 'NOT EXISTS',
-                                    ),
-                                    'relation' => 'OR',
-                            ),
-                            array(
-                                    array(
-                                            'key' => 'is_receipted',
-                                            'value' => 'true',
-                                            'compare' => '!=',
-                                    ),
-                                    array(
-                                            'key' => 'is_receipted',
-                                            'compare' => 'NOT EXISTS',
-                                    ),
-                                    'relation' => 'OR',
-                            ),
-                            'relation' => 'AND',
-                    );
-                    break;
+        if (count($search['input_filters']) < 3) { // If all 3 options are selected we don't need to worry about meta queries
+            $meta_query = array(
+            'relation' => 'OR',
+            );
+            if (in_array('online', $search['input_filters'])) {
+                $meta_query[] = array(
+                        'key' => 'gf_entry_id',
+                        'value' => '',
+                        'compare' => '!=',
+                );
+                $meta_query[] = array(
+                        'key' => 'subscription_id',
+                        'value' => '',
+                        'compare' => '!=',
+                );
             }
+            if (in_array('offline_receipted', $search['input_filters']) || in_array('offline_unreceipted', $search['input_filters'])) {
+                $offline_query = array(
+                        'relation' => 'AND',
+                        array(
+                                array(
+                                        'key' => 'gf_entry_id',
+                                        'value' => '',
+                                ),
+                                array(
+                                        'key' => 'gf_entry_id',
+                                        'compare' => 'NOT EXISTS',
+                                ),
+                                'relation' => 'OR',
+                        ),
+                        array(
+                                array(
+                                        'key' => 'subscription_id',
+                                        'value' => '',
+                                ),
+                                array(
+                                        'key' => 'subscription_id',
+                                        'compare' => 'NOT EXISTS',
+                                ),
+                                'relation' => 'OR',
+                        ),
+                );
+                if (!in_array('offline_unreceipted', $search['input_filters'])) { // Only receipted
+                    $offline_query[] = array(
+                    'key' => 'is_receipted',
+                    'value' => 'true',
+                    );
+                } elseif (!in_array('offline_receipted', $search['input_filters'])) { // Only unreceipted
+                    $offline_query[] = array(
+                    array(
+                    'key' => 'is_receipted',
+                    'value' => 'true',
+                    'compare' => '!=',
+                    ),
+                    array(
+                    'key' => 'is_receipted',
+                    'compare' => 'NOT EXISTS',
+                    ),
+                    'relation' => 'OR',
+                    );
+                }
+                $meta_query[] = $offline_query;
+            }
+            $args['meta_query'] = $meta_query;
         }
-        $args['meta_query'] = $meta_query;
 
         return get_posts($args);
     }
