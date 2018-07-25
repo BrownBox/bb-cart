@@ -218,7 +218,7 @@ class bb_cart_import {
             if (!empty($data['Name'])) {
                 $args['meta_query'][] = array(
                         'key' => 'first_name',
-                        'value' => $data['Name'],
+                        'value' => wp_filter_kses($data['Name']),
                 );
             }
             if (!empty($data['Surname'])) {
@@ -230,7 +230,7 @@ class bb_cart_import {
             if (!empty($data['Organization'])) {
                 $args['meta_query'][] = array(
                         'key' => 'organization',
-                        'value' => $data['Organization'],
+                        'value' => wp_filter_kses($data['Organization']),
                 );
             }
             $users = get_users($args);
@@ -301,7 +301,10 @@ class bb_cart_import {
             );
 
             // Insert the post into the database
-            $transaction_id = wp_insert_post($transaction);
+            $transaction_id = wp_insert_post($transaction, true);
+            if (is_wp_error($transaction_id)) {
+                return 'Error adding transaction: '.$transaction_id->get_error_message();
+            }
 
             $fund_code = get_term_by('name', $data['Source'], 'fundcode');
             if (!$fund_code) {
