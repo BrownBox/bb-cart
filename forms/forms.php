@@ -1,5 +1,8 @@
 <?php
-function bb_cart_get_donate_form(){
+function bb_cart_get_donate_form() {
+    // Sometimes GF doesn't load all the files we need automatically...
+    require_once(GFCommon::get_base_path().'/currency.php');
+
     $donate_form_id = get_option('bb_cart_donate_form_id');
     $donate_form = array(
             'title' => '[BB Cart] Donations',
