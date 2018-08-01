@@ -1393,7 +1393,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                     foreach ($items as $idx => $item) {
                         $html .= '<tr>'."\n";
                         $label = $item['label'];
-                        if ($item['quantity'] > 1) {
+                        if ($item['quantity'] > 1 || $section != 'donations') {
                             $label = $item['quantity'].'x '.$label;
                         }
                         $html .= '<td>'.$label.'</td>'."\n";
