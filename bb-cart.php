@@ -665,7 +665,8 @@ function bb_cart_add_from_querystring() {
                 $deductible = $fund_code_deductible == 'true';
                 $transaction_type = get_post_meta($fund_code_post->ID, 'transaction_type', true);
             }
-            $_SESSION[BB_CART_SESSION_ITEM]['donations'][] = array(
+            $section = 'donations';
+            $cart_item = array(
                     'label' => 'My Donation',
                     'currency' =>  bb_cart_get_default_currency(),
                     'price' => $price,
@@ -677,6 +678,7 @@ function bb_cart_add_from_querystring() {
                     'quantity' => 1,
                     'sku' => $_GET['sku'],
             );
+            $_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section);
         }
         wp_redirect(remove_query_arg(array('add_to_cart', 'sku', 'frequency')));
         exit;
