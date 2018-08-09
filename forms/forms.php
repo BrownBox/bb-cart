@@ -32,22 +32,22 @@ function bb_cart_get_donate_form() {
                             'label' => 'Form Setup',
                             'isRequired' => false,
                             'choices' => array(
-                                    0 => array(
+                                    array(
                                             'text' => 'Simple Giving',
                                             'value' => 'simple giving',
                                             'isSelected' => true,
                                     ),
-                                    1 => array(
+                                    array(
                                             'text' => 'Peer to Peer Campaign',
                                             'value' => 'peer to peer campaign',
                                             'isSelected' => false,
                                     ),
-                                    2 => array(
+                                    array(
                                             'text' => 'Supporting Message',
                                             'value' => 'supporting message',
                                             'isSelected' => false,
                                     ),
-                                    3 => array(
+                                    array(
                                             'text' => 'Donation Target',
                                             'value' => 'donation target',
                                             'isSelected' => false,
@@ -277,6 +277,7 @@ function bb_cart_get_donate_form() {
                                     )
                             ),
                             'inputName' => 'bb_donation_amounts',
+                            'enableOtherChoice' => true,
                             'field_bb_click_array_other_label' => 'My Best Gift',
                             'field_bb_click_array_is_product' => true,
                     ),
@@ -475,7 +476,7 @@ function bb_cart_get_checkout_form(){
     $checkout_form_id = get_option('bb_cart_checkout_form_id');
     $checkout_form = array(
             'title' => '[BB Cart] Checkout',
-            'description' => 'Version 1.0',
+            'description' => 'Version '.BB_CART_VERSION,
             'labelPlacement' => 'top_label',
             'descriptionPlacement' => 'below',
             'subLabelPlacement' => 'above',
@@ -522,6 +523,11 @@ function bb_cart_get_checkout_form(){
                                             'value' => 'subscribe',
                                             'isSelected' => false,
                                     ),
+                                    array(
+                                            'text' => 'Offer Scheduled Payments (Bank Deposit only)',
+                                            'value' => 'schedule payment',
+                                            'isSelected' => false,
+                                    ),
                             ),
                             'inputs' => array(
                                     array(
@@ -539,6 +545,10 @@ function bb_cart_get_checkout_form(){
                                     array(
                                             'id' => '28.4',
                                             'label' => 'show subscribe',
+                                    ),
+                                    array(
+                                            'id' => '28.5',
+                                            'label' => 'schedule payments',
                                     ),
                             ),
                             'allowsPrepopulate' => true,
@@ -560,19 +570,24 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => true,
                             'inputs' => NULL,
                             'choices' => array(
-                                    0 =>  array(
+                                    array(
                                             'text' => 'Pay with Credit Card',
                                             'value' => 'Credit Card',
                                             'isSelected' => true,
                                     ),
-                                    1 =>  array(
+                                    array(
                                             'text' => 'Pay with Direct Debit',
                                             'value' => 'Direct Debit',
                                             'isSelected' => false,
                                     ),
-                                    2 =>  array(
+                                    array(
                                             'text' => 'Pay with PayPal',
                                             'value' => 'PayPal',
+                                            'isSelected' => false,
+                                    ),
+                                    array(
+                                            'text' => 'Bank Deposit',
+                                            'value' => 'Bank Deposit',
                                             'isSelected' => false,
                                     ),
                             ),
@@ -719,6 +734,92 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => false,
                             'content' => '<img src="'.BB_CART_URL.'assets/images/trusted-site-seal.png" alt="This site is secured by Comodo for your protection">',
                             'visibility' => 'visible',
+                    ),
+                    array(
+                            'type' => 'html',
+                            'id' => 44,
+                            'label' => 'Pledge Instructions',
+                            'isRequired' => false,
+                            'visibility' => 'visible',
+                            'conditionalLogic' =>  array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 =>  array(
+                                                    'fieldId' => '12',
+                                                    'operator' => 'is',
+                                                    'value' => 'Bank Deposit',
+                                            ),
+                                    ),
+                            ),
+                            'content' => 'Thank you for pledging to support %%sitename%%. Please complete the form below so that we can send you our bank account details and thank you for your generosity.
+Your details will also allow us to give you a personal reference number to include with your payment so that we can make sure your gift gets to %%donation_for%%.',
+                    ),
+                    array(
+                            'type' => 'checkbox',
+                            'id' => 45,
+                            'label' => '',
+                            'isRequired' => false,
+                            'cssClass' => 'schedule_payment',
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'Schedule my payment',
+                                            'value' => 'schedule_payment',
+                                            'isSelected' => false,
+                                    ),
+                            ),
+                            'inputs' => array(
+                                    0 => array(
+                                            'id' => '45.1',
+                                            'label' => 'Schedule my payment',
+                                            'name' => '',
+                                    ),
+                            ),
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            array(
+                                                    'fieldId' => '28',
+                                                    'operator' => 'is',
+                                                    'value' => 'schedule payment',
+                                            ),
+                                            array(
+                                                    'fieldId' => '22',
+                                                    'operator' => 'isnot',
+                                                    'value' => 'one-off',
+                                            ),
+                                            array(
+                                                    'fieldId' => '12',
+                                                    'operator' => 'isnot',
+                                                    'value' => 'Bank Deposit',
+                                            ),
+                                    ),
+                            ),
+
+                    ),
+                    array(
+                            'id' => 46,
+                            'type' => 'date',
+                            'label' => 'Payment Date',
+                            'dateType' => 'datepicker',
+                            'calendarIconType' => 'calendar',
+                            'dateFormat' => 'dmy',
+                            'cssClass' => 'payment_date',
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'payment_date',
+                            'isRequired' => false,
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'any',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '45',
+                                                    'operator' => 'is',
+                                                    'value' => 'schedule_payment',
+                                            ),
+                                    ),
+                            ),
                     ),
                     array(
                             'type' => 'section',
