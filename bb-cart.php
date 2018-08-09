@@ -769,14 +769,22 @@ function bb_cart_post_purchase_actions($entry, $form){
             foreach ($form['fields'] as $field) {
                 if ($field['type'] == 'email') {
                     $email_field_id = $field['id'];
-                } else if ($field['uniquenameField'] == 'firstname') {
-                    $firstname_field_id = $field['id'];
-                } else if ($field['uniquenameField'] == 'lastname') {
-                    $lastname_field_id = $field['id'];
-                } else if($field['type']== 'date' && !empty($entry[$field['id']])) {
+                } elseif ($field->type == 'name') {
+                    foreach ($field->inputs as $input) {
+                        if ($input['id'] == $field->id.'.3') {
+                            $firstname = $entry[(string)$input['id']];
+                        } elseif ($input['id'] == $field->id.'.6') {
+                            $lastname = $entry[(string)$input['id']];
+                        }
+                    }
+                } elseif ($field['uniquenameField'] == 'firstname') {
+                    $firstname = $entry[$field['id']];
+                } elseif ($field['uniquenameField'] == 'lastname') {
+                    $lastname = $entry[$field['id']];
+                } elseif ($field['type']== 'date' && !empty($entry[$field['id']])) {
                     $transaction_date = $entry[$field['id']];
                     $transaction_date = date('Y-m-d', strtotime($transaction_date));
-                } else if ($field->inputName == 'payment_method') {
+                } elseif ($field->inputName == 'payment_method') {
                     $payment_method = $entry[$field->id];
                 }
             }
@@ -798,8 +806,33 @@ function bb_cart_post_purchase_actions($entry, $form){
             }
 
             if (!empty($author_id)) {
-                $firstname = get_user_meta($author_id, 'first_name', true);
-                $lastname = get_user_meta($author_id, 'last_name', true);
+                if (empty($firstname)) {
+                    $firstname = get_user_meta($author_id, 'first_name', true);
+                }
+                if (empty($lastname)) {
+                    $lastname = get_user_meta($author_id, 'last_name', true);
+                }
+            } else {
+                if (empty($firstname)) {
+                    $firstname = 'Unknown';
+                }
+                if (empty($lastname)) {
+                    $lastname = 'Unknown';
+                }
+                $userdata = array(
+                        'user_login' => $email,
+                        'user_nicename' => $firstname.' '.$lastname,
+                        'display_name' => $firstname.' '.$lastname,
+                        'user_email' => $email,
+                        'first_name' => $firstname,
+                        'nickname' => $firstname,
+                        'last_name' => $lastname,
+                        'role' => 'subscriber',
+                );
+                $author_id = wp_insert_user($userdata);
+                if (is_wp_error($author_id)) {
+                    unset($author_id);
+                }
             }
 
             if ($payment_method == 'Credit Card') {

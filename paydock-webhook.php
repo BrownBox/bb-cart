@@ -29,7 +29,29 @@ switch($data['event']) {
             $amount = $data['data']['amount'];
             $email = $data['data']['customer']['email'];
             $currency = $data['data']['currency'];
-            $user = get_user_by('email', $email);
+            if (email_exists($email)) {
+                $user = get_user_by('email', $email);
+                $author_id = $user->ID;
+                $firstname = get_user_meta($author_id, 'first_name', true);
+                $lastname = get_user_meta($author_id, 'last_name', true);
+            } else {
+                $firstname = $data['data']['customer']['first_name'];
+                $lastname = $data['data']['customer']['last_name'];
+                $userdata = array(
+                        'user_login' => $email,
+                        'user_nicename' => $firstname.' '.$lastname,
+                        'display_name' => $firstname.' '.$lastname,
+                        'user_email' => $email,
+                        'first_name' => $firstname,
+                        'nickname' => $firstname,
+                        'last_name' => $lastname,
+                        'role' => 'subscriber',
+                );
+                $author_id = wp_insert_user($userdata);
+                if (is_wp_error($author_id)) {
+                    unset($author_id);
+                }
+            }
 
             $transaction_check = array(
                     'date' => $data['data']['transactions'][0]['created_at'],
@@ -37,12 +59,6 @@ switch($data['event']) {
                     'user' => $user,
             );
             if (!bb_cart_transaction_exists($transaction_check)) {
-                // Contact details
-                $author_id = $user->ID;
-                $firstname = get_user_meta($author_id, 'first_name', true);
-                $lastname = get_user_meta($author_id, 'last_name', true);
-
-                // Other details
                 $frequency = 'recurring';
 
                 // Create transaction record
