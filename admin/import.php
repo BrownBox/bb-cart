@@ -197,15 +197,22 @@ class bb_cart_import {
         }
         if (empty($data['Email'])) {
             $email = preg_replace('/[^0-9a-z_-]/i', '', $data['Name'].'_'.$data['Surname'].'_');
-            if (!empty($data['ID'])) {
-                $email .= $data['ID'];
+            if (!empty($data['External ID'])) {
+                $email .= $data['External ID'];
             } else {
                 $email .= wp_generate_password(6, false);
             }
             $email .= '@example.com';
             $data['Email'] = strtolower($email);
         }
-        $user = get_user_by('email', $data['Email']);
+
+        // Attempt to locate user
+        if (!empty($data['ID'])) {
+            $user = get_user_by('id', $data['ID']);
+        }
+        if (!$user instanceof WP_User) {
+            $user = get_user_by('email', $data['Email']);
+        }
         if (!$user instanceof WP_User) {
             $args = array(
                     'meta_query' => array(
