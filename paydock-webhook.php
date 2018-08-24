@@ -50,6 +50,8 @@ switch($data['event']) {
                 $author_id = wp_insert_user($userdata);
                 if (is_wp_error($author_id)) {
                     unset($author_id);
+                } else {
+                    $user = new WP_User($author_id);
                 }
             }
 
