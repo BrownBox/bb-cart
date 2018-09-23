@@ -570,8 +570,8 @@ function bb_cart_check_for_cart_additions($entry, $form){
                     foreach ($field['inputs'] as $input) {
                         if ($input['name'] == 'bb_product_price') {
                             $amount = $entry[(string)$input["id"]];
-                        } elseif ($input['name'] == 'bb_product_quantity' && !empty($entry[(string)$input["id"]])) {
-                            $quantity = $entry[(string)$input["id"]];
+                        } elseif ($input['name'] == 'bb_product_quantity' && !$field->disableQuantity) {
+                            $quantity = (int)$entry[(string)$input["id"]];
                         } elseif ($input['name'] == 'bb_product_name' && !empty($entry[(string)$input["id"]])) {
                             $label = $entry[(string)$input["id"]];
                         }
@@ -585,7 +585,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
             } elseif ($field['type'] == 'bb_click_array') {
                 $amount = $entry[$field["id"].'.1'];
             }
-            if (!empty($amount)) {
+            if (!empty($amount) && $quantity > 0) {
                 // now we can add products to our session
                 // only problem is that the 'price' field is a joke in GF so many different formats.. so we need to clean that
                 $clean_price = bb_cart_clean_amount($amount, $currency); // this will now be the correctly formatted amount in cents
