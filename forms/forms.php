@@ -532,23 +532,23 @@ function bb_cart_get_checkout_form(){
                             'inputs' => array(
                                     array(
                                             'id' => '28.1',
-                                            'label' => 'show address',
+                                            'label' => 'Form Setup: Show Address',
                                     ),
                                     array(
                                             'id' => '28.2',
-                                            'label' => 'show phone',
+                                            'label' => 'Form Setup: Show Phone',
                                     ),
                                     array(
                                             'id' => '28.3',
-                                            'label' => 'show company',
+                                            'label' => 'Form Setup: Show Company',
                                     ),
                                     array(
                                             'id' => '28.4',
-                                            'label' => 'show subscribe',
+                                            'label' => 'Form Setup: Show Subscribe',
                                     ),
                                     array(
                                             'id' => '28.5',
-                                            'label' => 'schedule payments',
+                                            'label' => 'Form Setup: Offer Scheduled Payments',
                                     ),
                             ),
                             'allowsPrepopulate' => true,
