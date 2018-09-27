@@ -1034,6 +1034,9 @@ function bb_cart_post_purchase_actions($entry, $form){
             GFAPI::update_entry_property($entry['id'], "payment_date",   $entry['date_created']);
             GFAPI::update_entry_property($entry['id'], "payment_method", $payment_method);
             gform_update_meta($entry['id'], 'gform_product_info__', $gf_line_items);
+            gform_update_meta($entry['id'], 'gform_product_info_1_', $gf_line_items);
+            gform_update_meta($entry['id'], 'gform_product_info__1', $gf_line_items);
+            gform_update_meta($entry['id'], 'gform_product_info_1_1', $gf_line_items);
 
             do_action('bb_cart_post_purchase', $cart_items, $entry, $form, $transaction_id);
             if (function_exists('WC')) {
