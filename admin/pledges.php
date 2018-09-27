@@ -44,8 +44,9 @@ function bb_cart_pledges() {
 <?php
     foreach ($pledges as $pledge) {
         if (!empty($pledge->post_author)) {
-            $name = get_user_meta($pledge->post_author, 'display_name', true);
-            $email = get_user_meta($pledge->post_author, 'user_email', true);
+            $donor = new WP_User($pledge->post_author);
+            $name = $donor->display_name;
+            $email = $donor->user_email;
         } else {
             $entry = GFAPI::get_entry(get_post_meta($pledge->ID, 'gf_entry_id', true));
             $form = GFAPI::get_form($entry['form_id']);
