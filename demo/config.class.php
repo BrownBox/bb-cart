@@ -24,6 +24,7 @@ class BB_Cart {
             'phone',
             'company',
             'subscribe',
+            'schedule payment',
     );
 
     /**
