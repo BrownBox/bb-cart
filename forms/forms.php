@@ -524,7 +524,7 @@ function bb_cart_get_checkout_form(){
                                             'isSelected' => false,
                                     ),
                                     array(
-                                            'text' => 'Offer Scheduled Payments (Bank Deposit only)',
+                                            'text' => 'Offer Scheduled Payments',
                                             'value' => 'schedule payment',
                                             'isSelected' => false,
                                     ),
@@ -793,6 +793,11 @@ Your details will also allow us to give you a personal reference number to inclu
                                                     'fieldId' => '12',
                                                     'operator' => 'isnot',
                                                     'value' => 'Bank Deposit',
+                                            ),
+                                            array(
+                                                    'fieldId' => '12',
+                                                    'operator' => 'isnot',
+                                                    'value' => 'PayPal',
                                             ),
                                     ),
                             ),
