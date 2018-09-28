@@ -8,7 +8,12 @@ switch($data['event']) {
     case 'transaction_success':
         // Mark Direct Debit transactions as complete
         if ($data['data']['customer']['payment_source']['type'] == 'bsb') {
-            $pd_id = $data['_id'];
+            // PayDock have changed the data structure at some point, but some customers still seem to get the old format
+            if (!empty($data['data']['_id'])) { // So we have to cater to both new...
+                $pd_id = $data['data']['_id'];
+            } else { // ...and old
+                $pd_id = $data['_id'];
+            }
             $search_criteria['field_filters'][] = array('key' => 'transaction_id', 'value' => $pd_id);
             $entries = GFAPI::get_entries(0, $search_criteria);
             if ($entries) {
