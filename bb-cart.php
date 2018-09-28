@@ -968,6 +968,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                                     'name' => $item['label'],
                                     'price' => $item['price']/100,
                                     'quantity' => $item['quantity'],
+                                    'description' => $item['donation_for'],
                             );
                             $gf_line_items['products'][] = $line_item;
                             $line_item['fund_code'] = $item['fund_code'];
@@ -990,6 +991,9 @@ function bb_cart_post_purchase_actions($entry, $form){
                         'post_type' => 'transactionlineitem',
                         'post_date' => $transaction['post_date'],
                 );
+                if (!empty($bb_line_item['description'])) {
+                    $line_item['post_content'] = $bb_line_item['description'];
+                }
                 $line_item_id = wp_insert_post($line_item);
                 update_post_meta($line_item_id, 'fund_code', $bb_line_item['fund_code']);
                 update_post_meta($line_item_id, 'price', $bb_line_item['price']);
