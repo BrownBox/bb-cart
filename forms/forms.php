@@ -9,6 +9,7 @@ function bb_cart_get_donate_form() {
             'description' => 'Version '.BB_CART_VERSION,
             'is_active' => true,
             'cssClass' => 'bb_cart_donations',
+            'enableHoneypot' => true,
             'button' => array(
                     'type' => 'text',
                     'text' => 'Give Now',
@@ -482,6 +483,7 @@ function bb_cart_get_checkout_form(){
             'subLabelPlacement' => 'above',
             'is_active' => true,
             'cssClass' => 'bb_cart_checkout bb-processing',
+            'enableHoneypot' => true,
             'button' =>  array(
                     'type' => 'text',
                     'text' => 'Submit',
@@ -1222,6 +1224,7 @@ function bb_cart_get_shipping_form() {
             'descriptionPlacement' => 'below',
             'is_active' => true,
             'cssClass' => 'bb_cart_shipping bb-processing',
+            'enableHoneypot' => true,
             'button' =>  array(
                     'type' => 'text',
                     'text' => 'Proceed',
