@@ -25,7 +25,6 @@ function bb_cart_donor_history_profile_tab() {
     echo '        </thead>'."\n";
     echo '        <tbody id="the-list">'."\n";
     foreach ($transactions as $transaction) {
-        $author = new WP_User($transaction->post_author);
         $deductible = get_post_meta($transaction->ID, 'is_tax_deductible', true) == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
         $args = array(
                 'post_type' => 'transactionlineitem',
