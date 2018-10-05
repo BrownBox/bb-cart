@@ -1204,6 +1204,18 @@ Your details will also allow us to give you a personal reference number to inclu
                     ),
             )
     );
+
+    // If they have configured reCAPTCHA add it to the form
+    if (!empty(get_option('rg_gforms_captcha_public_key')) && !empty(get_option('rg_gforms_captcha_private_key'))) {
+        $checkout_form['fields'][] = array(
+                'type' => 'captcha',
+                'id' => 47,
+                'label' => 'Security Check',
+                'isRequired' => true,
+                'captchaLanguage' => 'en-GB',
+        );
+    }
+
     if (!$checkout_form_id || !GFAPI::form_id_exists($checkout_form_id)) { // If form doesn't exist, create it
         $checkout_form_id = GFAPI::add_form($checkout_form);
         update_option('bb_cart_checkout_form_id', $checkout_form_id);
