@@ -289,26 +289,26 @@ function bb_cart_form_submit_button($button, $form) {
         if ($cssClass == 'bb_cart_donations') {
             $content .= '<p>Your payment method</p>';
             foreach ($form['fields'] as &$field){
-                if($field->inputName == 'bb_cart_payment_method'){
+                if ($field->inputName == 'bb_cart_payment_method'){
                     foreach ($field->choices as &$choice){
-                        $content .= '<a href="#" data-paymentmethod="'.$choice['value'].'" class="pseudo-submit payment-method button">'.$choice['text'].'</a> ';
+                        $content .= '<a data-paymentmethod="'.$choice['value'].'" class="gform_button pseudo-submit payment-method button">'.$choice['text'].'</a> ';
                     }
                 }
             }
 
             $js = <<<MULTI
-				<script type="text/javascript">
-
-				jQuery(".pseudo-submit").on("click", function() {
-				    var payment_method = jQuery(this).attr("data-paymentmethod");
-				    jQuery("input[value='" + payment_method + "']").trigger("click")
-				    jQuery(this).parent().find(".gform_button.button").trigger("click");
-				    return false;
-				});
-
-				</script>
+            <script type="text/javascript">
+                jQuery(document).on('gform_post_render', function() {
+                    jQuery(".pseudo-submit").on("click", function() {
+                        var payment_method = jQuery(this).attr("data-paymentmethod");
+                        jQuery("input[value='" + payment_method + "']").trigger("click")
+                        jQuery(this).parent().find(".gform_button.button").trigger("click");
+                        return false;
+                    });
+                });
+            </script>
 MULTI;
-            return $content . $js;
+            return $content.$js;
         }
         return $button;
     }
