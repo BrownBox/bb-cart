@@ -1211,7 +1211,6 @@ Your details will also allow us to give you a personal reference number to inclu
                 'type' => 'captcha',
                 'id' => 47,
                 'label' => 'Security Check',
-                'isRequired' => true,
                 'captchaLanguage' => 'en-GB',
         );
     }
