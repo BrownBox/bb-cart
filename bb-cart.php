@@ -482,14 +482,15 @@ function bb_cart_item_types($value = '') {
 
 add_filter("gform_field_value_bb_cart_checkout_items_array", "bb_cart_checkout_items_array");
 function bb_cart_checkout_items_array($value){
-    $array_string = '';
-    if (!empty($_SESSION[BB_CART_SESSION_ITEM]['donations'])) {
-        foreach ($_SESSION[BB_CART_SESSION_ITEM]['donations'] as $item ) {
-            $array_string .= $item['entry_id'] . ",";
+    $entry_ids = array();
+    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
+        foreach ($items as $item) {
+            if (!empty($item['entry_id'])) {
+                $entry_ids[] = $item['entry_id'];
+            }
         }
-        $array_string = substr($array_string, 0, -1);
     }
-    return $array_string;
+    return implode(',', $entry_ids);
 }
 
 function bb_cart_get_default_currency() {

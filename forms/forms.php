@@ -1079,7 +1079,7 @@ Your details will also allow us to give you a personal reference number to inclu
                     array(
                             'type' => 'hidden',
                             'id' => 10,
-                            'label' => 'Donation Array',
+                            'label' => 'Cart Entries',
                             'isRequired' => false,
                             'allowsPrepopulate' => true,
                             'inputName' => 'bb_cart_checkout_items_array',
