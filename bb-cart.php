@@ -195,8 +195,14 @@ function bb_cart_clean_amount($amount, $currency_code = null) {
     if (is_null($currency_code)) {
         $currency_code = bb_cart_get_default_currency();
     }
-    $currency = new RGCurrency($currency_code);
-    return $currency->to_number($amount)*100;
+    return GFCommon::to_number($amount, $currency_code)*100;
+}
+
+function bb_cart_format_currency($amount, $currency_code = null) {
+    if (is_null($currency_code)) {
+        $currency_code = bb_cart_get_default_currency();
+    }
+    return GFCommon::to_money($amount, $currency_code);
 }
 
 // WE NEED TO ADD THE OPTION TO GRAVITY FORMS SETTINGS TO SELECT WHICH FORMS WILL ADD ITEMS TO THE CART
@@ -1389,7 +1395,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                                 $price = $woo_cart[$product['cart_item_key']]['line_total'];
                                 $total += $price;
                                 $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.$product['name'].'</a></td>'."\n";
-                                $html .= '<td class="text-right">$'.number_format($price, 2).'</td>'."\n";
+                                $html .= '<td class="text-right">'.bb_cart_format_currency($price).'</td>'."\n";
                                 if ($purpose != 'email') {
                                     $html .= '<td style="width: 15px;">'."\n";
                                     if ($item['removable'] !== false) {
@@ -1403,7 +1409,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                             }
                             $shipping = bb_cart_calculate_shipping($total);
                             if ($shipping > 0) {
-                                $html .= '<tr><td>'.bb_cart_shipping_label().'</td><td style="text-align: right;">$'.number_format($shipping, 2).'</td>';
+                                $html .= '<tr><td>'.bb_cart_shipping_label().'</td><td style="text-align: right;">'.bb_cart_format_currency($shipping).'</td>';
                                 if ($purpose != 'email') {
                                     $html .= '<td>&nbsp;</td>';
                                 }
@@ -1416,7 +1422,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                     $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">'.ucwords($section).'</th></tr>';
                     foreach ($items as $idx => $event) {
                         $html .= '<tr><td>'.$event['booking']->booking_spaces.' registration/s for '.$event['event']->event_name.' ('.$event['event']->event_start_date.')</td>'."\n";
-                        $html .= '<td style="text-align: right;">$'.number_format($event['booking']->booking_price, 2).'</td>'."\n";
+                        $html .= '<td style="text-align: right;">'.bb_cart_format_currency($event['booking']->booking_price).'</td>'."\n";
                         if ($purpose != 'email') {
                             $html .= '<td style="width: 15px;">'."\n";
                             if ($item['removable'] !== false) {
@@ -1441,7 +1447,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                         $item_price = ($item['price']*$item['quantity'])/100;
                         $total_price += $item_price;
                         $frequency = empty($item['frequency']) || $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
-                        $html .= '<td style="text-align: right;">$'.number_format($item_price, 2).$frequency.'</td>'."\n";
+                        $html .= '<td style="text-align: right;">'.bb_cart_format_currency($item_price).$frequency.'</td>'."\n";
                         if ($purpose != 'email') {
                             $html .= '<td style="width: 15px;">'."\n";
                             if ($item['removable'] !== false) {
@@ -1457,7 +1463,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
             }
             $html .= '</table>'."\n";
         }
-        $html .= '<p class="bb_cart_total" style="text-align: right;"><strong>Total: $'.number_format(bb_cart_total_price(), 2).'</strong></p>'."\n";
+        $html .= '<p class="bb_cart_total" style="text-align: right;"><strong>Total: '.bb_cart_format_currency(bb_cart_total_price()).'</strong></p>'."\n";
     }
     return $html;
 }
