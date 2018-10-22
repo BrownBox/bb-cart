@@ -207,7 +207,7 @@ class bb_cart_export {
 
         if (count($search['input_filters']) < 3) { // If all 3 options are selected we don't need to worry about meta queries
             $meta_query = array(
-            'relation' => 'OR',
+                    'relation' => 'OR',
             );
             if (in_array('online', $search['input_filters'])) {
                 $meta_query[] = array(
@@ -249,21 +249,21 @@ class bb_cart_export {
                 );
                 if (!in_array('offline_unreceipted', $search['input_filters'])) { // Only receipted
                     $offline_query[] = array(
-                    'key' => 'is_receipted',
-                    'value' => 'true',
+                            'key' => 'is_receipted',
+                            'value' => 'true',
                     );
                 } elseif (!in_array('offline_receipted', $search['input_filters'])) { // Only unreceipted
                     $offline_query[] = array(
-                    array(
-                    'key' => 'is_receipted',
-                    'value' => 'true',
-                    'compare' => '!=',
-                    ),
-                    array(
-                    'key' => 'is_receipted',
-                    'compare' => 'NOT EXISTS',
-                    ),
-                    'relation' => 'OR',
+                            array(
+                                    'key' => 'is_receipted',
+                                    'value' => 'true',
+                                    'compare' => '!=',
+                            ),
+                            array(
+                                    'key' => 'is_receipted',
+                                    'compare' => 'NOT EXISTS',
+                            ),
+                            'relation' => 'OR',
                     );
                 }
                 $meta_query[] = $offline_query;
