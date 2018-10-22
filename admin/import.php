@@ -324,6 +324,7 @@ class bb_cart_import {
             update_post_meta($transaction_id, 'is_tax_deductible', '0');
             update_post_meta($transaction_id, 'batch_id', $batch_id);
             update_post_meta($transaction_id, 'raw', $data);
+            update_post_meta($transaction_id, 'transaction_type', 'offline');
 
             $line_item = array(
                     'post_title' => 'EzeScan Import',
