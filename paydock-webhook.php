@@ -85,6 +85,8 @@ switch($data['event']) {
                 update_post_meta($transaction_id, 'donation_amount', $amount);
                 update_post_meta($transaction_id, 'total_amount', $amount);
                 update_post_meta($transaction_id, 'currency', $currency);
+                update_post_meta($transaction_id, 'transaction_type', 'online');
+                update_post_meta($transaction_id, 'is_receipted', 'false');
 
                 $batch_id = bb_cart_get_web_batch();
                 update_post_meta($transaction_id, 'batch_id', $batch_id);
