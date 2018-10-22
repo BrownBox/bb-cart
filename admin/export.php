@@ -211,41 +211,21 @@ class bb_cart_export {
             );
             if (in_array('online', $search['input_filters'])) {
                 $meta_query[] = array(
-                        'key' => 'gf_entry_id',
-                        'value' => '',
-                        'compare' => '!=',
+                        'key' => 'transaction_type',
+                        'value' => 'online',
                 );
                 $meta_query[] = array(
-                        'key' => 'subscription_id',
-                        'value' => '',
-                        'compare' => '!=',
+                        'key' => 'transaction_type',
+                        'compare' => 'NOT EXISTS',
                 );
             }
             if (in_array('offline_receipted', $search['input_filters']) || in_array('offline_unreceipted', $search['input_filters'])) {
                 $offline_query = array(
+                        array(
+                                'key' => 'transaction_type',
+                                'value' => 'offline',
+                        ),
                         'relation' => 'AND',
-                        array(
-                                array(
-                                        'key' => 'gf_entry_id',
-                                        'value' => '',
-                                ),
-                                array(
-                                        'key' => 'gf_entry_id',
-                                        'compare' => 'NOT EXISTS',
-                                ),
-                                'relation' => 'OR',
-                        ),
-                        array(
-                                array(
-                                        'key' => 'subscription_id',
-                                        'value' => '',
-                                ),
-                                array(
-                                        'key' => 'subscription_id',
-                                        'compare' => 'NOT EXISTS',
-                                ),
-                                'relation' => 'OR',
-                        ),
                 );
                 if (!in_array('offline_unreceipted', $search['input_filters'])) { // Only receipted
                     $offline_query[] = array(
