@@ -1202,6 +1202,16 @@ Your details will also allow us to give you a personal reference number to inclu
                             'inputName' => 'bb_cart_external_reference_entry',
                             'visibility' => 'hidden',
                     ),
+                    array(
+                            'type' => 'hidden',
+                            'id' => 48,
+                            'label' => 'Transaction Type',
+                            'isRequired' => false,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_transaction_type',
+                            'defaultValue' => 'online',
+                            'visibility' => 'hidden',
+                    ),
             )
     );
 

@@ -763,6 +763,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
             $donation_amount = 0;
             $payment_method = 'Credit Card';
+            $transaction_type = 'online';
             $currency = bb_cart_get_default_currency();
             $bb_line_items = array();
             $gf_line_items = array(
@@ -793,6 +794,8 @@ function bb_cart_post_purchase_actions($entry, $form){
                     $transaction_date = date('Y-m-d', strtotime($transaction_date));
                 } elseif ($field->inputName == 'payment_method') {
                     $payment_method = $entry[$field->id];
+                } elseif ($field->inputName == 'bb_cart_transaction_type' && !empty($entry[$field->id])) {
+                    $transaction_type = $entry[$field->id];
                 }
             }
 
@@ -878,6 +881,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             update_post_meta($transaction_id, 'total_amount', $total_amount);
             update_post_meta($transaction_id, 'cart', serialize($_SESSION[BB_CART_SESSION_ITEM]));
             update_post_meta($transaction_id, 'payment_method', $payment_method);
+            update_post_meta($transaction_id, 'transaction_type', $transaction_type);
             update_post_meta($transaction_id, 'is_receipted', 'true');
 
             if (isset($deductible)) {
