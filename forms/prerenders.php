@@ -291,7 +291,7 @@ function bb_cart_form_submit_button($button, $form) {
             foreach ($form['fields'] as &$field){
                 if ($field->inputName == 'bb_cart_payment_method'){
                     foreach ($field->choices as &$choice){
-                        $content .= '<a data-paymentmethod="'.$choice['value'].'" class="gform_button pseudo-submit payment-method button">'.$choice['text'].'</a> ';
+                        $content .= '<a data-paymentmethod="'.$choice['value'].'" id="gform_submit_button_'.$form['id'].'" class="gform_button pseudo-submit payment-method button">'.$choice['text'].'</a> ';
                     }
                 }
             }
