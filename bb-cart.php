@@ -246,19 +246,27 @@ function bb_cart_save_form_setting($form) {
     return $form;
 }
 
-add_filter("gform_field_value_bb_cart_total_price", "bb_cart_total_price");
-function bb_cart_total_price($value = '', $include_shipping = true) {
+add_filter("gform_field_value_bb_cart_total_price", "bb_cart_field_value_total_price");
+function bb_cart_field_value_total_price($value = '') {
+    return bb_cart_total_price();
+}
+
+function bb_cart_total_price($include_shipping = true, array $cart_items = array()) {
     $total = 0;
-    $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+    if (empty($cart_items)) {
+        $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+    }
     foreach ($cart_items as $section => $items) {
-        $total += bb_cart_section_total($section, $include_shipping);
+        $total += bb_cart_section_total($section, $include_shipping, $cart_items);
     }
     return $total;
 }
 
-function bb_cart_products_total($include_shipping = true) {
+function bb_cart_products_total($include_shipping = true, array $cart_items = array()) {
     $woo_total = 0;
-    $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+    if (empty($cart_items)) {
+        $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+    }
     if (!empty($cart_items['woo']) && function_exists('WC')) {
         $wc_session = WC()->session;
         if (is_object($wc_session)) {
@@ -276,9 +284,11 @@ function bb_cart_products_total($include_shipping = true) {
     return $woo_total;
 }
 
-function bb_cart_events_total() {
+function bb_cart_events_total(array $cart_items = array()) {
     $events_total = 0;
-    $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+    if (empty($cart_items)) {
+        $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+    }
     if (!empty($cart_items['event'])) {
         foreach ($cart_items['event'] as $event) {
             $events_total += $event['booking']->booking_price;
@@ -287,17 +297,19 @@ function bb_cart_events_total() {
     return $events_total;
 }
 
-function bb_cart_section_total($section = 'donations', $include_shipping = true) {
+function bb_cart_section_total($section = 'donations', $include_shipping = true, $cart_items = array()) {
     switch ($section) {
         case 'woo':
-            return bb_cart_products_total($include_shipping);
+            return bb_cart_products_total($include_shipping, $cart_items);
             break;
         case 'event':
-            return bb_cart_events_total();
+            return bb_cart_events_total($cart_items);
             break;
         default:
             $section_total = 0;
-            $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+            if (empty($cart_items)) {
+                $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+            }
             if (!empty($cart_items[$section])) {
                 foreach ($cart_items[$section] as $item) {
                     $section_total += $item['price']*$item['quantity'];
@@ -694,7 +706,7 @@ function bb_cart_add_from_querystring() {
 
 function bb_cart_calculate_shipping($total_price = null) {
     if (empty($total_price)) {
-        $total_price = bb_cart_total_price(null, false);
+        $total_price = bb_cart_total_price(false);
     }
     $shipping = 0;
 
@@ -1467,7 +1479,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
             }
             $html .= '</table>'."\n";
         }
-        $html .= '<p class="bb_cart_total" style="text-align: right;"><strong>Total: '.bb_cart_format_currency(bb_cart_total_price()).'</strong></p>'."\n";
+        $html .= '<p class="bb_cart_total" style="text-align: right;"><strong>Total: '.bb_cart_format_currency(bb_cart_total_price(true, $cart_items)).'</strong></p>'."\n";
     }
     return $html;
 }
