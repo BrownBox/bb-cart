@@ -1428,8 +1428,8 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                             foreach ($items as $idx => $product) {
                                 $price = $woo_cart[$product['cart_item_key']]['line_total'];
                                 $total += $price;
-                                $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.$product['name'].'</a></td>'."\n";
-                                $html .= '<td class="text-right">'.bb_cart_format_currency($price).'</td>'."\n";
+                                $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.$product['label'].'</a></td>'."\n";
+                                $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($price).'</td>'."\n";
                                 if ($purpose != 'email') {
                                     $html .= '<td style="width: 15px;">'."\n";
                                     if ($item['removable'] !== false) {
@@ -1456,7 +1456,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                     $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">'.ucwords($section).'</th></tr>';
                     foreach ($items as $idx => $event) {
                         $html .= '<tr><td>'.$event['booking']->booking_spaces.' registration/s for '.$event['event']->event_name.' ('.$event['event']->event_start_date.')</td>'."\n";
-                        $html .= '<td style="text-align: right;">'.bb_cart_format_currency($event['booking']->booking_price).'</td>'."\n";
+                        $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($event['booking']->booking_price).'</td>'."\n";
                         if ($purpose != 'email') {
                             $html .= '<td style="width: 15px;">'."\n";
                             if ($item['removable'] !== false) {
@@ -1481,7 +1481,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                         $item_price = ($item['price']*$item['quantity'])/100;
                         $total_price += $item_price;
                         $frequency = empty($item['frequency']) || $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
-                        $html .= '<td style="text-align: right;">'.bb_cart_format_currency($item_price).$frequency.'</td>'."\n";
+                        $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($item_price).$frequency.'</td>'."\n";
                         if ($purpose != 'email') {
                             $html .= '<td style="width: 15px;">'."\n";
                             if ($item['removable'] !== false) {
