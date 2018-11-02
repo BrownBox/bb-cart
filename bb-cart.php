@@ -1249,11 +1249,29 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
     parse_str(ltrim($query_string, '&'), $query);
     $i = 1;
     foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
-        foreach ($items as $cart_item) {
-            $query['item_name_'.$i] = $cart_item['label'];
-            $query['amount_'.$i] = $cart_item['price']/100;
-            $query['quantity_'.$i] = $cart_item['quantity'];
-            $i++;
+        if ($feed['meta']['transactionType'] == 'donation') {
+            if ($section != 'donations') {
+                continue;
+            }
+            if (count($items) > 1) {
+                $query['item_name'] = 'Donation';
+                $query['amount'] = 0;
+                foreach ($items as $cart_item) {
+                    $query['amount'] += $cart_item['price']/100;
+                }
+            } else {
+                foreach ($items as $cart_item) {
+                    $query['item_name'] = $cart_item['label'];
+                    $query['amount'] = $cart_item['price']/100;
+                }
+            }
+        } else {
+            foreach ($items as $cart_item) {
+                $query['item_name_'.$i] = $cart_item['label'];
+                $query['amount_'.$i] = $cart_item['price']/100;
+                $query['quantity_'.$i] = $cart_item['quantity'];
+                $i++;
+            }
         }
     }
     $query_string = '&' . http_build_query($query);
