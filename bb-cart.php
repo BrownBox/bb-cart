@@ -93,7 +93,7 @@ function bb_cart_start_session() {
                     foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as &$cart_item) {
                         if ($cart_item['cart_item_key'] == $woo_idx) { // Found it - let's make sure the details are the same
                             $cart_item = array(
-                                    'name' => $label,
+                                    'label' => $label,
                                     'cart_item_key' => $woo_idx,
                                     'product_id' => $woo_item['product_id'],
                                     'price' => 100*$woo_item['line_total']/$woo_item['quantity'],
@@ -113,7 +113,7 @@ function bb_cart_start_session() {
 
                 // Not found - add it
                 $_SESSION[BB_CART_SESSION_ITEM]['woo'][] = array(
-                        'name' => $label,
+                        'label' => $label,
                         'cart_item_key' => $woo_idx,
                         'product_id' => $woo_item['product_id'],
                         'price' => 100*$woo_item['line_total']/$woo_item['quantity'],
