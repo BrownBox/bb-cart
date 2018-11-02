@@ -285,9 +285,8 @@ add_filter("gform_submit_button", "bb_cart_form_submit_button", 1, 2);
 function bb_cart_form_submit_button($button, $form) {
     $cssClasses = explode(" ", $form['cssClass']);
     foreach ($cssClasses as $cssClass) {
-        $content = '<div class="hide">' . $button . '</div>';
         if ($cssClass == 'bb_cart_donations') {
-            $content .= '<p>Your payment method</p>';
+            $content = '<p>Your payment method</p>';
             foreach ($form['fields'] as &$field){
                 if ($field->inputName == 'bb_cart_payment_method'){
                     foreach ($field->choices as &$choice){
@@ -295,14 +294,15 @@ function bb_cart_form_submit_button($button, $form) {
                     }
                 }
             }
+            $content .= '<div class="hide">' . $button . '</div>';
 
             $js = <<<MULTI
             <script type="text/javascript">
                 jQuery(document).on('gform_post_render', function() {
                     jQuery(".pseudo-submit").on("click", function() {
                         var payment_method = jQuery(this).attr("data-paymentmethod");
-                        jQuery("input[value='" + payment_method + "']").trigger("click")
-                        jQuery(this).parent().find(".gform_button.button").trigger("click");
+                        jQuery("input[value='" + payment_method + "']").trigger("click");
+                        jQuery(this).parent().find("input.gform_button.button").trigger("click");
                         return false;
                     });
                 });
