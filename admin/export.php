@@ -162,7 +162,7 @@ class bb_cart_export {
                         'Fund Code' => $fund_code[0]->name,
                         'Amount' => get_post_meta($line_item->ID, 'price', true),
                         'Receipted' => get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? 'Y' : 'N',
-                        'Channel' => get_post_meta($transaction->ID, 'gf_entry_id', true) != '' ? 'Online' : 'Offline',
+                        'Channel' => get_post_meta($transaction->ID, 'transaction_type', true) == 'offline' ? 'Offline' : 'Online',
                 );
             }
             if ($_POST['input_mark_receipted'] == 'yes') {
