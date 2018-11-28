@@ -1029,7 +1029,7 @@ Your details will also allow us to give you a personal reference number to inclu
                             ),
                             'inputs' => array(
                                     0 => array(
-                                            'id' => '7.1',
+                                            'id' => '43.1',
                                             'label' => 'Yes, please send me news and updates',
                                             'name' => 'subscribe',
                                     ),
