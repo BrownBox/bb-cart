@@ -1428,8 +1428,9 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                             foreach ($items as $idx => $product) {
                                 $price = $woo_cart[$product['cart_item_key']]['line_total'];
                                 $total += $price;
-                                $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.$product['label'].'</a></td>'."\n";
+                                $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.apply_filters('bb_cart_table_item_label_display', $product['label'], $purpose, $product, $section, $idx).'</a></td>'."\n";
                                 $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($price).'</td>'."\n";
+
                                 if ($purpose != 'email') {
                                     $html .= '<td style="width: 15px;">'."\n";
                                     if ($item['removable'] !== false) {
@@ -1455,7 +1456,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                 case 'events':
                     $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">'.ucwords($section).'</th></tr>';
                     foreach ($items as $idx => $event) {
-                        $html .= '<tr><td>'.$event['booking']->booking_spaces.' registration/s for '.$event['event']->event_name.' ('.$event['event']->event_start_date.')</td>'."\n";
+                        $html .= '<tr><td>'.apply_filters('bb_cart_table_item_label_display', $event['booking']->booking_spaces.' registration/s for '.$event['event']->event_name.' ('.$event['event']->event_start_date, $purpose, $event, $section, $idx).')</td>'."\n";
                         $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($event['booking']->booking_price).'</td>'."\n";
                         if ($purpose != 'email') {
                             $html .= '<td style="width: 15px;">'."\n";
@@ -1477,7 +1478,7 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                         if ($item['quantity'] > 1 || $section != 'donations') {
                             $label = $item['quantity'].'x '.$label;
                         }
-                        $html .= '<td>'.$label.'</td>'."\n";
+                        $html .= '<td>'.apply_filters('bb_cart_table_item_label_display', $label, $purpose, $item, $section, $idx).'</td>'."\n";
                         $item_price = ($item['price']*$item['quantity'])/100;
                         $total_price += $item_price;
                         $frequency = empty($item['frequency']) || $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
