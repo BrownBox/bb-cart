@@ -22,6 +22,7 @@ require_once(BB_CART_DIR.'forms/forms.php');
 require_once(BB_CART_DIR.'forms/prerenders.php');
 require_once(BB_CART_DIR.'forms/presubmission.php');
 require_once(BB_CART_DIR.'forms/confirmation.php');
+require_once(BB_CART_DIR.'forms/update-entry.php');
 require_once(BB_CART_DIR.'admin/settings.php');
 require_once(BB_CART_DIR.'admin/pledges.php');
 require_once(BB_CART_DIR.'admin/import.php');
@@ -1190,7 +1191,7 @@ function bb_cart_get_transaction_for_subscription($subscription_id) {
 /**
  * Find the transaction for the specified entry
  * @param int $entry_id
- * @return mixed
+ * @return WP_Post|false Matching transaction if found, otherwise false
  */
 function bb_cart_get_transaction_from_entry($entry_id) {
     $args = array(
@@ -1214,7 +1215,7 @@ function bb_cart_get_transaction_from_entry($entry_id) {
 /**
  * Get cart contents for the specified entry
  * @param array $entry
- * @return mixed|boolean
+ * @return mixed|boolean Cart contents if transaction found (may still be empty), otherwise false
  */
 function bb_cart_get_cart_from_entry($entry) {
     $transaction = bb_cart_get_transaction_from_entry($entry['id']);
