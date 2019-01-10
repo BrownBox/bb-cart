@@ -17,7 +17,7 @@ function bb_cart_get_donate_form() {
             ),
             'bb_cart_enable' => 'cart_enabled',
             'confirmations' => array(
-                    0 => array(
+                    '597697bdb19ee' => array(
                             'id' => '597697bdb19ee',
                             'name' => 'Default Confirmation',
                             'isDefault' => true,
@@ -489,7 +489,7 @@ function bb_cart_get_checkout_form(){
                     'text' => 'Submit',
             ),
             'confirmations' => array(
-                    0 => array(
+                    '56ce55c57ef2e' => array(
                             'id' => '56ce55c57ef2e',
                             'name' => 'Default Confirmation',
                             'isDefault' => true,
@@ -1251,7 +1251,7 @@ function bb_cart_get_shipping_form() {
                     'text' => 'Proceed',
             ),
             'confirmations' => array(
-                    0 =>  array(
+                    '597237bdb19ee' => array(
                             'id' => '597237bdb19ee',
                             'name' => 'Default Confirmation',
                             'isDefault' => true,
