@@ -74,7 +74,7 @@ class bb_cart_fund_code_report {
                 echo '            <td style="padding-top: 2rem;"><strong>'.$fund_code.'</strong></td>'."\n";
                 echo '            <td style="padding-top: 2rem; text-align: right;">';
                 if (!empty($stats['total']) || empty($stats['children'])) {
-                    echo '<a href="'.add_query_arg('fund_code', $fund_code).'">$'.number_format($stats['total'], 2).'</a>';
+                    echo '<a href="'.add_query_arg('fund_code', urlencode($fund_code)).'">$'.number_format($stats['total'], 2).'</a>';
                 }
                 echo '</td>'."\n";
                 echo '        </tr>'."\n";
@@ -83,7 +83,7 @@ class bb_cart_fund_code_report {
                         $subtotal += $child_total;
                         echo '        <tr>'."\n";
                         echo '            <td style="padding-left: 2rem;">'.$child_code.'</td>'."\n";
-                        echo '            <td style="text-align: right;"><a href="'.add_query_arg('fund_code', $child_code).'">$'.number_format($child_total, 2).'</a></td>'."\n";
+                        echo '            <td style="text-align: right;"><a href="'.add_query_arg('fund_code', urlencode($child_code)).'">$'.number_format($child_total, 2).'</a></td>'."\n";
                         echo '        </tr>'."\n";
                     }
                     echo '        <tr>'."\n";
