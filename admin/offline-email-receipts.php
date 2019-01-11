@@ -42,6 +42,7 @@ class bb_cart_offline_email_receipts {
         register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_sender_email');
         register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_template');
         register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_send_immediately');
+        register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_bcc_recipient');
         register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_send_to_online_recurring_donors');
 
         // Additional hooks
@@ -100,8 +101,13 @@ class bb_cart_offline_email_receipts {
         <tr valign="top">
             <th scope="row">Send Immediately</th>
             <td><label><input type="checkbox" name="bb_cart_offline_receipt_send_immediately" value="1" <?php checked(1, get_option('bb_cart_offline_receipt_send_immediately')); ?>>
-            Send offline email receipts to all eligible recipients as soon as the transaction is imported.</label><br>
-            If this option is not ticked, the receipts must be triggered manually.</td>
+            Send offline email receipts to all eligible recipients during transaction import.</label><br>
+            Only applies to imported transactions. For all other offline transactions (or if this option is not ticked), the receipts must be triggered manually.</td>
+        </tr>
+        <tr valign="top">
+            <th scope="row">Copy Offline Receipts To</th>
+            <td><input type="email" size="75" name="bb_cart_offline_receipt_bcc_recipient" value="<?php echo get_option('bb_cart_offline_receipt_bcc_recipient'); ?>"><br>
+            Enter an email address here to have a copy of all offline receipts sent to that address.</td>
         </tr>
         <tr valign="top">
             <th scope="row">Send to Online Recurring Donors</th>
@@ -126,13 +132,16 @@ class bb_cart_offline_email_receipts {
      */
     public static function send_email_receipt(WP_Post $transaction) {
         $user = new WP_User($transaction->post_author);
-        if (!empty($user->user_email) && strpos($user->user_email, '@example.com') === false && substr($user->user_email, -8) != '.invalid') {
+        if (!empty($user->user_email) && strpos($user->user_email, '@example.com') === false) {
             $subject = self::replace_merge_tags(get_option('bb_cart_offline_receipt_subject'), $transaction);
             $message = self::replace_merge_tags(get_option('bb_cart_offline_receipt_template'), $transaction);
             $headers = array(
                     'From: '.get_option('bb_cart_offline_receipt_sender_name').' <'.get_option('bb_cart_offline_receipt_sender_email').'>',
                     'Content-Type: text/html; charset=UTF-8',
             );
+            if (is_email(get_option('bb_cart_offline_receipt_bcc_recipient'))) {
+                $headers[] = 'Bcc: '.get_option('bb_cart_offline_receipt_bcc_recipient');
+            }
             if (wp_mail($user->user_email, $subject, wpautop($message), $headers)) {
                 update_post_meta($transaction->ID, 'is_receipted', 'true');
                 return true;
