@@ -63,6 +63,9 @@ class bb_cart_offline_email_receipts {
                     'From: '.get_option('bb_cart_offline_receipt_sender_name').' <'.get_option('bb_cart_offline_receipt_sender_email').'>',
                     'Content-Type: text/html; charset=UTF-8',
             );
+            if (is_email(get_option('bb_cart_offline_receipt_bcc_recipient'))) {
+                $headers[] = 'Bcc: '.get_option('bb_cart_offline_receipt_bcc_recipient');
+            }
             if (wp_mail($user_email, $subject, wpautop($message), $headers)) {
                 echo '<div class="notice notice-success"><p>Test email sent successfully.</p></div>';
             } else {
