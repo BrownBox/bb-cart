@@ -890,7 +890,6 @@ function bb_cart_post_purchase_actions($entry, $form){
             update_post_meta($transaction_id, 'frequency', $frequency);
             update_post_meta($transaction_id, 'gf_entry_id', $entry['id']);
             update_post_meta($transaction_id, 'batch_id', $batch_id);
-            update_post_meta($transaction_id, 'donation_amount', $donation_amount);
             update_post_meta($transaction_id, 'total_amount', $total_amount);
             update_post_meta($transaction_id, 'cart', serialize($_SESSION[BB_CART_SESSION_ITEM]));
             update_post_meta($transaction_id, 'payment_method', $payment_method);
@@ -1005,6 +1004,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                         break;
                 }
             }
+            update_post_meta($transaction_id, 'donation_amount', $donation_amount);
             update_post_meta($transaction_id, 'currency', $currency);
 
             foreach ($bb_line_items as $bb_line_item) {
