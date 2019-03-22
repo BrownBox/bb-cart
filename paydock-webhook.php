@@ -79,7 +79,7 @@ switch($data['event']) {
                 $transaction_id = wp_insert_post($transaction);
 
                 update_post_meta($transaction_id, 'frequency', $frequency);
-                update_post_meta($transaction_id, 'donation_amount', $amount);
+                update_post_meta($transaction_id, 'donation_amount', $amount); // Virtually all subscriptions will be donations - we update it below based on the previous transaction (if found) though just in case
                 update_post_meta($transaction_id, 'total_amount', $amount);
                 update_post_meta($transaction_id, 'currency', $currency);
                 update_post_meta($transaction_id, 'transaction_type', 'online');
@@ -99,23 +99,44 @@ switch($data['event']) {
                         'post_date' => $transaction['post_date'],
                 );
                 if ($transaction_details) {
-                    update_post_meta($transaction_id, 'donation_amount', get_post_meta($transaction_details->ID, 'donation_amount', true)); // Subscriptions should generally be donations but just to be safe...
+                    $prev_amount = get_post_meta($transaction_details->ID, 'total_amount');
+                    if ($prev_amount == $amount) {
+                        update_post_meta($transaction_id, 'donation_amount', get_post_meta($transaction_details->ID, 'donation_amount', true)); // Subscriptions should generally be donations but just to be safe...
+                    }
 
                     $line_items = bb_cart_get_transaction_line_items($transaction_details->ID);
-                    foreach ($line_items as $previous_line_item) {
-                        $previous_meta = get_post_meta($previous_line_item->ID);
+                    if ($prev_amount == $amount || count($line_items) == 1) {
+                        foreach ($line_items as $previous_line_item) {
+                            $previous_meta = get_post_meta($previous_line_item->ID);
+                            $line_item_id = wp_insert_post($line_item);
+                            $price = $previous_meta['price'][0];
+                            if ($prev_amount != $amount) { // Amount has changed, use new amount
+                                $price = $amount;
+                            }
+                            update_post_meta($line_item_id, 'fund_code', $previous_meta['fund_code'][0]);
+                            update_post_meta($line_item_id, 'price', $price);
+                            update_post_meta($line_item_id, 'quantity', $previous_meta['quantity'][0]);
+
+                            wp_set_post_terms($line_item_id, $transaction_term->term_id, 'transaction');
+                            $previous_fund_codes = wp_get_object_terms($previous_line_item->ID, 'fundcode');
+                            foreach ($previous_fund_codes as $fund_code_term) {
+                                wp_set_post_terms($line_item_id, $fund_code_term->term_id, 'fundcode');
+                            }
+                        }
+                    } else { // Amount has changed but we have multiple line items - just create one line item with default fund code
+                        $fund_code = bb_cart_get_default_fund_code();
                         $line_item_id = wp_insert_post($line_item);
-                        update_post_meta($line_item_id, 'fund_code', $previous_meta['fund_code'][0]);
-                        update_post_meta($line_item_id, 'price', $previous_meta['price'][0]);
-                        update_post_meta($line_item_id, 'quantity', $previous_meta['quantity'][0]);
+                        update_post_meta($line_item_id, 'fund_code', $fund_code);
+                        update_post_meta($line_item_id, 'price', $amount);
+                        update_post_meta($line_item_id, 'quantity', 1);
 
                         wp_set_post_terms($line_item_id, $transaction_term->term_id, 'transaction');
-                        $previous_fund_codes = wp_get_object_terms($previous_line_item->ID, 'fundcode');
-                        foreach ($previous_fund_codes as $fund_code_term) {
+                        if (!empty($fund_code)) {
+                            $fund_code_term = get_term_by('slug', $fund_code, 'fundcode'); // Have to pass term ID rather than slug
                             wp_set_post_terms($line_item_id, $fund_code_term->term_id, 'fundcode');
                         }
                     }
-                } else {
+                } else { // No previous tranaction found
                     $fund_code = bb_cart_get_default_fund_code(); // No way to get this directly from PayDock, so if we can't find an existing transaction for this subscription, just use the default fund code
                     $line_item_id = wp_insert_post($line_item);
                     update_post_meta($line_item_id, 'fund_code', $fund_code);
