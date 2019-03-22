@@ -60,12 +60,9 @@ switch($data['event']) {
                 }
             }
 
-            $transaction_check = array(
-                    'date' => $data['data']['transactions'][0]['created_at'],
-                    'amount' => $amount,
-                    'user' => $user,
-            );
-            if (!bb_cart_transaction_exists($transaction_check)) {
+            $transaction_details = bb_cart_get_transaction_for_subscription($subscription_id);
+            // Make sure we haven't already tracked this transaction
+            if (!$transaction_details || date('Y-m-d', strtotime($transaction_details->post_date)) < date('Y-m-d', strtotime($data['data']['transactions'][0]['created_at']))) {
                 $frequency = 'recurring';
 
                 // Create transaction record
@@ -87,13 +84,13 @@ switch($data['event']) {
                 update_post_meta($transaction_id, 'currency', $currency);
                 update_post_meta($transaction_id, 'transaction_type', 'online');
                 update_post_meta($transaction_id, 'is_receipted', 'false');
+                update_post_meta($transaction_id, 'subscription_id', $subscription_id);
 
                 $batch_id = bb_cart_get_web_batch();
                 update_post_meta($transaction_id, 'batch_id', $batch_id);
 
                 $transaction_term = get_term_by('slug', $transaction_id, 'transaction'); // Have to pass term ID rather than slug
 
-                $transaction_details = bb_cart_get_transaction_for_subscription($subscription_id);
                 $line_item = array(
                         'post_title' => 'PayDock Subscription Payment',
                         'post_status' => 'publish',
@@ -131,9 +128,6 @@ switch($data['event']) {
                         wp_set_post_terms($line_item_id, $fund_code_term->term_id, 'fundcode');
                     }
                 }
-
-                // We do this at the end because we don't want to pick up our new transaction when looking for previous details
-                update_post_meta($transaction_id, 'subscription_id', $subscription_id);
 
                 do_action('bb_cart_webhook_paydock_recurring_success', $user, $amount, $transaction_id);
             }
