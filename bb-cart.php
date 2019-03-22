@@ -671,23 +671,24 @@ function bb_cart_check_for_cart_additions($entry, $form){
 add_action('wp', 'bb_cart_add_from_querystring', 99);
 function bb_cart_add_from_querystring() {
     if (!empty($_GET['add_to_cart'])) {
-        $price = bb_cart_clean_amount((int)$_GET['add_to_cart']);
+        $price = bb_cart_clean_amount($_GET['add_to_cart']);
         if ($price > 0) {
             global $blog_id;
-            $frequency = $_GET['frequency'];
-            if (empty($frequency)) {
-                $frequency = 'one-off';
-            }
-            $fund_code = bb_cart_get_default_fund_code();
+
+            $section = !empty($_GET['type']) ? $_GET['type'] : 'donations';
+            $label = !empty($_GET['label']) ? $_GET['label'] : 'My Donation';
+            $frequency = !empty($_GET['frequency']) ? $_GET['frequency'] : 'one-off';
+            $sku = !empty($_GET['sku']) ? $_GET['sku'] : null;
+            $fund_code = !empty($_GET['fund_code']) ? (int)$_GET['fund_code'] : bb_cart_get_default_fund_code();
             $fund_code_post = bb_cart_load_fund_code($fund_code);
             if ($fund_code_post instanceof WP_Post) {
                 $fund_code_deductible = get_post_meta($fund_code_post->ID, 'deductible', true);
                 $deductible = $fund_code_deductible == 'true';
                 $transaction_type = get_post_meta($fund_code_post->ID, 'transaction_type', true);
             }
-            $section = 'donations';
+
             $cart_item = array(
-                    'label' => 'My Donation',
+                    'label' => $label,
                     'currency' =>  bb_cart_get_default_currency(),
                     'price' => $price,
                     'frequency' => $frequency,
@@ -696,11 +697,11 @@ function bb_cart_add_from_querystring() {
                     'deductible' => $deductible,
                     'transaction_type' => $transaction_type,
                     'quantity' => 1,
-                    'sku' => $_GET['sku'],
+                    'sku' => $sku,
             );
             $_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section);
         }
-        wp_redirect(remove_query_arg(array('add_to_cart', 'sku', 'frequency')));
+        wp_redirect(remove_query_arg(array('add_to_cart', 'sku', 'frequency', 'label', 'type')));
         exit;
     }
 }
