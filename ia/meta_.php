@@ -21,14 +21,15 @@ class metaClass {
     }
 
     function bb_metabox_content( $post ) {
-        if( !is_array( $meta_fields) ) $meta_fields = array();
+        $meta_fields = array();
+
         wp_nonce_field(plugin_basename( __FILE__ ), 'bb_metabox_content_nonce');
 
         foreach ($this->fields as $field) {
             array_push($meta_fields, $this->bb_new_field($field));
         }
 
-        set_transient($this->slug.'_meta_fields', serialize($meta_fields), 3600);
+        set_transient($this->slug.'_meta_fields', maybe_serialize($meta_fields), 3600);
     }
 
     function bb_metabox_save( $post_id ) {
@@ -42,9 +43,11 @@ class metaClass {
             return;
         }
 
-        $meta_fields = unserialize(get_transient($this->slug.'_meta_fields'));
-        foreach($meta_fields as $meta_field) {
-            update_post_meta($post_id, $meta_field, sanitize_text_field($_POST[$meta_field]));
+        $meta_fields = maybe_unserialize(get_transient($this->slug.'_meta_fields'));
+        if (is_array($meta_fields)) {
+            foreach ($meta_fields as $meta_field) {
+                update_post_meta($post_id, $meta_field, sanitize_text_field($_POST[$meta_field]));
+            }
         }
     }
 
