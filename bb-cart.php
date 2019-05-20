@@ -947,7 +947,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                                     $price = $woo_cart[$product['cart_item_key']]['line_total'];
                                     $total += $price;
                                     $line_item = array(
-                                            'name' => $product['name'],
+                                            'name' => $product['label'],
                                             'price' => $price/$product['quantity'],
                                             'quantity' => $product['quantity'],
                                     );
