@@ -914,7 +914,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                                 WC()->cart->calculate_totals();
                                 $woo_cart = $wc_session->get('cart', array());
                                 $WCCheckout = new WC_Checkout();
-                                $order_id = $WCCheckout->create_order();
+                                $order_id = $WCCheckout->create_order(array());
                                 update_post_meta($transaction_id, 'woocommerce_order_id', $order_id);
 
                                 if (!empty($author_id)) {
