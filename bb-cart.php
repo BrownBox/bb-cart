@@ -1251,7 +1251,7 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
     parse_str(ltrim($query_string, '&'), $query);
     $i = 1;
     foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
-        if ($feed['meta']['transactionType'] == 'donation') {
+        if ($feed['meta']['transactionType'] == 'donation' || $feed['meta']['transactionType'] == 'subscription') {
             if ($section != 'donations') {
                 continue;
             }
