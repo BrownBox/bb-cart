@@ -302,7 +302,7 @@ function bb_cart_form_submit_button($button, $form) {
                     jQuery(".pseudo-submit").on("click", function() {
                         var payment_method = jQuery(this).attr("data-paymentmethod");
                         jQuery("input[value='" + payment_method + "']").trigger("click");
-                        jQuery(this).parent().find("input.gform_button.button").trigger("click");
+                        jQuery(this).parents(".gform_footer").find("div.hide input.gform_button.button").trigger("click");
                         return false;
                     });
                 });
