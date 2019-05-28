@@ -111,24 +111,28 @@ class bb_cart_export {
             wp_die('No matching transactions found.');
         }
 
+        $export_fields = array(
+                'Date',
+                'Donor ID',
+                'Receipt Number',
+                'Nickname',
+                'First Name',
+                'Last Name',
+                'Organisation',
+                'Address Line 1',
+                'Address Line 2',
+                'Suburb',
+                'Postcode',
+                'State',
+                'Country',
+                'Fund Code',
+                'Amount',
+                'Receipted',
+                'Channel',
+        );
+
         $csv = array(
-                array(
-                        'Date',
-                        'Donor ID',
-                        'Receipt Number',
-                        'First Name',
-                        'Last Name',
-                        'Address Line 1',
-                        'Address Line 2',
-                        'Suburb',
-                        'Postcode',
-                        'State',
-                        'Country',
-                        'Fund Code',
-                        'Amount',
-                        'Receipted',
-                        'Channel',
-                ),
+                $export_fields,
         );
 
         foreach ($transactions as $transaction) {
@@ -147,12 +151,14 @@ class bb_cart_export {
                     }
                 }
                 $last_name = $user->last_name == 'Unknown' ? '' : $user->last_name;
-                $csv[] = array(
+                $row = array(
                         'Date' => $transaction->post_date,
                         'Donor ID' => $user->ID,
                         'Receipt Number' => $transaction->ID,
+                        'Nickname' => $user->nickname,
                         'First Name' => $first_name,
                         'Last Name' => $last_name,
+                        'Organisation' => $user_meta['organization'][0],
                         'Address Line 1' => $user_meta['bbconnect_address_one_1'][0],
                         'Address Line 2' => $user_meta['bbconnect_address_two_1'][0],
                         'Suburb' => $user_meta['bbconnect_address_city_1'][0],
@@ -164,6 +170,7 @@ class bb_cart_export {
                         'Receipted' => get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? 'Y' : 'N',
                         'Channel' => get_post_meta($transaction->ID, 'transaction_type', true) == 'offline' ? 'Offline' : 'Online',
                 );
+                $csv[] = $row;
             }
             if ($_POST['input_mark_receipted'] == 'yes') {
                 update_post_meta($transaction->ID, 'is_receipted', 'true');
