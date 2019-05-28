@@ -173,7 +173,7 @@ class bb_cart_batch_management {
                 $dl_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'download', '_wpnonce' => $nonce), $clean_url);
                 echo '                        <span class="view"><a href="'.$dl_url.'" data-batch="'.$batch->ID.'">Download Summary</a> | </span>'."\n";
                 $trash_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'trash', '_wpnonce' => $nonce), $clean_url);
-                echo '                        <span class="delete"><a href="'.$trash_url.'" class="submitdelete" data-batch="'.$batch->ID.'">Delete</a></span>'."\n";
+                echo '                        <span class="delete"><a href="'.$trash_url.'" class="submitdelete" data-batch="'.$batch->ID.'" onclick="return confirm(\'Are you sure you want to delete this batch and all associated transactions? This cannot be undone!\');">Delete</a></span>'."\n";
                 echo '                    </div>'."\n";
                 echo '                </td>'."\n";
                 echo '                <td class="">'.$this->get_batch_summary_html($batch->ID).'</td>'."\n";
