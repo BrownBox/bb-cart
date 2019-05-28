@@ -130,6 +130,7 @@ class bb_cart_export {
                 'Receipted',
                 'Channel',
         );
+        $export_fields = apply_filters('bb_cart_export_fields', $export_fields);
 
         $csv = array(
                 $export_fields,
@@ -170,6 +171,7 @@ class bb_cart_export {
                         'Receipted' => get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? 'Y' : 'N',
                         'Channel' => get_post_meta($transaction->ID, 'transaction_type', true) == 'offline' ? 'Offline' : 'Online',
                 );
+                $row = apply_filters('bb_cart_export_row', $row, $transaction, $line_item, $user);
                 $csv[] = $row;
             }
             if ($_POST['input_mark_receipted'] == 'yes') {
