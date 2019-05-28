@@ -4,6 +4,8 @@ class bb_cart_offline_email_receipts {
             '{{today_date}}',
             '{{transaction_date}}',
             '{{donor_name}}',
+            '{{donor_nickname}}',
+            '{{organisation_name}}',
             '{{donor_address}}',
             '{{donor_id}}',
             '{{transaction_amount}}',
@@ -23,6 +25,8 @@ class bb_cart_offline_email_receipts {
                 '{{today_date}}' => current_time(get_option('date_format')),
                 '{{transaction_date}}' => current_time(get_option('date_format')),
                 '{{donor_name}}' => $current_user->display_name,
+                '{{donor_nickname}}' => $current_user->nickname,
+                '{{organisation_name}}' => 'An Organisation',
                 '{{donor_address}}' => '123 A Street<br>City State 9999<br>Country',
                 '{{donor_id}}' => '1234',
                 '{{transaction_amount}}' => '123.45',
@@ -174,6 +178,7 @@ class bb_cart_offline_email_receipts {
      * @return mixed
      */
     public static function replace_merge_tag($content, WP_Post $transaction, $merge_tag) {
+        $meta = get_user_meta($transaction->post_author);
         switch ($merge_tag) {
             case '{{today_date}}':
                 $replace = current_time(get_option('date_format'));
@@ -186,8 +191,15 @@ class bb_cart_offline_email_receipts {
                 $donor = new WP_User($transaction->post_author);
                 $replace = $donor->display_name;
                 break;
+            case '{{donor_nickname}}':
+                $donor = new WP_User($transaction->post_author);
+                $replace = $donor->nickname;
+                break;
+            case '{{organisation_name}}':
+                $donor = new WP_User($transaction->post_author);
+                $replace = $meta['organisation'][0];
+                break;
             case '{{donor_address}}':
-                $meta = get_user_meta($transaction->post_author);
                 $replace = <<<EOR
 {$meta['bbconnect_address_one_1'][0]}
 {$meta['bbconnect_address_two_1'][0]}
