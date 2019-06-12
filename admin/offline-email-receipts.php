@@ -139,7 +139,7 @@ class bb_cart_offline_email_receipts {
      */
     public static function send_email_receipt(WP_Post $transaction) {
         $user = new WP_User($transaction->post_author);
-        if (!empty($user->user_email) && strpos($user->user_email, '@example.com') === false) {
+        if (!empty($user->user_email) && strpos($user->user_email, '@example.com') === false && substr($user->user_email, -8) != '.invalid') {
             $subject = self::replace_merge_tags(get_option('bb_cart_offline_receipt_subject'), $transaction);
             $message = self::replace_merge_tags(get_option('bb_cart_offline_receipt_template'), $transaction);
             $headers = array(
