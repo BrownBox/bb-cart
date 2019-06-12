@@ -197,7 +197,7 @@ class bb_cart_offline_email_receipts {
                 break;
             case '{{organisation_name}}':
                 $donor = new WP_User($transaction->post_author);
-                $replace = $meta['organisation'][0];
+                $replace = $meta['organization'][0];
                 break;
             case '{{donor_address}}':
                 $replace = <<<EOR
