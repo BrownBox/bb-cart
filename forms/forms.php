@@ -530,6 +530,11 @@ function bb_cart_get_checkout_form(){
                                             'value' => 'schedule payment',
                                             'isSelected' => false,
                                     ),
+                                    array(
+                                            'text' => 'Show Anonymous',
+                                            'value' => 'anonymous',
+                                            'isSelected' => false,
+                                    ),
                             ),
                             'inputs' => array(
                                     array(
@@ -551,6 +556,10 @@ function bb_cart_get_checkout_form(){
                                     array(
                                             'id' => '28.5',
                                             'label' => 'Form Setup: Offer Scheduled Payments',
+                                    ),
+                                    array(
+                                            'id' => '28.6',
+                                            'label' => 'Form Setup: Show Anonymous',
                                     ),
                             ),
                             'allowsPrepopulate' => true,
@@ -1045,6 +1054,40 @@ Your details will also allow us to give you a personal reference number to inclu
                                                     'fieldId' => '28',
                                                     'operator' => 'is',
                                                     'value' => 'subscribe',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'checkbox',
+                            'id' => 49,
+                            'label' => 'Anonymous Donation',
+                            'isRequired' => false,
+                            'choices' => array(
+                                    0 => array(
+                                            'text' => 'Anonymous Gift: Your name and contact details will not be shared with the member',
+                                            'value' => 'anonymous',
+                                            'isSelected' => false,
+                                    ),
+                            ),
+                            'inputs' => array(
+                                    0 => array(
+                                            'id' => '49.1',
+                                            'label' => 'Anonymous Gift: Your name and contact details will not be shared with the member',
+                                            'name' => 'anonymous',
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'bb_cart_anonymous',
+                            'visibility' => 'visible',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '28',
+                                                    'operator' => 'is',
+                                                    'value' => 'anonymous',
                                             ),
                                     ),
                             ),
