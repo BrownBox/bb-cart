@@ -12,7 +12,7 @@ class bb_cart_batch_management {
     }
 
     public function create_admin_page() {
-        $clean_url = remove_query_arg(array('_wpnonce', 'action', 'batch', 'paged'));
+        $clean_url = remove_query_arg(array('_wpnonce', 'action', 'sub_action', 'batch', 'paged', 'item'));
         if (!empty($_GET['action'])) {
             if (wp_verify_nonce($_GET['_wpnonce'], 'bb_cart_batches')) {
                 switch ($_GET['action']) {
@@ -190,16 +190,52 @@ class bb_cart_batch_management {
         echo '</div>'."\n";
     }
 
-    private function edit_batch_page($clean_url) {
+    private function edit_batch_page($back_url) {
         $batch_id = (int)$_GET['batch'];
         $batch = get_post($batch_id);
         $can_edit = current_user_can('manage_options');
         $ajax_url = admin_url('admin-ajax.php');
 
         if (!$batch instanceof WP_Post || $batch->post_type != 'transactionbatch') {
-            echo '<div class="notice notice-error"><p>Invalid action. Please <a href="'.$clean_url.'">reload the page</a> and try again.</p></div>';
+            echo '<div class="notice notice-error"><p>Invalid action. Please <a href="'.$back_url.'">reload the page</a> and try again.</p></div>';
             return;
         }
+
+        $clean_url = remove_query_arg(array('sub_action', 'item'));
+        if (!empty($_GET['sub_action'])) {
+            switch ($_GET['sub_action']) {
+                case 'trash':
+                    $items = $_GET['item'];
+                    // Before we delete the line items we need a list of transactions to update
+                    $check_transactions = array();
+                    foreach ($items as $item) {
+                        $check_transactions[] = bb_cart_get_transaction_from_line_item($item);
+                    }
+                    $check_transactions = array_unique($check_transactions);
+                    bb_cart_delete_line_items($items);
+                    foreach ($check_transactions as $check_transaction) {
+                        $remaining_line_items = bb_cart_get_transaction_line_items($check_transaction->ID);
+                        if (empty($remaining_line_items)) {
+                            bb_cart_delete_transactions(array($check_transaction->ID));
+                        } else {
+                            $donation_amount = $total_amount = 0;
+                            foreach ($remaining_line_items as $remaining_line_item) {
+                                $price = get_post_meta($remaining_line_item->ID, 'price', true);
+                                $total_amount += $price;
+                                $fund_code = bb_cart_get_fund_code($remaining_line_item->ID);
+                                if (get_post_meta($fund_code, 'transaction_type', true) == 'donation') {
+                                    $donation_amount += $price;
+                                }
+                            }
+                            update_post_meta($check_transaction->ID, 'total_amount', $total_amount);
+                            update_post_meta($check_transaction->ID, 'donation_amount', $donation_amount);
+                        }
+                    }
+                    echo '<div class="notice notice-success"><p>Deleted successfully.</p></div>';
+                    break;
+            }
+        }
+
         echo '<div class="wrap">'."\n";
         echo '<p style="float: right;"><a href="'.add_query_arg(array('action' => 'email_receipts')).'" class="button" onclick="return confirm(\'This will email receipts for all transactions in this batch which have not yet been receipted and where the donor has a valid email address. Are you sure you wish to continue?\');">Email Receipts</a></p>'."\n";
         echo '<h2>Batch Details: '.$batch->post_title.'</h2>'."\n";
@@ -219,6 +255,7 @@ class bb_cart_batch_management {
         $total = 0;
         foreach ($transactions as $transaction) {
             $author = new WP_User($transaction->post_author);
+            $can_delete = strtolower(get_post_meta($transaction->ID, 'transaction_type', true)) == 'offline';
             $receipted = get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
             $args = array(
                     'post_type' => 'transactionlineitem',
@@ -256,16 +293,12 @@ class bb_cart_batch_management {
                                 'url' => add_query_arg(array('action' => 'bb_cart_load_split_transaction_line', 'id' => $line_item->ID), $ajax_url),
                         );
                         echo '                    <div class="row-actions">'."\n";
+                        if ($can_delete) {
+                            $trash_url = add_query_arg(array('item[]' => urlencode($line_item->ID), 'sub_action' => 'trash'), $clean_url);
+                            echo '                        <span class="delete"><a href="'.$trash_url.'" class="submitdelete" data-item="'.$line_item->ID.'" onclick="return confirm(\'Are you sure you want to delete this item? This cannot be undone!\');">Delete</a> | </span>'."\n";
+                        }
                         echo '                        <span class="edit">'.bb_cart_ajax_modal_link('Edit', $edit_args).' | </span>'."\n";
                         echo '                        <span class="edit">'.bb_cart_ajax_modal_link('Split', $split_args).'</span>'."\n";
-//                 if ($batch->post_status == 'pending') {
-//                     $confirm_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'confirm', '_wpnonce' => $nonce), $clean_url);
-//                     echo '                        <span class="publish"><a href="'.$confirm_url.'" class="submitpublish" data-batch="'.$batch->ID.'">Confirm</a> | </span>'."\n";
-//                 }
-//                 $dl_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'download', '_wpnonce' => $nonce), $clean_url);
-//                 echo '                        <span class="view"><a href="'.$dl_url.'" data-batch="'.$batch->ID.'">Download Summary</a> | </span>'."\n";
-//                 $trash_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'trash', '_wpnonce' => $nonce), $clean_url);
-//                 echo '                        <span class="delete"><a href="'.$trash_url.'" class="submitdelete" data-batch="'.$batch->ID.'">Delete</a></span>'."\n";
                         echo '                    </div>'."\n";
                     }
                     echo '                <td class="post-author page-author column-author">'.$author->display_name.'</td>'."\n";
@@ -361,9 +394,7 @@ class bb_cart_batch_management {
         }
         foreach ($batch_ids as $batch_id) {
             $transactions = $this->get_batch_transactions($batch_id);
-            foreach ($transactions as $transaction) {
-                wp_trash_post($transaction->ID);
-            }
+            bb_cart_delete_transactions($transactions);
             wp_trash_post($batch_id);
         }
     }

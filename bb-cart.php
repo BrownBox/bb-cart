@@ -1371,9 +1371,39 @@ function bb_cart_cancel_pending_transaction($transaction_id, $message, $entry = 
         }
     }
     $order_id = get_post_meta($transaction_id, 'woocommerce_order_id', true);
-    if ($order_id) {
+    if ($order_id && class_exists('WC_Order')) {
         $order = new WC_Order($order_id);
         $order->update_status('failed');
+    }
+}
+
+function bb_cart_delete_transactions($transactions) {
+    if (!is_array($transactions)) {
+        $transactions = explode(',', $transactions);
+    }
+    foreach ($transactions as $transaction) {
+        if ($transaction instanceof WP_Post) {
+            $transaction_id = $transaction->ID;
+        } else {
+            $transaction_id = (int)$transaction;
+        }
+        $line_items = bb_cart_get_transaction_line_items($transaction_id);
+        bb_cart_delete_line_items($line_items);
+        wp_trash_post($transaction_id);
+    }
+}
+
+function bb_cart_delete_line_items($line_items) {
+    if (!is_array($line_items)) {
+        $line_items = explode(',', $line_items);
+    }
+    foreach ($line_items as $line_item) {
+        if ($line_item instanceof WP_Post) {
+            $line_item_id = $line_item->ID;
+        } else {
+            $line_item_id = (int)$line_item;
+        }
+        wp_trash_post($line_item_id);
     }
 }
 

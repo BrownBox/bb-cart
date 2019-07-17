@@ -221,6 +221,8 @@ function bb_cart_split_transaction_line() {
             'post_status' => $line_item->post_status,
             'post_date' => $line_item->post_date,
             'post_author' => $line_item->post_author,
+            'post_title' => $line_item->post_title,
+            'post_content' => $line_item->post_content,
     );
     $new_item_id = wp_insert_post($new_line_item);
 
