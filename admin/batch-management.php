@@ -194,6 +194,9 @@ class bb_cart_batch_management {
     private function edit_batch_page($clean_url) {
         $batch_id = (int)$_GET['batch'];
         $batch = get_post($batch_id);
+        $can_edit = current_user_can('manage_options');
+        $ajax_url = admin_url('admin-ajax.php');
+
         if (!$batch instanceof WP_Post || $batch->post_type != 'transactionbatch') {
             echo '<div class="notice notice-error"><p>Invalid action. Please <a href="'.$clean_url.'">reload the page</a> and try again.</p></div>';
             return;
@@ -245,8 +248,12 @@ class bb_cart_batch_management {
                     $total += $amount;
                     echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="lineitem-'.$line_item->ID.'">'."\n";
                     echo '                <td class="post-author has-row-actions page-author column-author"><strong>'.$author->display_name.'</strong>'."\n";
-                    echo '                    <div class="row-actions">'."\n";
-//                 echo '                        <span class="edit"><a href="'.$edit_url.'" data-batch="'.$batch->ID.'">View Details</a> | </span>'."\n";
+                    if ($can_edit) {
+                        $edit_args = array(
+                                'url' => add_query_arg(array('action' => 'bb_cart_load_edit_transaction_line', 'id' => $line_item->ID), $ajax_url),
+                        );
+                        echo '                    <div class="row-actions">'."\n";
+                        echo '                        <span class="edit">'.bb_cart_ajax_modal_link('Edit', $edit_args).'</span>'."\n";
 //                 if ($batch->post_status == 'pending') {
 //                     $confirm_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'confirm', '_wpnonce' => $nonce), $clean_url);
 //                     echo '                        <span class="publish"><a href="'.$confirm_url.'" class="submitpublish" data-batch="'.$batch->ID.'">Confirm</a> | </span>'."\n";
@@ -255,7 +262,8 @@ class bb_cart_batch_management {
 //                 echo '                        <span class="view"><a href="'.$dl_url.'" data-batch="'.$batch->ID.'">Download Summary</a> | </span>'."\n";
 //                 $trash_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'trash', '_wpnonce' => $nonce), $clean_url);
 //                 echo '                        <span class="delete"><a href="'.$trash_url.'" class="submitdelete" data-batch="'.$batch->ID.'">Delete</a></span>'."\n";
-                    echo '                    </div>'."\n";
+                        echo '                    </div>'."\n";
+                    }
                     echo '                </td>'."\n";
                     echo '                <td class="">'.$fund_code.'</td>'."\n";
                     echo '                <td class="">'.apply_filters('the_content', $line_item->post_content).'</td>'."\n";

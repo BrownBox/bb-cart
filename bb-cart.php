@@ -23,6 +23,7 @@ require_once(BB_CART_DIR.'forms/prerenders.php');
 require_once(BB_CART_DIR.'forms/presubmission.php');
 require_once(BB_CART_DIR.'forms/confirmation.php');
 require_once(BB_CART_DIR.'forms/update-entry.php');
+require_once(BB_CART_DIR.'admin/fx.php');
 require_once(BB_CART_DIR.'admin/settings.php');
 require_once(BB_CART_DIR.'admin/pledges.php');
 require_once(BB_CART_DIR.'admin/import.php');
