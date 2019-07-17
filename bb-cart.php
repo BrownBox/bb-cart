@@ -1191,6 +1191,26 @@ function bb_cart_get_transaction_for_subscription($subscription_id) {
 }
 
 /**
+ * Find the transaction for the specified line item
+ * @param WP_Post|integer $line_item
+ * @return WP_Post|false Transaction object on success, else false
+ */
+function bb_cart_get_transaction_from_line_item($line_item) {
+    $line_item = get_post($line_item);
+    if (!($line_item instanceof WP_Post) || get_post_type($line_item) != 'transactionlineitem') {
+        return false;
+    }
+
+    $transaction_terms = wp_get_post_terms($line_item->ID, 'transaction');
+    if (count($transaction_terms)) {
+        $transaction = get_post($transaction_terms[0]->slug);
+        return $transaction;
+    }
+
+    return false;
+}
+
+/**
  * Find the transaction for the specified entry
  * @param int $entry_id
  * @return WP_Post|false Matching transaction if found, otherwise false

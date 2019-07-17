@@ -153,7 +153,6 @@ class bb_cart_batch_management {
             echo '            </tr>'."\n";
         } else {
             $pages = array_chunk($batches, $page_size, true);
-            $users = $forms = array();
             foreach ($pages[$paged-1] as $batch) {
                 echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="note-'.$batch->ID.'">'."\n";
                 $batch_date = bbconnect_get_datetime($batch->post_date);

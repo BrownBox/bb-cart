@@ -27,6 +27,8 @@ function bb_cart_load_edit_transaction_line() {
     if (!$line_item instanceof WP_Post || get_post_type($line_item) != 'transactionlineitem') {
         die('Invalid ID');
     }
+    $transaction = bb_cart_get_transaction_from_line_item($line_item);
+    $transaction_type = get_post_meta($transaction->ID, 'transaction_type', true);
 
     $args = array(
             'post_type' => 'fundcode',
@@ -52,6 +54,13 @@ function bb_cart_load_edit_transaction_line() {
 ?>
         </select></p>
         <p><label for="edit_date">Date: </label> <input id="edit_date" name="edit_date" type="date" value="<?php echo date('Y-m-d', strtotime($line_item->post_date)); ?>"></p>
+<?php
+    if (strtolower($transaction_type) == 'offline') {
+?>
+        <p><label for="edit_amount">Amount: </label> <input id="edit_amount" name="edit_amount" type="number" value="<?php echo get_post_meta($line_item->ID, 'price', true); ?>"></p>
+<?php
+    }
+?>
         <input type="submit" value="Update" onclick="bb_cart_update_transaction_line(); return false;">
     </form>
     <script>
@@ -60,7 +69,8 @@ function bb_cart_load_edit_transaction_line() {
                     'action': 'bb_cart_update_transaction_line',
                     'id': <?php echo $line_item->ID; ?>,
                     'fund_code': jQuery('#edit_fund_code').val(),
-                    'date': jQuery('#edit_date').val()
+                    'date': jQuery('#edit_date').val(),
+                    'amount': jQuery('#edit_amount').val()
             };
             jQuery.post(ajaxurl, data, function(response) {
                 alert(response);
@@ -96,16 +106,40 @@ function bb_cart_update_transaction_line() {
     wp_set_post_terms($line_item->ID, $fund_code_term->term_id, 'fundcode');
 
     // Changes impacting the whole transaction
-    $transaction_term = array_shift(wp_get_post_terms($line_item->ID, 'transaction'));
-    $transaction = get_post($transaction_term->slug);
-    $transaction->post_date = $date;
-    wp_update_post($transaction);
+    $transaction = bb_cart_get_transaction_from_line_item($line_item);
+    $transaction_type = get_post_meta($transaction->ID, 'transaction_type', true);
+    if (strtolower($transaction_type) == 'offline') {
+        if (!empty($_POST['amount'])) {
+            $new_amount = $_POST['amount'];
+            $old_amount = get_post_meta($line_item->ID, 'price', true);
+            $diff = $old_amount - $new_amount;
+            update_post_meta($line_item->ID, 'price', $new_amount);
 
-    $line_items = bb_cart_get_transaction_line_items($transaction_term->slug);
-    foreach ($line_items as $line_item) {
-        $line_item->post_date = $date;
-        wp_update_post($line_item);
+            $original_amount = get_post_meta($transaction->ID, 'total_amount', true);
+            update_post_meta($transaction->ID, 'total_amount', $original_amount-$diff);
+
+            // Now we need to check whether it's a donation so we can update the donation amount too
+            $fund_code_type = get_post_meta($fund_code, 'transaction_type', true);
+            if ($fund_code_type == 'donation') {
+                $original_amount = get_post_meta($transaction->ID, 'donation_amount', true);
+                update_post_meta($transaction->ID, 'donation_amount', $original_amount-$diff);
+            }
+        }
     }
+
+    // We can't use wp_update_post() here as it will clear all the meta values, so we'll do a custom query instead
+    global $wpdb;
+    $posts_to_update = array($transaction->ID);
+    $line_items = bb_cart_get_transaction_line_items($transaction->ID);
+    foreach ($line_items as $line_item) {
+        $posts_to_update[] = $line_item->ID;
+    }
+    $format = array_fill(0, count($posts_to_update), '%d');
+    $update_data = $posts_to_update;
+    array_unshift($update_data, $date);
+
+    $query = $wpdb->prepare('UPDATE '.$wpdb->posts.' SET post_date = %s WHERE ID in ('.implode(',', $format).')', $update_data);
+    $wpdb->query($query);
 
     die('Updated Successfully');
 }
