@@ -208,7 +208,8 @@ class bb_cart_batch_management {
         echo '    <table class="wp-list-table widefat fixed striped action_items">'."\n";
         echo '        <thead>'."\n";
         echo '            <tr>'."\n";
-        echo '                <th style="" class="manage-column column-author column-primary" id="author" scope="col">Donor Name</th>'."\n";
+        echo '                <th style="" class="manage-column column-postdate column-primary" id="date" scope="col">Date</th>'."\n";
+        echo '                <th style="" class="manage-column column-author" id="author" scope="col">Donor Name</th>'."\n";
         echo '                <th style="" class="manage-column" id="fundcode" scope="col">Fund Code</th>'."\n";
         echo '                <th style="" class="manage-column" id="comments" scope="col">Description</th>'."\n";
         echo '                <th style="text-align: center;" class="manage-column" id="receipted" scope="col">Receipted</th>'."\n";
@@ -247,7 +248,7 @@ class bb_cart_batch_management {
                     $amount = get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
                     $total += $amount;
                     echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="lineitem-'.$line_item->ID.'">'."\n";
-                    echo '                <td class="post-author has-row-actions page-author column-author"><strong>'.$author->display_name.'</strong>'."\n";
+                    echo '                <td class="post-date has-row-actions page-date column-date"><strong>'.date_i18n(get_option('date_format'), strtotime($line_item->post_date)).'</strong>'."\n";
                     if ($can_edit) {
                         $edit_args = array(
                                 'url' => add_query_arg(array('action' => 'bb_cart_load_edit_transaction_line', 'id' => $line_item->ID), $ajax_url),
@@ -264,7 +265,7 @@ class bb_cart_batch_management {
 //                 echo '                        <span class="delete"><a href="'.$trash_url.'" class="submitdelete" data-batch="'.$batch->ID.'">Delete</a></span>'."\n";
                         echo '                    </div>'."\n";
                     }
-                    echo '                </td>'."\n";
+                    echo '                <td class="post-author page-author column-author">'.$author->display_name.'</td>'."\n";
                     echo '                <td class="">'.$fund_code.'</td>'."\n";
                     echo '                <td class="">'.apply_filters('the_content', $line_item->post_content).'</td>'."\n";
                     echo '                <td style="text-align: center;">'.$receipted.'</td>'."\n";
@@ -276,7 +277,7 @@ class bb_cart_batch_management {
         echo '        </tbody>'."\n";
         echo '        <tfoot>'."\n";
         echo '            <tr>'."\n";
-        echo '                <th colspan="5" style="text-align: right;" class="manage-column" id="amount" scope="col"><span style="border-top: 1px solid black;">Total: $'.number_format($total, 2).'</span></th>'."\n";
+        echo '                <th colspan="6" style="text-align: right;" class="manage-column" id="amount" scope="col"><span style="border-top: 1px solid black;">Total: $'.number_format($total, 2).'</span></th>'."\n";
         echo '            </tr>'."\n";
         echo '        </tfoot>'."\n";
         echo '    </table>'."\n";
