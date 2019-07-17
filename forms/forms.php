@@ -1265,6 +1265,7 @@ Your details will also allow us to give you a personal reference number to inclu
                 'id' => 47,
                 'label' => 'Security Check',
                 'captchaLanguage' => 'en-GB',
+                'visibility' => 'hidden',
         );
     }
 
