@@ -718,7 +718,7 @@ function bb_cart_get_checkout_form(){
                                             ),
                                     ),
                             ),
-                            'content' => 'When you click "Submit" you will be directed to PayPal to finalise your donation. Once complete, please follow the link and return to our site so that we know your donation went through successfully and we can thank you. Please note that PayPal is not able to process donations that have both one-off and recurring amounts in the one transaction. In this case please use the credit card or direct debit payment options.',
+                            'content' => 'When you click "Submit" you will be directed to PayPal to finalise your donation. Once complete, please follow the link and return to our site so that we know your donation went through successfully and we can thank you. Please note that PayPal is not able to process donations that have both one-off and recurring amounts in the one transaction. In this case please use an alternate payment method.',
                     ),
                     array(
                             'type' => 'text',
