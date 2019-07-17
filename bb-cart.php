@@ -1307,11 +1307,13 @@ function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = n
         GFAPI::update_entry_property($entry['id'], "payment_date", $date);
         $form = GFAPI::get_form($entry['form_id']);
         foreach ($form['fields'] as $field) {
-            if ($field->inputName == 'bb_cart_checkout_items_array') {
+            if ($field->inputName == 'bb_cart_checkout_items_array' && !empty($entry[$field->id])) {
                 $item_entries = explode(',', $entry[$field->id]);
                 foreach ($item_entries as $item_entry) {
-                    GFAPI::update_entry_property($item_entry, "payment_status", 'Approved');
-                    GFAPI::update_entry_property($item_entry, "payment_date", $date);
+                    if (!empty($item_entry)) {
+                        GFAPI::update_entry_property($item_entry, "payment_status", 'Approved');
+                        GFAPI::update_entry_property($item_entry, "payment_date", $date);
+                    }
                 }
             }
         }
