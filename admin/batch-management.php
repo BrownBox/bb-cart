@@ -252,8 +252,12 @@ class bb_cart_batch_management {
                         $edit_args = array(
                                 'url' => add_query_arg(array('action' => 'bb_cart_load_edit_transaction_line', 'id' => $line_item->ID), $ajax_url),
                         );
+                        $split_args = array(
+                                'url' => add_query_arg(array('action' => 'bb_cart_load_split_transaction_line', 'id' => $line_item->ID), $ajax_url),
+                        );
                         echo '                    <div class="row-actions">'."\n";
-                        echo '                        <span class="edit">'.bb_cart_ajax_modal_link('Edit', $edit_args).'</span>'."\n";
+                        echo '                        <span class="edit">'.bb_cart_ajax_modal_link('Edit', $edit_args).' | </span>'."\n";
+                        echo '                        <span class="edit">'.bb_cart_ajax_modal_link('Split', $split_args).'</span>'."\n";
 //                 if ($batch->post_status == 'pending') {
 //                     $confirm_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'confirm', '_wpnonce' => $nonce), $clean_url);
 //                     echo '                        <span class="publish"><a href="'.$confirm_url.'" class="submitpublish" data-batch="'.$batch->ID.'">Confirm</a> | </span>'."\n";

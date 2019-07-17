@@ -25,7 +25,7 @@ function bb_cart_donor_history_profile_tab() {
     echo '                <th style="text-align: right;" class="manage-column" id="amount" scope="col">Amount</th>'."\n";
     echo '                <th style="text-align: center;" class="manage-column" id="tax_deductible" scope="col">Tax Deductible</th>'."\n";
     if ($can_edit) {
-        echo '                <th style="" class="manage-column" id="actions" scope="col">&nbsp;</th>'."\n";
+        echo '                <th style="" colspan="2" class="manage-column" id="actions" scope="col">&nbsp;</th>'."\n";
     }
     echo '            </tr>'."\n";
     echo '        </thead>'."\n";
@@ -64,10 +64,14 @@ function bb_cart_donor_history_profile_tab() {
                 echo '                <td style="text-align: right;">'.bb_cart_format_currency($amount).'</td>'."\n";
                 echo '                <td style="text-align: center;">'.$deductible.'</td>'."\n";
                 if ($can_edit) {
-                    $modal_args = array(
+                    $edit_args = array(
                             'url' => add_query_arg(array('action' => 'bb_cart_load_edit_transaction_line', 'id' => $line_item->ID), $ajax_url),
                     );
-                    echo '                <td style="text-align: center;">'.bb_cart_ajax_modal_link('Edit', $modal_args).'</td>'."\n";
+                    $split_args = array(
+                            'url' => add_query_arg(array('action' => 'bb_cart_load_split_transaction_line', 'id' => $line_item->ID), $ajax_url),
+                    );
+                    echo '                <td style="text-align: center;">'.bb_cart_ajax_modal_link('Edit', $edit_args).'</td>'."\n";
+                    echo '                <td style="text-align: center;">'.bb_cart_ajax_modal_link('Split', $split_args).'</td>'."\n";
                 }
                 echo '            </tr>'."\n";
             }
