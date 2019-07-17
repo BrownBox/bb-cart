@@ -763,8 +763,8 @@ function bb_cart_get_checkout_form(){
                                             ),
                                     ),
                             ),
-                            'content' => 'Thank you for pledging to support %%sitename%%. Please complete the form below so that we can send you our bank account details and thank you for your generosity.
-Your details will also allow us to give you a personal reference number to include with your payment so that we can make sure your gift gets to %%donation_for%%.',
+                            'content' => 'Thank you for your pledge of support. Please complete the form below so that we can send you our bank account details and thank you for your generosity.
+Your details will also allow us to give you a personal reference number to include with your payment so that we can make sure your gift is allocated according to your selection.',
                     ),
                     array(
                             'type' => 'checkbox',
