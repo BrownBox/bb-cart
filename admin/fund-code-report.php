@@ -13,7 +13,7 @@ class bb_cart_fund_code_report {
     }
 
     public function add_plugin_page() {
-        $this->hook = add_submenu_page('users.php', 'Fund Code Report', 'Fund Code Report', 'add_users', $this->slug, array($this, 'create_admin_page'));
+        $this->hook = add_submenu_page('bb_cart_settings', 'Fund Code Report', 'Fund Code Report', 'add_users', $this->slug, array($this, 'create_admin_page'));
     }
 
     public function enqueue_scripts($hook) {

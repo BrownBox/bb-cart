@@ -12,7 +12,7 @@ class bb_cart_export {
     }
 
     public function add_plugin_page() {
-        add_submenu_page('users.php', 'Export Transactions', 'Export Transactions', 'add_users', $this->slug, array($this, 'create_admin_page'));
+        add_submenu_page('bb_cart_settings', 'Export Transactions', 'Export Transactions', 'add_users', $this->slug, array($this, 'create_admin_page'));
     }
 
     public function create_admin_page() {
