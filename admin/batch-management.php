@@ -243,43 +243,51 @@ class bb_cart_batch_management {
         );
         echo '<p style="float: right;">'."\n";
         echo '<a href="'.add_query_arg(array('action' => 'email_receipts')).'" class="button" onclick="return confirm(\'This will email receipts for all transactions in this batch which have not yet been receipted and where the donor has a valid email address. Are you sure you wish to continue?\');">Email Receipts</a>'."\n";
-        echo bb_cart_ajax_modal_link('Edit Batch Details', $edit_args)."\n";
+        if ($can_edit) {
+            echo bb_cart_ajax_modal_link('Edit Batch Details', $edit_args)."\n";
+        }
         echo '</p>'."\n";
         echo '<h2>Batch Details: '.$batch->post_title.'</h2>'."\n";
         $transactions = bb_cart_get_batch_transactions($batch_id);
-        echo '    <div class="tablenav top">'."\n";
-        echo '        <div class="alignleft actions bulkactions">'."\n";
-        echo '            <label for="bulk-action-selector-top" class="screen-reader-text">Select bulk action</label>'."\n";
-        echo '            <select name="action" id="bulk-action-selector-top">'."\n";
-        echo '                <option value="-1">Bulk Actions</option>'."\n";
-        echo '                <option value="movetransactions">Move</option>'."\n";
-        echo '                <option value="newbatch">Create New Batch</option>'."\n";
-        echo '            </select>'."\n";
-        echo '            <input type="hidden" name="selected_line_items" id="selected_line_items" value="">'."\n";
-        echo '            <input id="doaction" class="button action" value="Apply" type="submit" onclick="bb_cart_batch_details_bulkaction();">'."\n";
-        echo '        </div>'."\n";
-        echo '    </div>'."\n";
+        if ($can_edit) {
+            echo '    <div class="tablenav top">'."\n";
+            echo '        <div class="alignleft actions bulkactions">'."\n";
+            echo '            <label for="bulk-action-selector-top" class="screen-reader-text">Select bulk action</label>'."\n";
+            echo '            <select name="action" id="bulk-action-selector-top">'."\n";
+            echo '                <option value="-1">Bulk Actions</option>'."\n";
+            echo '                <option value="movetransactions">Move</option>'."\n";
+            echo '                <option value="newbatch">Create New Batch</option>'."\n";
+            echo '            </select>'."\n";
+            echo '            <input type="hidden" name="selected_line_items" id="selected_line_items" value="">'."\n";
+            echo '            <input id="doaction" class="button action" value="Apply" type="submit" onclick="bb_cart_batch_details_bulkaction();">'."\n";
+            echo '        </div>'."\n";
+            echo '    </div>'."\n";
 ?>
-        <script>
-        function bb_cart_batch_details_bulkaction() {
-            var action = jQuery('#bulk-action-selector-top').val();
-            if (action != '-1') {
-                var url = '<?php echo $ajax_url; ?>?action=bb_cart_load_'+action;
-                jQuery('input[type=checkbox][name=line_item]').each(function() {
-                    if (jQuery(this).prop('checked')) {
-                        url += '&items[]='+jQuery(this).val();
-                    }
-                });
-                jQuery('body').append('<a id="bb_cart_templink" style="display: none;" class="thickbox" href="'+url+'&width=600&height=400"></a>');
-                jQuery('#bb_cart_templink').click().remove();
-            }
+    <script>
+    function bb_cart_batch_details_bulkaction() {
+        var action = jQuery('#bulk-action-selector-top').val();
+        if (action != '-1') {
+            var url = '<?php echo $ajax_url; ?>?action=bb_cart_load_'+action;
+            jQuery('input[type=checkbox][name=line_item]').each(function() {
+                if (jQuery(this).prop('checked')) {
+                    url += '&items[]='+jQuery(this).val();
+                }
+            });
+            jQuery('body').append('<a id="bb_cart_templink" style="display: none;" class="thickbox" href="'+url+'&width=600&height=400"></a>');
+            jQuery('#bb_cart_templink').click().remove();
         }
-        </script>
+    }
+    </script>
 <?php
+        }
         echo '    <table class="wp-list-table widefat fixed striped action_items">'."\n";
         echo '        <thead>'."\n";
         echo '            <tr>'."\n";
-        echo '                <th id="cb" class="manage-column column-cb check-column"><input id="cb-select-all-1" type="checkbox"></th>'."\n";
+        echo '                <th id="cb" class="manage-column column-cb check-column">'."\n";
+        if ($can_edit) {
+            echo '                    <input id="cb-select-all-1" type="checkbox">'."\n";
+        }
+        echo '                </th>'."\n";
         echo '                <th style="" class="manage-column column-postdate column-primary" id="date" scope="col">Date</th>'."\n";
         echo '                <th style="" class="manage-column column-author" id="author" scope="col">Donor Name</th>'."\n";
         echo '                <th style="" class="manage-column" id="fundcode" scope="col">Fund Code</th>'."\n";
