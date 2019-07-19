@@ -7,11 +7,10 @@ new \bb_cart\cptTaxClass('Transaction', 'Transactions', array('transactionlineit
         'labels' => array(
                 'name' => 'Transactions',
         ),
-        'menu_icon' => 'dashicons-cart',
         'public' => false,
         'has_archive' => false,
         'query_var' => false,
-        'show_ui' => true,
+        'show_ui' => false,
         'hierarchical' => false,
         'supports' => array(
                 'title',
@@ -103,11 +102,10 @@ new \bb_cart\cptClass('Transaction Line Item', 'Transaction Line Items', array(
                 'with_front' => false,
                 'slug' => 'line-item',
         ),
-        'menu_icon' => 'dashicons-feedback',
         'public' => false,
         'has_archive' => false,
         'query_var' => false,
-        'show_ui' => true,
+        'show_ui' => false,
         'hierarchical' => false,
         'supports' => array(
                 'title',
@@ -144,11 +142,10 @@ new \bb_cart\cptClass('Transaction Batch', 'Transaction Batches', array(
                 'with_front' => false,
                 'slug' => 'batch',
         ),
-        'menu_icon' => 'dashicons-archive',
         'public' => false,
         'has_archive' => false,
         'query_var' => false,
-        'show_ui' => true,
+        'show_ui' => false,
         'hierarchical' => false,
 ));
 
@@ -172,11 +169,11 @@ new \bb_cart\cptTaxClass('Fund Code', 'Fund Codes', array('transactionlineitem',
         'rewrite' => array(
                 'with_front' => false,
         ),
-        'menu_icon' => 'dashicons-portfolio',
         'public' => false,
         'has_archive' => false,
         'query_var' => false,
         'show_ui' => true,
+        'show_in_menu' => false,
         'hierarchical' => true,
         'supports' => array(
                 'title',
@@ -233,4 +230,32 @@ function bb_cart_create_default_fund_code() {
         }
         update_option('bb_cart_default_fund_code', $fund_code_id);
     }
+}
+
+// Add fund codes menu item under BB Cart
+add_action('admin_menu', 'bb_cart_add_fund_code_menu');
+function bb_cart_add_fund_code_menu() {
+    add_submenu_page('bb_cart_settings', 'Fund Codes', 'Fund Codes', 'edit_posts', 'edit.php?post_type=fundcode');
+}
+
+add_filter('parent_file', 'bb_cart_fund_code_parent_file');
+function bb_cart_fund_code_parent_file($parent_file) {
+    global $current_screen;
+
+    if (in_array($current_screen->base, array('post', 'edit')) && 'fundcode' == $current_screen->post_type) {
+        $parent_file = 'bb_cart_settings';
+    }
+
+    return $parent_file;
+}
+
+add_filter('submenu_file', 'bb_cart_fund_code_submenu_file');
+function bb_cart_fund_code_submenu_file($submenu_file) {
+    global $current_screen;
+
+    if (in_array($current_screen->base, array('post', 'edit')) && 'fundcode' == $current_screen->post_type) {
+        $submenu_file = 'edit.php?post_type=fundcode';
+    }
+
+    return $submenu_file;
 }
