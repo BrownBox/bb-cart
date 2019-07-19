@@ -16,9 +16,10 @@ function bb_cart_ajax_modal_link($text, $args = array()) {
             'width' => 600,
             'height' => 400,
             'url' => '',
+            'class' => '',
     );
     $args = wp_parse_args($args, $default_args);
-    return sprintf('<a class="thickbox" href="%s&width=%d&height=%d">%s</a>', $args['url'], $args['width'], $args['height'], $text);
+    return sprintf('<a class="thickbox %s" href="%s&width=%d&height=%d">%s</a>', $args['class'], $args['url'], $args['width'], $args['height'], $text);
 }
 
 add_action('wp_ajax_bb_cart_load_edit_transaction_line', 'bb_cart_load_edit_transaction_line');
@@ -133,6 +134,37 @@ function bb_cart_load_split_transaction_line() {
     die();
 }
 
+add_action('wp_ajax_bb_cart_load_edit_batch', 'bb_cart_load_edit_batch');
+function bb_cart_load_edit_batch() {
+    $batch = get_post((int)$_GET['id']);
+    if (!$batch instanceof WP_Post || get_post_type($batch) != 'transactionbatch') {
+        die('Invalid ID');
+    }
+?>
+    <h3>Updating <?php echo get_the_title($batch); ?></h3>
+    <form action="" method="post">
+        <p><label for="edit_batch_name">Batch Name: </label> <input id="edit_batch_name" name="edit_batch_name" type="text" value="<?php echo get_the_title($batch); ?>"></p>
+        <p><label for="edit_date">Date: </label> <input id="edit_date" name="edit_date" type="date" value="<?php echo date('Y-m-d', strtotime($batch->post_date)); ?>"></p>
+        <input type="submit" value="Update" onclick="bb_cart_update_batch(); return false;">
+    </form>
+    <script>
+        function bb_cart_update_batch() {
+            var data = {
+                    'action': 'bb_cart_update_batch',
+                    'id': <?php echo $batch->ID; ?>,
+                    'title': jQuery('#edit_batch_name').val(),
+                    'date': jQuery('#edit_date').val()
+            };
+            jQuery.post(ajaxurl, data, function(response) {
+                alert(response);
+                window.location.reload();
+            });
+        }
+    </script>
+<?php
+    die();
+}
+
 add_action('wp_ajax_bb_cart_update_transaction_line', 'bb_cart_update_transaction_line');
 function bb_cart_update_transaction_line() {
     $line_item = get_post((int)$_POST['id']);
@@ -178,19 +210,7 @@ function bb_cart_update_transaction_line() {
         }
     }
 
-    // We can't use wp_update_post() here as it will clear all the meta values, so we'll do a custom query instead
-    global $wpdb;
-    $posts_to_update = array($transaction->ID);
-    $line_items = bb_cart_get_transaction_line_items($transaction->ID);
-    foreach ($line_items as $line_item) {
-        $posts_to_update[] = $line_item->ID;
-    }
-    $format = array_fill(0, count($posts_to_update), '%d');
-    $update_data = $posts_to_update;
-    array_unshift($update_data, $date);
-
-    $query = $wpdb->prepare('UPDATE '.$wpdb->posts.' SET post_date = %s WHERE ID in ('.implode(',', $format).')', $update_data);
-    $wpdb->query($query);
+    bb_cart_update_transaction_date($transaction->ID, $date);
 
     die('Updated Successfully');
 }
@@ -240,4 +260,74 @@ function bb_cart_split_transaction_line() {
     update_post_meta($line_item->ID, 'price', $current_amount-$amount);
 
     die('Split Successfully');
+}
+
+add_action('wp_ajax_bb_cart_update_batch', 'bb_cart_update_batch');
+function bb_cart_update_batch() {
+    $batch = get_post((int)$_POST['id']);
+    if (!$batch instanceof WP_Post || get_post_type($batch) != 'transactionbatch') {
+        die('Invalid ID');
+    }
+
+    $title = $_POST['title'];
+    if (empty($title)) {
+        die('Batch Name cannot be empty');
+    }
+
+    $date = $_POST['date'];
+    if (strtotime($date) === false) {
+        die('Invalid Date');
+    } else {
+        $date = date('Y-m-d', strtotime($date));
+    }
+
+    // We can't use wp_update_post() here as it will clear all the meta values, so we'll do a custom query instead
+    global $wpdb;
+    $query = $wpdb->prepare('UPDATE '.$wpdb->posts.' SET post_title = %s WHERE ID = %d', array($title, $batch->ID));
+    $wpdb->query($query);
+
+    bb_cart_change_batch_date($batch->ID, $date);
+
+    die('Updated Successfully');
+}
+
+function bb_cart_change_batch_date($batch_id, $new_date) {
+    bb_cart_change_post_dates(array($batch_id), $new_date);
+    $transactions = bb_cart_get_batch_transactions($batch_id);
+    foreach ($transactions as $transaction) {
+        bb_cart_change_transaction_date($transaction->ID, $new_date);
+    }
+}
+
+function bb_cart_change_transaction_date($transaction_id, $new_date) {
+    $posts_to_update = array($transaction_id);
+    $line_items = bb_cart_get_transaction_line_items($transaction_id);
+    foreach ($line_items as $line_item) {
+        $posts_to_update[] = $line_item->ID;
+    }
+    bb_cart_change_post_dates($posts_to_update, $new_date);
+}
+
+function bb_cart_change_post_dates(array $post_ids, $new_date) {
+    // We can't use wp_update_post() here as it will clear all the meta values, so we'll do a custom query instead
+    global $wpdb;
+    $format = array_fill(0, count($post_ids), '%d');
+    $update_data = $post_ids;
+    array_unshift($update_data, $new_date);
+    $query = $wpdb->prepare('UPDATE '.$wpdb->posts.' SET post_date = %s WHERE ID in ('.implode(',', $format).')', $update_data);
+    $wpdb->query($query);
+}
+
+function bb_cart_get_batch_transactions($batch_id) {
+    $args = array(
+            'post_type' => 'transaction',
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                    array(
+                            'key' => 'batch_id',
+                            'value' => $batch_id,
+                    ),
+            ),
+    );
+    return get_posts($args);
 }

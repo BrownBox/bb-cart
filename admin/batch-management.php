@@ -193,7 +193,7 @@ class bb_cart_batch_management {
     private function edit_batch_page($back_url) {
         $batch_id = (int)$_GET['batch'];
         $batch = get_post($batch_id);
-        $can_edit = current_user_can('manage_options');
+        $can_edit = current_user_can('manage_options') && $batch->post_status == 'pending';
         $ajax_url = admin_url('admin-ajax.php');
 
         if (!$batch instanceof WP_Post || $batch->post_type != 'transactionbatch') {
@@ -237,9 +237,16 @@ class bb_cart_batch_management {
         }
 
         echo '<div class="wrap">'."\n";
-        echo '<p style="float: right;"><a href="'.add_query_arg(array('action' => 'email_receipts')).'" class="button" onclick="return confirm(\'This will email receipts for all transactions in this batch which have not yet been receipted and where the donor has a valid email address. Are you sure you wish to continue?\');">Email Receipts</a></p>'."\n";
+        $edit_args = array(
+                'class' => 'button',
+                'url' => add_query_arg(array('action' => 'bb_cart_load_edit_batch', 'id' => $batch->ID), $ajax_url),
+        );
+        echo '<p style="float: right;">'."\n";
+        echo '<a href="'.add_query_arg(array('action' => 'email_receipts')).'" class="button" onclick="return confirm(\'This will email receipts for all transactions in this batch which have not yet been receipted and where the donor has a valid email address. Are you sure you wish to continue?\');">Email Receipts</a>'."\n";
+        echo bb_cart_ajax_modal_link('Edit Batch Details', $edit_args)."\n";
+        echo '</p>'."\n";
         echo '<h2>Batch Details: '.$batch->post_title.'</h2>'."\n";
-        $transactions = $this->get_batch_transactions($batch_id);
+        $transactions = bb_cart_get_batch_transactions($batch_id);
         echo '    <table class="wp-list-table widefat fixed striped action_items">'."\n";
         echo '        <thead>'."\n";
         echo '            <tr>'."\n";
@@ -339,7 +346,7 @@ class bb_cart_batch_management {
     }
 
     private function get_batch_summary_html($batch_id) {
-        $transactions = $this->get_batch_transactions($batch_id);
+        $transactions = bb_cart_get_batch_transactions($batch_id);
         $groups = $this->group_transactions_by_fund_code($transactions);
         $output = '<p>';
         $total = 0;
@@ -357,7 +364,7 @@ class bb_cart_batch_management {
         if ($pagenow == 'users.php' && $_GET['page'] == 'bb_cart_batch_management' && !empty($_GET['batch']) && $_GET['action'] == 'download' && wp_verify_nonce($_GET['_wpnonce'], 'bb_cart_batches')) {
             $batch_id = array_shift($_GET['batch']);
             $output = get_the_date('', $batch_id)."\n\n";
-            $transactions = $this->get_batch_transactions($batch_id);
+            $transactions = bb_cart_get_batch_transactions($batch_id);
             $groups = $this->group_transactions_by_fund_code($transactions);
             $total = 0;
             $output .= str_pad('Code', 50).str_pad('# of Transactions', 20, ' ', STR_PAD_LEFT).str_pad('Amount', 20, ' ', STR_PAD_LEFT)."\n";
@@ -393,14 +400,14 @@ class bb_cart_batch_management {
             $batch_ids = explode(',', $batch_ids);
         }
         foreach ($batch_ids as $batch_id) {
-            $transactions = $this->get_batch_transactions($batch_id);
+            $transactions = bb_cart_get_batch_transactions($batch_id);
             bb_cart_delete_transactions($transactions);
             wp_trash_post($batch_id);
         }
     }
 
     private function email_receipts($batch_id) {
-        $transactions = $this->get_batch_transactions($batch_id);
+        $transactions = bb_cart_get_batch_transactions($batch_id);
         $count = 0;
         foreach ($transactions as $transaction) {
             if (get_post_meta($transaction->ID, 'is_receipted', true) != 'true') {
@@ -410,20 +417,6 @@ class bb_cart_batch_management {
             }
         }
         echo '<div class="notice notice-success"><p>'.$count.' emails sent.</p></div>';
-    }
-
-    private function get_batch_transactions($batch_id) {
-        $args = array(
-                'post_type' => 'transaction',
-                'posts_per_page' => -1,
-                'meta_query' => array(
-                        array(
-                                'key' => 'batch_id',
-                                'value' => $batch_id,
-                        ),
-                ),
-        );
-        return get_posts($args);
     }
 
     private function group_transactions_by_fund_code($transactions) {
