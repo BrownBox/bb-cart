@@ -356,6 +356,72 @@ function bb_cart_new_batch() {
     die('Updated Successfully');
 }
 
+add_action('wp_ajax_bb_cart_load_movetransactions', 'bb_cart_load_movetransactions');
+function bb_cart_load_movetransactions() {
+    $items = $_GET['items'];
+    if (empty($items)) {
+        die('No transactions selected');
+    }
+
+    $args = array(
+            'post_type' => 'transactionbatch',
+            'posts_per_page' => -1,
+            'post_status' => 'pending',
+            'orderby' => 'date',
+            'order' => 'ASC',
+    );
+    $batches = get_posts($args);
+?>
+    <h3>Select Batch</h3>
+    <form action="" method="post">
+        <p><label for="move_batch_id">Move To: </label>
+        <select id="move_batch_id" name="move_batch_id">
+<?php
+    foreach ($batches as $batch) {
+?>
+            <option value="<?php echo $batch->ID; ?>"><?php echo $batch->post_title; ?></option>
+<?php
+    }
+?>
+        </select></p>
+        <input type="submit" value="Move" onclick="bb_cart_move_transactions(); return false;">
+    </form>
+    <script>
+        function bb_cart_move_transactions() {
+            var data = {
+                    'action': 'bb_cart_move_transactions',
+                    'items': '<?php echo implode(',', $items); ?>',
+                    'batch_id': jQuery('#move_batch_id').val()
+            };
+            jQuery.post(ajaxurl, data, function(response) {
+                alert(response);
+                window.location.reload();
+            });
+        }
+    </script>
+<?php
+    die();
+}
+
+add_action('wp_ajax_bb_cart_move_transactions', 'bb_cart_move_transactions');
+function bb_cart_move_transactions() {
+    $items = $_POST['items'];
+    if (empty($items)) {
+        die('No transactions selected');
+    }
+    $items = explode(',', $items);
+
+    $batch_id = (int)$_POST['batch_id'];
+    $batch = get_post($batch_id);
+    if (!$batch instanceof WP_Post || get_post_type($batch) != 'transactionbatch') {
+        die('Invalid ID');
+    }
+
+    bb_cart_move_line_items_to_batch($items, $batch_id);
+
+    die('Updated Successfully');
+}
+
 function bb_cart_change_batch_date($batch_id, $new_date) {
     bb_cart_change_post_dates(array($batch_id), $new_date);
     $transactions = bb_cart_get_batch_transactions($batch_id);
