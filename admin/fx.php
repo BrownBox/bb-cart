@@ -471,6 +471,7 @@ function bb_cart_move_line_items_to_batch($items, $new_batch_id) {
             $new_transaction = array(
                     'post_type' => 'transaction',
                     'post_status' => $original_transaction->post_status,
+                    'post_author' => $original_transaction->post_author,
                     'post_date' => $date,
                     'post_title' => $original_transaction->post_title,
                     'post_content' => $original_transaction->post_content,
