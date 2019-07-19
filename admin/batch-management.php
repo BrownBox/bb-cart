@@ -247,9 +247,39 @@ class bb_cart_batch_management {
         echo '</p>'."\n";
         echo '<h2>Batch Details: '.$batch->post_title.'</h2>'."\n";
         $transactions = bb_cart_get_batch_transactions($batch_id);
+        echo '    <div class="tablenav top">'."\n";
+        echo '        <div class="alignleft actions bulkactions">'."\n";
+        echo '            <label for="bulk-action-selector-top" class="screen-reader-text">Select bulk action</label>'."\n";
+        echo '            <select name="action" id="bulk-action-selector-top">'."\n";
+        echo '                <option value="-1">Bulk Actions</option>'."\n";
+        echo '                <option value="movetransactions">Move</option>'."\n";
+        echo '                <option value="newbatch">Create New Batch</option>'."\n";
+        echo '            </select>'."\n";
+        echo '            <input type="hidden" name="selected_line_items" id="selected_line_items" value="">'."\n";
+        echo '            <input id="doaction" class="button action" value="Apply" type="submit" onclick="bb_cart_batch_details_bulkaction();">'."\n";
+        echo '        </div>'."\n";
+        echo '    </div>'."\n";
+?>
+        <script>
+        function bb_cart_batch_details_bulkaction() {
+            var action = jQuery('#bulk-action-selector-top').val();
+            if (action != '-1') {
+                var url = '<?php echo $ajax_url; ?>?action=bb_cart_load_'+action;
+                jQuery('input[type=checkbox][name=line_item]').each(function() {
+                    if (jQuery(this).prop('checked')) {
+                        url += '&items[]='+jQuery(this).val();
+                    }
+                });
+                jQuery('body').append('<a id="bb_cart_templink" style="display: none;" class="thickbox" href="'+url+'&width=600&height=400"></a>');
+                jQuery('#bb_cart_templink').click().remove();
+            }
+        }
+        </script>
+<?php
         echo '    <table class="wp-list-table widefat fixed striped action_items">'."\n";
         echo '        <thead>'."\n";
         echo '            <tr>'."\n";
+        echo '                <th id="cb" class="manage-column column-cb check-column"><input id="cb-select-all-1" type="checkbox"></th>'."\n";
         echo '                <th style="" class="manage-column column-postdate column-primary" id="date" scope="col">Date</th>'."\n";
         echo '                <th style="" class="manage-column column-author" id="author" scope="col">Donor Name</th>'."\n";
         echo '                <th style="" class="manage-column" id="fundcode" scope="col">Fund Code</th>'."\n";
@@ -291,6 +321,11 @@ class bb_cart_batch_management {
                     $amount = get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
                     $total += $amount;
                     echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="lineitem-'.$line_item->ID.'">'."\n";
+                    echo '                <th scope="row" class="check-column">';
+                    if ($can_edit) {
+                        echo '                    <input id="cb-select-'.$line_item->ID.'" name="line_item" value="'.$line_item->ID.'" type="checkbox">';
+                    }
+                    echo '                </th>'."\n";
                     echo '                <td class="post-date has-row-actions page-date column-date"><strong>'.date_i18n(get_option('date_format'), strtotime($line_item->post_date)).'</strong>'."\n";
                     if ($can_edit) {
                         $edit_args = array(
@@ -320,7 +355,7 @@ class bb_cart_batch_management {
         echo '        </tbody>'."\n";
         echo '        <tfoot>'."\n";
         echo '            <tr>'."\n";
-        echo '                <th colspan="6" style="text-align: right;" class="manage-column" id="amount" scope="col"><span style="border-top: 1px solid black;">Total: $'.number_format($total, 2).'</span></th>'."\n";
+        echo '                <th colspan="7" style="text-align: right;" class="manage-column" id="amount" scope="col"><span style="border-top: 1px solid black;">Total: $'.number_format($total, 2).'</span></th>'."\n";
         echo '            </tr>'."\n";
         echo '        </tfoot>'."\n";
         echo '    </table>'."\n";
