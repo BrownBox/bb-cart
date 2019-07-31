@@ -14,6 +14,7 @@ switch($data['event']) {
             } else { // ...and old
                 $pd_id = $data['_id'];
             }
+            $search_criteria = array();
             $search_criteria['field_filters'][] = array('key' => 'transaction_id', 'value' => $pd_id);
             $entries = GFAPI::get_entries(0, $search_criteria);
             if ($entries) {
@@ -30,7 +31,6 @@ switch($data['event']) {
         // Handle subscription payments
         if ($data['data']['one_off'] == false) {
             $subscription_id = $data['data']['subscription_id'];
-            $receipt_no = $data['data']['transactions'][0]['_id'];
             $amount = $data['data']['amount'];
             $email = $data['data']['customer']['email'];
             $currency = $data['data']['currency'];
@@ -64,6 +64,7 @@ switch($data['event']) {
             // Make sure we haven't already tracked this transaction
             if (!$transaction_details || date('Y-m-d', strtotime($transaction_details->post_date)) < date('Y-m-d', strtotime($data['data']['transactions'][0]['created_at']))) {
                 $frequency = 'recurring';
+                $transaction_date = date('Y-m-d H:i:s', strtotime($data['data']['transactions'][0]['created_at']));
 
                 // Create transaction record
                 $transaction = array(
@@ -72,7 +73,7 @@ switch($data['event']) {
                         'post_status' => 'publish',
                         'post_author' => $author_id,
                         'post_type' => 'transaction',
-                        'post_date' => date('Y-m-d H:i:s', strtotime($data['data']['transactions'][0]['created_at'])),
+                        'post_date' => $transaction_date,
                 );
 
                 // Insert the post into the database
@@ -86,7 +87,7 @@ switch($data['event']) {
                 update_post_meta($transaction_id, 'is_receipted', 'false');
                 update_post_meta($transaction_id, 'subscription_id', $subscription_id);
 
-                $batch_id = bb_cart_get_web_batch();
+                $batch_id = bb_cart_get_web_batch($transaction_date);
                 update_post_meta($transaction_id, 'batch_id', $batch_id);
 
                 $transaction_term = get_term_by('slug', $transaction_id, 'transaction'); // Have to pass term ID rather than slug
