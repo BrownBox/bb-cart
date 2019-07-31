@@ -287,8 +287,14 @@ class bb_cart_import {
         $firstname = get_user_meta($author_id, 'first_name', true);
         $lastname = get_user_meta($author_id, 'last_name', true);
 
-        list($day, $month, $year) = explode('/', $data['Payment Date']);
-        $transaction_date = implode('-', array($year, $month, $day));
+        $transaction_date = false;
+        $transaction_timestamp = strtotime($data['Payment Date']);
+        if ($transaction_timestamp !== false) {
+            $transaction_date = date('Y-m-d', $transaction_timestamp);
+        }
+        if ($transaction_date === false) {
+            return 'Error processing transaction: Invalid/unrecognised date. Recommended date format is yyyy-mm-dd.';
+        }
 
         $transaction_details = array(
                 'date' => $transaction_date,
