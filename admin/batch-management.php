@@ -155,7 +155,7 @@ class bb_cart_batch_management {
             $pages = array_chunk($batches, $page_size, true);
             foreach ($pages[$paged-1] as $batch) {
                 echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="note-'.$batch->ID.'">'."\n";
-                $batch_date = bbconnect_get_datetime($batch->post_date);
+                $batch_date = bb_cart_get_datetime($batch->post_date);
                 echo '                <th scope="row" class="check-column">';
                 if ($batch->post_status == 'pending') {
                     echo '                    <input id="cb-select-'.$batch->ID.'" name="batch[]" value="'.$batch->ID.'" type="checkbox">';
