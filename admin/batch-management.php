@@ -421,7 +421,7 @@ class bb_cart_batch_management {
 
             header("Content-type: text/plain");
             header("Content-Length: ".strlen($output));
-            header("Content-Disposition: attachment; filename=".get_the_title($batch_id).'.txt');
+            header("Content-Disposition: attachment; filename=".str_replace(' ', '_', get_the_title($batch_id)).'.txt');
             header("Pragma: no-cache");
             header("Expires: 0");
             print $output;
