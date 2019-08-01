@@ -404,7 +404,7 @@ class bb_cart_batch_management {
 
     public function download_summary() {
         global $pagenow;
-        if ($pagenow == 'users.php' && $_GET['page'] == 'bb_cart_batch_management' && !empty($_GET['batch']) && $_GET['action'] == 'download' && wp_verify_nonce($_GET['_wpnonce'], 'bb_cart_batches')) {
+        if ($pagenow == 'admin.php' && $_GET['page'] == 'bb_cart_batch_management' && !empty($_GET['batch']) && $_GET['action'] == 'download' && wp_verify_nonce($_GET['_wpnonce'], 'bb_cart_batches')) {
             $batch_id = array_shift($_GET['batch']);
             $output = get_the_date('', $batch_id)."\n\n";
             $transactions = bb_cart_get_batch_transactions($batch_id);
