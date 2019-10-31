@@ -1407,7 +1407,18 @@ function bb_cart_get_shipping_form() {
             'pagination' => array(
                     'type' => 'none',
             ),
-            'fields' => array(
+            'fields' => array( // Next field ID: 5
+                    array(
+                            'type' => 'text',
+                            'id' => 4,
+                            'label' => 'Suburb',
+                            'isRequired' => true,
+                            'allowsPrepopulate' => true,
+                            'inputName' => 'suburb',
+                            'visibility' => 'administrative',
+                            'inputMask' => true,
+                            'description' => 'Please enter your suburb so we can calculate your shipping costs',
+                    ),
                     array(
                             'type' => 'text',
                             'id' => 1,
