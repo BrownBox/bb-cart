@@ -26,7 +26,7 @@ function bb_cart_get_donate_form() {
                             'queryString' => 'payment_method={Payment method:17}&gift_type={Gift type:15}',
                     ),
             ),
-            'fields' => array(
+            'fields' => array( // Next field ID: 25
                     array(
                             'type' => 'checkbox',
                             'id' => 7,
@@ -498,7 +498,7 @@ function bb_cart_get_checkout_form(){
                             'queryString' => 'n={Name (First):1.3}&e={entry_id}&f={form_id}',
                     ),
             ),
-            'fields' => array(
+            'fields' => array( // Next field ID: 52
                     array(
                             'type' => 'checkbox',
                             'id' => 28,
@@ -506,7 +506,12 @@ function bb_cart_get_checkout_form(){
                             'isRequired' => false,
                             'choices' => array(
                                     array(
-                                            'text' => 'Show Address',
+                                            'text' => 'Show Shipping Address',
+                                            'value' => 'shipping_address',
+                                            'isSelected' => false,
+                                    ),
+                                    array(
+                                            'text' => 'Show Billing Address',
                                             'value' => 'address',
                                             'isSelected' => false,
                                     ),
@@ -539,26 +544,30 @@ function bb_cart_get_checkout_form(){
                             'inputs' => array(
                                     array(
                                             'id' => '28.1',
-                                            'label' => 'Form Setup: Show Address',
+                                            'label' => 'Form Setup: Show Shipping Address',
                                     ),
                                     array(
                                             'id' => '28.2',
-                                            'label' => 'Form Setup: Show Phone',
+                                            'label' => 'Form Setup: Show Billing Address',
                                     ),
                                     array(
                                             'id' => '28.3',
-                                            'label' => 'Form Setup: Show Company',
+                                            'label' => 'Form Setup: Show Phone',
                                     ),
                                     array(
                                             'id' => '28.4',
-                                            'label' => 'Form Setup: Show Subscribe',
+                                            'label' => 'Form Setup: Show Company',
                                     ),
                                     array(
                                             'id' => '28.5',
-                                            'label' => 'Form Setup: Offer Scheduled Payments',
+                                            'label' => 'Form Setup: Show Subscribe',
                                     ),
                                     array(
                                             'id' => '28.6',
+                                            'label' => 'Form Setup: Offer Scheduled Payments',
+                                    ),
+                                    array(
+                                            'id' => '28.7',
                                             'label' => 'Form Setup: Show Anonymous',
                                     ),
                             ),
@@ -812,7 +821,6 @@ Your details will also allow us to give you a personal reference number to inclu
                                             ),
                                     ),
                             ),
-
                     ),
                     array(
                             'id' => 46,
@@ -954,8 +962,95 @@ Your details will also allow us to give you a personal reference number to inclu
                     ),
                     array(
                             'type' => 'address',
+                            'id' => 50,
+                            'label' => 'Shipping Address',
+                            'isRequired' => false,
+                            'inputs' => array(
+                                    0 =>  array(
+                                            'id' => '50.1',
+                                            'label' => 'Street Address',
+                                    ),
+                                    1 =>  array(
+                                            'id' => '50.2',
+                                            'label' => 'Address Line 2',
+                                            'isHidden' => true,
+                                    ),
+                                    2 =>  array(
+                                            'id' => '50.3',
+                                            'label' => 'City',
+                                    ),
+                                    3 =>  array(
+                                            'id' => '50.4',
+                                            'label' => 'State / Province',
+                                    ),
+                                    4 =>  array(
+                                            'id' => '50.5',
+                                            'label' => 'ZIP / Postal Code',
+                                    ),
+                                    5 =>  array(
+                                            'id' => '50.6',
+                                            'label' => 'Country',
+                                            'name' => '',
+                                    ),
+                            ),
+                            'description' => '',
+                            'descriptionPlacement' => 'above',
+                            'addressType' => 'international',
+                            'defaultCountry' => 'Australia',
+                            'visibility' => 'visible',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            0 => array(
+                                                    'fieldId' => '28',
+                                                    'operator' => 'is',
+                                                    'value' => 'shipping_address',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'checkbox',
+                            'id' => 51,
+                            'label' => '',
+                            'isRequired' => false,
+                            'choices' => array(
+                                    array(
+                                            'text' => 'Billing address is the same as shipping address',
+                                            'value' => 'same_address',
+                                            'isSelected' => false,
+                                    ),
+                            ),
+                            'inputs' => array(
+                                    array(
+                                            'id' => '51.1',
+                                            'label' => 'Billing address is the same as shipping address',
+                                    ),
+                            ),
+                            'allowsPrepopulate' => true,
+                            'visibility' => 'visible',
+                            'conditionalLogic' => array(
+                                    'actionType' => 'show',
+                                    'logicType' => 'all',
+                                    'rules' => array(
+                                            array(
+                                                    'fieldId' => '28',
+                                                    'operator' => 'is',
+                                                    'value' => 'shipping_address',
+                                            ),
+                                            array(
+                                                    'fieldId' => '28',
+                                                    'operator' => 'is',
+                                                    'value' => 'address',
+                                            ),
+                                    ),
+                            ),
+                    ),
+                    array(
+                            'type' => 'address',
                             'id' => 2,
-                            'label' => 'Address',
+                            'label' => 'Billing Address',
                             'isRequired' => false,
                             'inputs' => array(
                                     0 =>  array(
@@ -994,10 +1089,15 @@ Your details will also allow us to give you a personal reference number to inclu
                                     'actionType' => 'show',
                                     'logicType' => 'all',
                                     'rules' => array(
-                                            0 => array(
+                                            array(
                                                     'fieldId' => '28',
                                                     'operator' => 'is',
                                                     'value' => 'address',
+                                            ),
+                                            array(
+                                                    'fieldId' => '51',
+                                                    'operator' => 'isnot',
+                                                    'value' => 'same_address',
                                             ),
                                     ),
                             ),
