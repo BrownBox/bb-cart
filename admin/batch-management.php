@@ -41,9 +41,10 @@ class bb_cart_batch_management {
         $statuses = array(
                 'pending' => 'Pending',
                 'publish' => 'Confirmed',
+                'trash' => 'Trash',
                 'all' => 'All',
         );
-        $selected_status = 'pending';
+        $selected_status = $batch_status = 'pending';
         $page_size = 50;
         $paged = max(1, (int)$_GET['paged']);
         $nonce = wp_create_nonce('bb_cart_batches');
@@ -54,14 +55,28 @@ class bb_cart_batch_management {
             $order = $_GET['order'];
         }
         if (!empty($_GET['post_status']) && in_array($_GET['post_status'], array_keys($statuses))) {
-            $selected_status = $_GET['post_status'];
+            $selected_status = $batch_status = $_GET['post_status'];
+            if ($selected_status == 'all') {
+                $batch_status = array('pending', 'publish');
+            }
         }
+        $today = getdate();
         $args = array(
                 'post_type' => 'transactionbatch',
                 'posts_per_page' => -1,
-                'post_status' => $selected_status,
+                'post_status' => $batch_status,
                 'orderby' => $orderby,
                 'order' => $order,
+                'date_query' => array(
+                        array(
+                                'before' => array(
+                                        'year'  => $today['year'],
+                                        'month' => $today['mon'],
+                                        'day'   => $today['mday'],
+                                ),
+                                'inclusive' => true,
+                        ),
+                ),
         );
         $batches = get_posts($args);
         $total_pages = ceil(count($batches)/$page_size);
@@ -171,8 +186,10 @@ class bb_cart_batch_management {
                 }
                 $dl_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'download', '_wpnonce' => $nonce), $clean_url);
                 echo '                        <span class="view"><a href="'.$dl_url.'" data-batch="'.$batch->ID.'">Download Summary</a> | </span>'."\n";
-                $trash_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'trash', '_wpnonce' => $nonce), $clean_url);
-                echo '                        <span class="delete"><a href="'.$trash_url.'" class="submitdelete" data-batch="'.$batch->ID.'" onclick="return confirm(\'Are you sure you want to delete this batch and all associated transactions? This cannot be undone!\');">Delete</a></span>'."\n";
+                if ($batch->post_status != 'trash') {
+                    $trash_url = add_query_arg(array('batch[]' => urlencode($batch->ID), 'action' => 'trash', '_wpnonce' => $nonce), $clean_url);
+                    echo '                        <span class="delete"><a href="'.$trash_url.'" class="submitdelete" data-batch="'.$batch->ID.'" onclick="return confirm(\'Are you sure you want to delete this batch and all associated transactions? This cannot be undone!\');">Delete</a></span>'."\n";
+                }
                 echo '                    </div>'."\n";
                 echo '                </td>'."\n";
                 echo '                <td class="">'.$this->get_batch_summary_html($batch->ID).'</td>'."\n";

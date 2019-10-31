@@ -1090,7 +1090,7 @@ function bb_cart_get_web_batch($date = null) {
 
     $existing_batch = get_page_by_title($batch_name, OBJECT, 'transactionbatch');
 
-    if ($existing_batch instanceof WP_Post && $existing_batch->post_status == 'pending') {
+    if ($existing_batch instanceof WP_Post && in_array($existing_batch->post_status, array('pending', 'future'))) {
         return $existing_batch->ID;
     } else {
         // Create batch
