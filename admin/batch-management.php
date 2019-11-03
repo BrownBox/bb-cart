@@ -60,7 +60,7 @@ class bb_cart_batch_management {
                 $batch_status = array('pending', 'publish');
             }
         }
-        $today = getdate();
+        $today = new DateTime(current_time('mysql'));
         $args = array(
                 'post_type' => 'transactionbatch',
                 'posts_per_page' => -1,
@@ -70,9 +70,9 @@ class bb_cart_batch_management {
                 'date_query' => array(
                         array(
                                 'before' => array(
-                                        'year'  => $today['year'],
-                                        'month' => $today['mon'],
-                                        'day'   => $today['mday'],
+                                        'year'  => $today->format('Y'),
+                                        'month' => $today->format('m'),
+                                        'day'   => $today->format('d'),
                                 ),
                                 'inclusive' => true,
                         ),
