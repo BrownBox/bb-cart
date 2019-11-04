@@ -1069,6 +1069,20 @@ function bb_cart_post_purchase_actions($entry, $form){
             gform_update_meta($entry['id'], 'gform_product_info__1', $gf_line_items);
             gform_update_meta($entry['id'], 'gform_product_info_1_1', $gf_line_items);
 
+            if ($transaction_status == 'Approved') {
+                // Send notifications configured to go on "Payment Completed" event
+                $action = array();
+                $action['id']               = $transaction_id.'_'.$entry['id'];
+                $action['type']             = 'complete_payment';
+                $action['transaction_id']   = $transaction_id;
+                $action['amount']           = $total_amount;
+                $action['entry_id']         = $entry['id'];
+                $action['payment_date']     = gmdate('y-m-d H:i:s');
+                $action['payment_method']	= $payment_method;
+                $action['ready_to_fulfill'] = !$entry['is_fulfilled'] ? true : false;
+                GFAPI::send_notifications($form, $entry, rgar($action, 'type'), array('payment_action' => $action));
+            }
+
             do_action('bb_cart_post_purchase', $cart_items, $entry, $form, $transaction_id);
             if (function_exists('WC')) {
                 WC()->cart->empty_cart();

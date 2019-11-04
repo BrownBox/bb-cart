@@ -23,6 +23,18 @@ switch($data['event']) {
                     $transaction = bb_cart_get_transaction_from_entry($entry['id']);
                     if ($transaction) {
                         bb_cart_complete_pending_transaction($transaction->ID, $now, $entry);
+
+                        // Send notifications configured to go on "Payment Completed" event
+                        $action = array();
+                        $action['id']               = $pd_id;
+                        $action['type']             = 'complete_payment';
+                        $action['transaction_id']   = $transaction->ID;
+                        $action['amount']           = $data['data']['amount'];
+                        $action['entry_id']         = $entry['id'];
+                        $action['payment_date']     = gmdate('y-m-d H:i:s');
+                        $action['payment_method']	= 'Direct Debit';
+                        $action['ready_to_fulfill'] = !$entry['is_fulfilled'] ? true : false;
+                        GFAPI::send_notifications(GFAPI::get_form($entry['form_id']), $entry, rgar($action, 'type'), array('payment_action' => $action));
                     }
                 }
             }
