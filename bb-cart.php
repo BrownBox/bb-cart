@@ -888,7 +888,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             // Insert the post into the database
             $transaction_id = wp_insert_post($transaction);
 
-            $batch_id = bb_cart_get_web_batch($transaction['post_date']);
+            $batch_id = bb_cart_get_web_batch($transaction['post_date'], $form, $entry);
 
             update_post_meta($transaction_id, 'frequency', $frequency);
             update_post_meta($transaction_id, 'gf_entry_id', $entry['id']);
@@ -1093,7 +1093,7 @@ function bb_cart_post_purchase_actions($entry, $form){
     }
 }
 
-function bb_cart_get_web_batch($date = null) {
+function bb_cart_get_web_batch($date = null, $form = null, $entry = null) {
     if (empty($date)) {
         $date = current_time('mysql');
     }
@@ -1102,7 +1102,7 @@ function bb_cart_get_web_batch($date = null) {
     $batch_date = $date_obj->format('Y-m-d');
     $batch_name = 'WEB '.$batch_date;
 
-    $existing_batch = get_page_by_title($batch_name, OBJECT, 'transactionbatch');
+    $existing_batch = apply_filters('bb_cart_get_web_batch', get_page_by_title($batch_name, OBJECT, 'transactionbatch'), $batch_date, $form, $entry);
 
     if ($existing_batch instanceof WP_Post && in_array($existing_batch->post_status, array('pending', 'future'))) {
         return $existing_batch->ID;
