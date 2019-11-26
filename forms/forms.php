@@ -996,7 +996,6 @@ Your details will also allow us to give you a personal reference number to inclu
                             'description' => '',
                             'descriptionPlacement' => 'above',
                             'addressType' => 'international',
-                            'defaultCountry' => 'Australia',
                             'visibility' => 'visible',
                             'conditionalLogic' => array(
                                     'actionType' => 'show',
@@ -1083,7 +1082,6 @@ Your details will also allow us to give you a personal reference number to inclu
                             'description' => '',
                             'descriptionPlacement' => 'above',
                             'addressType' => 'international',
-                            'defaultCountry' => 'Australia',
                             'visibility' => 'visible',
                             'conditionalLogic' => array(
                                     'actionType' => 'show',
