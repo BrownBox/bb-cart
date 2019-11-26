@@ -332,7 +332,8 @@ function bb_cart_donations_total() {
     return bb_cart_section_total();
 }
 
-add_filter("gform_field_value_bb_cart_total_quantity", "bb_cart_total_quantity");
+add_filter("gform_field_value_bb_cart_total_quantity", function() {return 1;}); // Always set quantity to 1 otherwise total gets multiplied by quantity
+
 function bb_cart_total_quantity($value = '') {
     $count = 0;
     $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
