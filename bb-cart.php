@@ -1286,11 +1286,9 @@ add_filter('gform_paypal_query', 'bb_cart_paypal_line_items', 10, 5);
 function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submission_data) {
     parse_str(ltrim($query_string, '&'), $query);
     $i = 1;
+    $donation = $feed['meta']['transactionType'] == 'donation' || $feed['meta']['transactionType'] == 'subscription';
     foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
-        if ($feed['meta']['transactionType'] == 'donation' || $feed['meta']['transactionType'] == 'subscription') {
-            if ($section != 'donations') {
-                continue;
-            }
+        if ($donation && $section == 'donations') {
             if (count($items) > 1) {
                 $query['item_name'] = 'Donation';
                 $query['amount'] = 0;
@@ -1303,13 +1301,19 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
                     $query['amount'] = $cart_item['price']/100;
                 }
             }
-        } else {
+        } elseif (!$donation && $section != 'donations') {
             foreach ($items as $cart_item) {
                 $query['item_name_'.$i] = $cart_item['label'];
                 $query['amount_'.$i] = $cart_item['price']/100;
                 $query['quantity_'.$i] = $cart_item['quantity'];
                 $i++;
             }
+        }
+    }
+    if (!$donation) {
+        $shipping = bb_cart_calculate_shipping();
+        if ($shipping > 0) {
+            $query['shipping_1'] = $shipping;
         }
     }
     $query_string = '&' . http_build_query($query);
