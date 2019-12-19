@@ -1349,11 +1349,14 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
     parse_str(ltrim($query_string, '&'), $query);
     $i = 1;
     $donation = $feed['meta']['transactionType'] == 'donation' || $feed['meta']['transactionType'] == 'subscription';
+    $donation_types = apply_filters('bb_cart_donation_types', array('donations'));
+    if ($donation) {
+        $query['amount'] = 0;
+    }
     foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
-        if ($donation && $section == 'donations') {
-            if (count($items) > 1) {
+        if ($donation && in_array($section, $donation_types)) {
+            if (count($items) > 1 || count($_SESSION[BB_CART_SESSION_ITEM]) > 1) {
                 $query['item_name'] = 'Donation';
-                $query['amount'] = 0;
                 foreach ($items as $cart_item) {
                     $query['amount'] += $cart_item['price']/100;
                 }
@@ -1363,7 +1366,7 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
                     $query['amount'] = $cart_item['price']/100;
                 }
             }
-        } elseif (!$donation && $section != 'donations') {
+        } elseif (!$donation && !in_array($section, $donation_types)) {
             foreach ($items as $cart_item) {
                 $query['item_name_'.$i] = $cart_item['label'];
                 $query['amount_'.$i] = $cart_item['price']/100;
@@ -1505,14 +1508,18 @@ function bb_cart_is_checkout_form($form) {
 
 add_filter("gform_notification", "bb_cart_configure_notifications", 10, 3);
 function bb_cart_configure_notifications($notification, $form, $entry) {
-    if (bb_cart_total_quantity() > 0) {
+    $cart_items = bb_cart_get_cart_from_entry($entry);
+    $shipping = null;
+    if (empty($cart_items) && bb_cart_total_quantity() > 0) {
         $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
     } else {
-        $cart_items = bb_cart_get_cart_from_entry($entry);
+        $gf_line_items = bb_cart_gf_product_info(array(), $form, $entry);
+        $total = $entry['payment_amount'];
+        $shipping = $gf_line_items['shipping']['price'];
     }
 
     if (!empty($cart_items)) {
-        $notification['message'] = str_replace("!!!items!!!", bb_cart_table('email', $cart_items), $notification['message']);
+        $notification['message'] = str_replace("!!!items!!!", bb_cart_table('email', $cart_items, $total, $shipping), $notification['message']);
         if ($form['id'] == bb_cart_get_checkout_form()) {
             $campaign = $fund_code = '';
             $fund_code_id = $entry[11];
@@ -1530,12 +1537,83 @@ function bb_cart_configure_notifications($notification, $form, $entry) {
     return $notification;
 }
 
+add_filter('gform_product_info', 'bb_cart_gf_product_info', 10, 3);
+function bb_cart_gf_product_info($product_info, $form, $entry) {
+    $gf_line_items = array();
+    if (!is_admin() && !empty($_SESSION[BB_CART_SESSION_ITEM])) {
+        $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+        foreach ($cart_items as $section => $items) {
+            switch ($section) {
+                case 'woo':
+                    $total = 0;
+                    foreach ($items as $product) {
+                        $gf_line_items['products'][] = array(
+                                'name' => $product['label'],
+                                'price' => $product['price']/100,
+                                'quantity' => $product['quantity'],
+                        );
+                    }
+                    $shipping = bb_cart_calculate_shipping($total);
+                    if ($shipping > 0) {
+                        $gf_line_items['shipping'] = array(
+                                'name' => bb_cart_shipping_label(),
+                                'price' => $shipping,
+                        );
+                    }
+                    break;
+                case 'event':
+                    foreach ($items as $event) {
+                        $gf_line_items['products'][] = array(
+                                'name' => $event['label'],
+                                'price' => $event['price']/$event['quantity'],
+                                'quantity' => $event['quantity'],
+                        );
+                    }
+                    break;
+                default:
+                    foreach ($items as $item) {
+                        $gf_line_items['products'][] = array(
+                                'name' => $item['label'],
+                                'price' => $item['price']/100,
+                                'quantity' => $item['quantity'],
+                                'description' => $item['donation_for'],
+                        );
+                    }
+                    break;
+            }
+        }
+    } else {
+        $transaction = bb_cart_get_transaction_from_entry($entry['id']);
+        if ($transaction instanceof WP_Post) {
+            $line_items = bb_cart_get_transaction_line_items($transaction->ID);
+            foreach ($line_items as $line_item) {
+                $meta = get_post_meta($line_item->ID);
+                if ($meta['fund_code'][0] == 'Postage') {
+                    $gf_line_items['shipping'] = array(
+                            'name' => bb_cart_shipping_label(),
+                            'price' => $meta['price'][0],
+                    );
+                } else {
+                    $gf_line_items['products'][] = array(
+                            'name' => $line_item->post_title,
+                            'price' => $meta['price'][0],
+                            'quantity' => $meta['quantity'][0],
+                    );
+                }
+            }
+        } else {
+            return $product_info;
+        }
+    }
+    return $gf_line_items;
+}
+
 function bb_cart_shortcode() {
     return bb_cart_table();
 }
 add_shortcode('bb_cart_table', 'bb_cart_shortcode');
 
-function bb_cart_table($purpose = 'table', array $cart_items = array()) {
+function bb_cart_table($purpose = 'table', array $cart_items = array(), $total = null, $shipping = null) {
     if (empty($cart_items)) {
         $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
     }
@@ -1555,38 +1633,34 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
             $html .= '<table class="bb-table" width="100%">'."\n";
             switch ($section) {
                 case 'woo':
-                    if (function_exists('WC')) {
-                        $wc_session = WC()->session;
-                        if (is_object($wc_session)) {
-                            $woo_cart = $wc_session->get('cart', array());
-                            $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Products</th></tr>';
-                            $total = 0;
-                            foreach ($items as $idx => $product) {
-                                $price = $woo_cart[$product['cart_item_key']]['line_total'];
-                                $total += $price;
-                                $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.apply_filters('bb_cart_table_item_label_display', $product['label'], $purpose, $product, $section, $idx).'</a></td>'."\n";
-                                $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($price).'</td>'."\n";
-
-                                if ($purpose != 'email') {
-                                    $html .= '<td style="width: 15px;">'."\n";
-                                    if ($item['removable'] !== false) {
-                                        $html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
-                                    } else {
-                                        $html .= '&nbsp;';
-                                    }
-                                    $html .= '</td>'."\n";
-                                }
-                                $html .= '</tr>';
+                    $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Products</th></tr>';
+                    $product_total = 0;
+                    foreach ($items as $idx => $product) {
+                        $price = ($product['price']*$product['quantity'])/100;
+                        $product_total += $price;
+                        $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.apply_filters('bb_cart_table_item_label_display', $product['label'], $purpose, $product, $section, $idx).'</a></td>'."\n";
+                        $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($price).'</td>'."\n";
+                        if ($purpose != 'email') {
+                            $html .= '<td style="width: 15px;">'."\n";
+                            if ($product['removable'] !== false) {
+                                $html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
+                            } else {
+                                $html .= '&nbsp;';
                             }
-                            $shipping = bb_cart_calculate_shipping($total);
-                            if ($shipping > 0) {
-                                $html .= '<tr><td>'.bb_cart_shipping_label().'</td><td style="text-align: right;">'.bb_cart_format_currency($shipping).'</td>';
-                                if ($purpose != 'email') {
-                                    $html .= '<td>&nbsp;</td>';
-                                }
-                                $html .= '</tr>'."\n";
-                            }
+                            $html .= '</td>'."\n";
                         }
+                        $html .= '</tr>';
+                    }
+                    if (is_null($shipping)) {
+                        $shipping = bb_cart_calculate_shipping($product_total);
+                    }
+                    if ($shipping > 0) {
+                        $html .= '<tr><td>'.bb_cart_shipping_label().'</td>'."\n";
+                        $html .= '<td style="text-align: right;">'.bb_cart_format_currency($shipping).'</td>'."\n";
+                        if ($purpose != 'email') {
+                            $html .= '<td>&nbsp;</td>'."\n";
+                        }
+                        $html .= '</tr>'."\n";
                     }
                     break;
                 case 'event':
@@ -1618,7 +1692,6 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                         }
                         $html .= '<td>'.apply_filters('bb_cart_table_item_label_display', $label, $purpose, $item, $section, $idx).'</td>'."\n";
                         $item_price = ($item['price']*$item['quantity'])/100;
-                        $total_price += $item_price;
                         $frequency = empty($item['frequency']) || $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
                         $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($item_price).$frequency.'</td>'."\n";
                         if ($purpose != 'email') {
@@ -1636,7 +1709,10 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
             }
             $html .= '</table>'."\n";
         }
-        $html .= '<p class="bb_cart_total" style="text-align: right;"><strong>Total: '.bb_cart_format_currency(bb_cart_total_price(true, $cart_items)).'</strong></p>'."\n";
+        if (is_null($total)) {
+            $total = bb_cart_total_price(true, $cart_items);
+        }
+        $html .= '<p class="bb_cart_total" style="text-align: right;"><strong>Total: '.bb_cart_format_currency($total).'</strong></p>'."\n";
     }
     return $html;
 }
