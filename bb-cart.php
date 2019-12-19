@@ -134,9 +134,11 @@ function bb_cart_start_session() {
 
     // Now we try to work around Event Manager idiocy
     if (is_user_logged_in() && !empty($_SESSION[BB_CART_SESSION_ITEM]['event'])) {
-        foreach ($_SESSION[BB_CART_SESSION_ITEM]['event'] as &$event) {
-            $event['booking']->person_id = get_current_user_id();
-            $event['booking']->save(false);
+        foreach ($_SESSION[BB_CART_SESSION_ITEM]['event'] as $event) {
+            $booking = new EM_Booking($event['booking_id']);
+            $booking->person_id = get_current_user_id();
+            $booking->manage_override = true; // Allow user to manage their own booking
+            $booking->save(false);
         }
     }
 }
@@ -293,7 +295,7 @@ function bb_cart_events_total(array $cart_items = array()) {
     }
     if (!empty($cart_items['event'])) {
         foreach ($cart_items['event'] as $event) {
-            $events_total += $event['booking']->booking_price;
+            $events_total += $event['price']*100;
         }
     }
     return $events_total;
@@ -348,11 +350,6 @@ function bb_cart_total_quantity($value = '') {
                                 $count += $product['quantity'];
                             }
                         }
-                    }
-                    break;
-                case 'event':
-                    foreach ($items as $event) {
-                        $count += $event['booking']->tickets; // @todo check property name
                     }
                     break;
                 default:
@@ -708,6 +705,69 @@ function bb_cart_add_from_querystring() {
     }
 }
 
+add_action('em_booking_add', 'bb_cart_set_event_person_id', 10, 3);
+function bb_cart_set_event_person_id(EM_Event $EM_Event, EM_Booking $EM_Booking, $post_validation) {
+    if ($post_validation && !empty($EM_Booking->get_price())) { // Regular event
+        if (is_user_logged_in()) {
+            $EM_Booking->person_id = get_current_user_id(); // For some reason Event Manager doesn't set this automatically
+            $EM_Booking->manage_override = true; // Allow user to manage their own booking
+            $EM_Booking->save(false); // Save to ensure we have an ID
+        }
+    }
+}
+
+/**
+ * Add Events to BB Cart
+ */
+add_filter('em_booking_save', 'bb_cart_add_event_to_cart', 10, 2);
+function bb_cart_add_event_to_cart($success, EM_Booking $EM_Booking) {
+    if ($success) {
+        if (!session_id()) {
+            session_start();
+        }
+        $exists = false;
+        if (is_array($_SESSION[BB_CART_SESSION_ITEM]['event'])) {
+            foreach ($_SESSION[BB_CART_SESSION_ITEM]['event'] as $event) {
+                if ($event['booking_id'] == $EM_Booking->booking_id) {
+                    $exists = true;
+                    break;
+                }
+            }
+        }
+        if (!$exists) {
+            $EM_Event = new EM_Event($EM_Booking->event_id);
+            $_SESSION[BB_CART_SESSION_ITEM]['event'][] = array(
+                    'label' => $EM_Event->event_name,
+                    'event_id' => $EM_Event->event_id,
+                    'booking_id' => $EM_Booking->booking_id,
+                    'price' => $EM_Booking->get_price(),
+                    'quantity' => $EM_Booking->booking_spaces,
+            );
+        }
+    }
+    return $success;
+}
+
+/**
+ * Set address details for other plugins if user created/updated through Event Manager
+ */
+add_filter('em_register_new_user', 'bb_cart_user_created_via_event', 10, 1);
+function bb_cart_user_created_via_event($user_id) {
+    // Now we try to work around Event Manager idiocy
+    if(!session_id()) {
+        session_start();
+    }
+    if (!empty($_SESSION[BB_CART_SESSION_ITEM]['event']) && class_exists('EM_Booking')) {
+        foreach ($_SESSION[BB_CART_SESSION_ITEM]['event'] as $event) {
+            $booking = new EM_Booking($event['booking_id']);
+            $booking->person_id = $user_id;
+            $booking->manage_override = true; // Allow user to manage their own booking
+            $booking->save(false);
+        }
+    }
+    return $user_id;
+}
+
 function bb_cart_calculate_shipping($total_price = null) {
     if (empty($total_price)) {
         $total_price = bb_cart_total_price(false);
@@ -977,14 +1037,16 @@ function bb_cart_post_purchase_actions($entry, $form){
                         break;
                     case 'event':
                         foreach ($items as $event) {
-                            $event['booking']->approve();
+                            $em_booking = new EM_Booking($event['booking_id']);
+                            $em_booking->approve();
+                            $total += $event['price'];
+
                             $line_item = array(
                                     'name' => $event['label'],
-                                    'price' => $event['booking']->booking_price/$event['booking']->booking_spaces, // @todo is there a way of getting the per-ticket price? Probably not as there could be a combination of different tickets in one booking...
-                                    'quantity' => $event['booking']->booking_spaces,
+                                    'price' => $event['price']/$event['quantity'], // @todo is there a way of getting the per-ticket price? Probably not as there could be a combination of different tickets in one booking...
+                                    'quantity' => $event['quantity'],
                             );
                             $gf_line_items['products'][] = $line_item;
-                            $line_item['fund_code'] = $event['fund_code'];
                             $bb_line_items[] = $line_item;
                         }
                         break;
@@ -1527,14 +1589,16 @@ function bb_cart_table($purpose = 'table', array $cart_items = array()) {
                         }
                     }
                     break;
-                case 'events':
-                    $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">'.ucwords($section).'</th></tr>';
+                case 'event':
+                    $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Events</th></tr>';
                     foreach ($items as $idx => $event) {
-                        $html .= '<tr><td>'.apply_filters('bb_cart_table_item_label_display', $event['booking']->booking_spaces.' registration/s for '.$event['event']->event_name.' ('.$event['event']->event_start_date, $purpose, $event, $section, $idx).')</td>'."\n";
-                        $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($event['booking']->booking_price).'</td>'."\n";
+                        $EM_Booking = new EM_Booking($event['booking_id']);
+                        $EM_Event = new EM_Event($EM_Booking->event_id);
+                        $html .= '<tr><td>'.apply_filters('bb_cart_table_item_label_display', $EM_Booking->booking_spaces.' registration/s for '.$EM_Event->event_name.' ('.$EM_Event->event_start_date.')', $purpose, $event, $section, $idx).'</td>'."\n";
+                        $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($EM_Booking->booking_price).'</td>'."\n";
                         if ($purpose != 'email') {
                             $html .= '<td style="width: 15px;">'."\n";
-                            if ($item['removable'] !== false) {
+                            if ($event['removable'] !== false) {
                                 $html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
                             } else {
                                 $html .= '&nbsp;';
