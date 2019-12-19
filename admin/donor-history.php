@@ -15,6 +15,7 @@ function bb_cart_donor_history_profile_tab() {
     $can_edit = current_user_can('manage_options');
     $ajax_url = admin_url('admin-ajax.php');
     $transactions = bb_cart_get_user_transactions($user_id);
+    $batch_nonce = wp_create_nonce('bb_cart_batches');
 
     $clean_url = remove_query_arg(array('trans_action', 'item'));
     if (!empty($_GET['trans_action'])) {
@@ -107,6 +108,13 @@ function bb_cart_donor_history_profile_tab() {
                             'url' => add_query_arg(array('action' => 'bb_cart_load_split_transaction_line', 'id' => $line_item->ID), $ajax_url),
                     );
                     echo '                <td style="text-align: center;">'."\n";
+                    if (current_user_can('add_users')) {
+                        $batch_id = get_post_meta($transaction->ID, 'batch_id', true);
+                        if ($batch_id > 0) {
+                            $batch_url = add_query_arg(array('page' => 'bb_cart_batch_management', 'batch' => urlencode($batch_id), 'action' => 'edit', '_wpnonce' => $batch_nonce), admin_url('admin.php'));
+                            echo '                    <span class="edit"><a href="'.$batch_url.'" class="submit">View Batch</a> | </span>'."\n";
+                        }
+                    }
                     if ($can_delete) {
                         $trash_url = add_query_arg(array('item[]' => urlencode($line_item->ID), 'trans_action' => 'trash'), $clean_url);
                         echo '                    <span class="edit"><a href="'.$trash_url.'" class="submitdelete" data-item="'.$line_item->ID.'" onclick="return confirm(\'Are you sure you want to delete this item? This cannot be undone!\');">Delete</a> | </span>'."\n";
