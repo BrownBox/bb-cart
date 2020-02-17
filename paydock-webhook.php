@@ -3,6 +3,8 @@ require_once("../../../wp-load.php");
 
 $data = json_decode(file_get_contents('php://input'), true);
 
+usleep(rand(1000000, 5000000)); // Sleep for random interval between 1 and 5 seconds in an attempt to prevent duplicate requests from being processed simultaneously
+
 // @todo check for live vs sandbox gateway
 switch($data['event']) {
     case 'transaction_success':
@@ -72,9 +74,15 @@ switch($data['event']) {
                 }
             }
 
-            $transaction_details = bb_cart_get_transaction_for_subscription($subscription_id);
+
             // Make sure we haven't already tracked this transaction
-            if (!$transaction_details || date('Y-m-d', strtotime($transaction_details->post_date)) < date('Y-m-d', strtotime($data['data']['transactions'][0]['created_at']))) {
+            $transaction_details = bb_cart_get_transaction_for_subscription($subscription_id);
+            $duplicate = false;
+            if ($transaction_details) {
+                $previous_date = bb_cart_get_datetime($transaction_details->post_date);
+                $duplicate = $previous_date->format('Ymd') >= $pd_date->format('Ymd');
+            }
+            if (!$duplicate) {
                 $frequency = 'recurring';
                 $transaction_date = date('Y-m-d H:i:s', strtotime($data['data']['transactions'][0]['created_at']));
 
