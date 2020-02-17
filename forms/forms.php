@@ -1386,7 +1386,7 @@ function bb_cart_get_shipping_form() {
             'labelPlacement' => 'top_label',
             'descriptionPlacement' => 'below',
             'is_active' => true,
-            'cssClass' => 'bb_cart_shipping bb-processing',
+            'cssClass' => 'bb_cart_shipping',
             'enableHoneypot' => true,
             'button' =>  array(
                     'type' => 'text',
