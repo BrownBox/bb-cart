@@ -2,7 +2,7 @@
 add_action('admin_menu', 'bb_cart_create_menu', 1);
 function bb_cart_create_menu() {
     add_menu_page('BB Cart', 'BB Cart', 'manage_options', 'bb_cart_settings', 'bb_cart_settings_page', 'dashicons-cart', 74);
-    add_submenu_page('bb_cart_settings', 'Settings', 'Settings', 'manage_options', 'bb_cart_settings', 'bb_cart_settings_page', 'dashicons-cart');
+    add_submenu_page('bb_cart_settings', 'Settings', 'Settings', 'manage_options', 'bb_cart_settings', 'bb_cart_settings_page');
 }
 
 add_action('admin_init', 'bb_cart_register_settings');
