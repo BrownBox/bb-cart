@@ -74,6 +74,8 @@ switch($data['event']) {
                 }
             }
 
+            $pd_date = bb_cart_get_datetime($data['data']['transactions'][0]['created_at'], new DateTimeZone('UTC'));
+            $pd_date->setTimezone(bb_cart_get_timezone()); // PayDock always sends dates in UTC so need to convert to local time
 
             // Make sure we haven't already tracked this transaction
             $transaction_details = bb_cart_get_transaction_for_subscription($subscription_id);
@@ -84,7 +86,7 @@ switch($data['event']) {
             }
             if (!$duplicate) {
                 $frequency = 'recurring';
-                $transaction_date = date('Y-m-d H:i:s', strtotime($data['data']['transactions'][0]['created_at']));
+                $transaction_date = $pd_date->format('Y-m-d H:i:s');
 
                 // Create transaction record
                 $transaction = array(
@@ -94,6 +96,7 @@ switch($data['event']) {
                         'post_author' => $author_id,
                         'post_type' => 'transaction',
                         'post_date' => $transaction_date,
+                        'post_modified' => current_time('mysql'),
                 );
 
                 // Insert the post into the database
@@ -117,7 +120,8 @@ switch($data['event']) {
                         'post_status' => 'publish',
                         'post_author' => $author_id,
                         'post_type' => 'transactionlineitem',
-                        'post_date' => $transaction['post_date'],
+                        'post_date' => $transaction_date,
+                        'post_modified' => current_time('mysql'),
                 );
                 if ($transaction_details) {
                     $prev_amount = get_post_meta($transaction_details->ID, 'total_amount');
