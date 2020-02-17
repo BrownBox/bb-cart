@@ -1654,14 +1654,15 @@ function bb_cart_table($purpose = 'table', array $cart_items = array(), $total =
                     if (is_null($shipping)) {
                         $shipping = bb_cart_calculate_shipping($product_total);
                     }
-                    if ($shipping > 0) {
-                        $html .= '<tr><td>'.bb_cart_shipping_label().'</td>'."\n";
-                        $html .= '<td style="text-align: right;">'.bb_cart_format_currency($shipping).'</td>'."\n";
-                        if ($purpose != 'email') {
-                            $html .= '<td>&nbsp;</td>'."\n";
-                        }
-                        $html .= '</tr>'."\n";
+                    if (is_numeric($shipping)) {
+                    	$shipping = bb_cart_format_currency($shipping);
                     }
+                    $html .= '<tr><td>'.bb_cart_shipping_label().'</td>'."\n";
+                    $html .= '<td style="text-align: right;">'.$shipping.'</td>'."\n";
+                    if ($purpose != 'email') {
+                    	$html .= '<td>&nbsp;</td>'."\n";
+                    }
+                    $html .= '</tr>'."\n";
                     break;
                 case 'event':
                     $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Events</th></tr>';
