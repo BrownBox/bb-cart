@@ -3,7 +3,7 @@ add_action('admin_init', 'bb_cart_create_modal');
 function bb_cart_create_modal() {
     add_thickbox();
     add_action('admin_footer', function() {
-?>
+        ?>
 <div id="bb_cart_modal" style="display: none;">
     <div style="overflow: scroll;" id="bb_cart_thickbox_contents">Loading, please wait...</div>
 </div>
@@ -242,6 +242,7 @@ function bb_cart_load_edit_batch() {
     <form action="" method="post">
         <p><label for="edit_batch_name">Batch Name: </label> <input id="edit_batch_name" name="edit_batch_name" type="text" value="<?php echo get_the_title($batch); ?>"></p>
         <p><label for="edit_date">Date: </label> <input id="edit_date" name="edit_date" type="date" value="<?php echo date('Y-m-d', strtotime($batch->post_date)); ?>"></p>
+        <p><label for="update_transactions">Update Transactions: </label> <input id="update_transactions" name="update_transactions" type="checkbox" value="1"> Update all transaction dates to match batch date</p>
         <input type="submit" value="Update" onclick="bb_cart_update_batch(); return false;">
     </form>
     <script>
@@ -250,7 +251,8 @@ function bb_cart_load_edit_batch() {
                     'action': 'bb_cart_update_batch',
                     'id': <?php echo $batch->ID; ?>,
                     'title': jQuery('#edit_batch_name').val(),
-                    'date': jQuery('#edit_date').val()
+                    'date': jQuery('#edit_date').val(),
+                    'update_transactions': jQuery('#update_transactions').is(":checked")
             };
             jQuery.post(ajaxurl, data, function(response) {
                 alert(response);
@@ -281,12 +283,14 @@ function bb_cart_update_batch() {
         $date = date('Y-m-d', strtotime($date));
     }
 
+    $update_transactions = $_POST['update_transactions'] == 'true'; // Boolean value gets posted as a string
+
     // We can't use wp_update_post() here as it will clear all the meta values, so we'll do a custom query instead
     global $wpdb;
     $query = $wpdb->prepare('UPDATE '.$wpdb->posts.' SET post_title = %s WHERE ID = %d', array($title, $batch->ID));
     $wpdb->query($query);
 
-    bb_cart_change_batch_date($batch->ID, $date);
+    bb_cart_change_batch_date($batch->ID, $date, $update_transactions);
 
     die('Updated Successfully');
 }
@@ -422,11 +426,13 @@ function bb_cart_move_transactions() {
     die('Updated Successfully');
 }
 
-function bb_cart_change_batch_date($batch_id, $new_date) {
+function bb_cart_change_batch_date($batch_id, $new_date, $update_transactions = false) {
     bb_cart_change_post_dates(array($batch_id), $new_date);
-    $transactions = bb_cart_get_batch_transactions($batch_id);
-    foreach ($transactions as $transaction) {
-        bb_cart_change_transaction_date($transaction->ID, $new_date);
+    if ($update_transactions) {
+        $transactions = bb_cart_get_batch_transactions($batch_id);
+        foreach ($transactions as $transaction) {
+            bb_cart_change_transaction_date($transaction->ID, $new_date);
+        }
     }
 }
 
