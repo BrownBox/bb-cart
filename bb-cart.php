@@ -147,7 +147,6 @@ function bb_cart_end_session() {
     unset($_SESSION[BB_CART_SESSION_ITEM]);
 }
 
-add_action('init', 'bb_cart_start_session', 1);
 add_action('wp_logout', 'bb_cart_end_session');
 // add_action('wp_login', 'bb_cart_end_session');
 
