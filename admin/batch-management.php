@@ -343,7 +343,7 @@ class bb_cart_batch_management {
                     if (empty($fund_code)) {
                         $fund_code = 'Blank/Unknown';
                     }
-                    $amount = get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
+                    $amount = (float)get_post_meta($line_item->ID, 'price', true)*(int)get_post_meta($line_item->ID, 'quantity', true);
                     $total += $amount;
                     echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="lineitem-'.$line_item->ID.'">'."\n";
                     echo '                <th scope="row" class="check-column">';
@@ -375,6 +375,22 @@ class bb_cart_batch_management {
                     echo '                <td style="text-align: right;">$'.number_format($amount, 2).'</td>'."\n";
                     echo '            </tr>'."\n";
                 }
+            } else {
+            	$fund_code = get_post_meta($transaction->ID, 'fund_code', true);
+            	if (empty($fund_code)) {
+            		$fund_code = 'Blank/Unknown';
+            	}
+            	$amount = get_post_meta($transaction->ID, 'total_amount', true);
+            	$total += $amount;
+            	echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="transaction-'.$transaction->ID.'">'."\n";
+            	echo '                <th scope="row" class="check-column"></th>'."\n";
+            	echo '                <td class="post-date has-row-actions page-date column-date"><strong>'.date_i18n(get_option('date_format'), strtotime($transaction->post_date)).'</strong>'."\n";
+            	echo '                <td class="post-author page-author column-author">'.$author->display_name.'</td>'."\n";
+            	echo '                <td class="">'.$fund_code.'</td>'."\n";
+            	echo '                <td class=""></td>'."\n";
+            	echo '                <td style="text-align: center;">'.$receipted.'</td>'."\n";
+            	echo '                <td style="text-align: right;">$'.number_format($amount, 2).'</td>'."\n";
+            	echo '            </tr>'."\n";
             }
         }
         echo '        </tbody>'."\n";
@@ -510,7 +526,7 @@ class bb_cart_batch_management {
                     if (empty($fund_code)) {
                         $fund_code = 'Blank/Unknown';
                     }
-                    $amount = get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
+                    $amount = (float)get_post_meta($line_item->ID, 'price', true)*(int)get_post_meta($line_item->ID, 'quantity', true);
                     if (!isset($totals[$fund_code])) {
                         $totals[$fund_code] = $fund_code_template;
                     }
