@@ -154,6 +154,14 @@ class bb_cart_batch_management {
         echo '                <th style="" class="manage-column column-date sortable '.$sort_class.' ui-sortable" id="date" scope="col">'."\n";
         echo '                    <a href="'.$url.'"><span>Date</span><span class="sorting-indicator"></span></a>'."\n";
         echo '                </th>'."\n";
+        $url = add_query_arg($this->get_sorting_args('id', 'asc', $sort_class), $clean_url);
+        if ($orderby == 'id') {
+        	$sort_class .= ' sorted';
+        }
+        $col_count++;
+        echo '                <th style="" class="manage-column column-date sortable '.$sort_class.' ui-sortable" id="id" scope="col">'."\n";
+        echo '                    <a href="'.$url.'"><span>ID</span><span class="sorting-indicator"></span></a>'."\n";
+        echo '                </th>'."\n";
         echo '            </tr>'."\n";
         $table_headers = ob_get_clean();
 
@@ -195,6 +203,7 @@ class bb_cart_batch_management {
                 echo '                <td class="">'.$this->get_batch_summary_html($batch->ID).'</td>'."\n";
                 echo '                <td class="">'.$batch->post_content.'</td>'."\n";
                 echo '                <td class="post-date page-date column-date">'.$batch_date->format($date_format).'</td>'."\n";
+                echo '                <td class="column-id">'.$batch->ID.'</td>'."\n";
                 echo '            </tr>'."\n";
             }
         }
@@ -264,7 +273,7 @@ class bb_cart_batch_management {
             echo bb_cart_ajax_modal_link('Edit Batch Details', $edit_args)."\n";
         }
         echo '</p>'."\n";
-        echo '<h2>Batch Details: '.$batch->post_title.'</h2>'."\n";
+        echo '<h2>Batch #'.$batch->ID.': '.$batch->post_title.'</h2>'."\n";
         $transactions = bb_cart_get_batch_transactions($batch_id);
         if ($can_edit) {
             echo '    <div class="tablenav top">'."\n";
