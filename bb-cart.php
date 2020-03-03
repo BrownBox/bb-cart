@@ -144,7 +144,10 @@ function bb_cart_start_session() {
 }
 
 function bb_cart_end_session() {
-    unset($_SESSION[BB_CART_SESSION_ITEM]);
+	if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+		unset($_SESSION[BB_CART_SESSION_ITEM]);
+	}
+	bb_cart_reset_shipping();
 }
 
 add_action('wp_logout', 'bb_cart_end_session');
@@ -780,6 +783,16 @@ function bb_cart_shipping_label() {
     return apply_filters('bb_cart_shipping_label', 'Shipping');
 }
 
+add_action('woocommerce_add_to_cart', 'bb_cart_reset_shipping');
+add_action('woocommerce_cart_item_removed', 'bb_cart_reset_shipping');
+add_action('woocommerce_cart_item_restored', 'bb_cart_reset_shipping');
+add_action('woocommerce_after_cart_item_quantity_update', 'bb_cart_reset_shipping');
+function bb_cart_reset_shipping() {
+	if (!empty($_SESSION[BB_CART_SESSION_SHIPPING_TYPE])) {
+		unset($_SESSION[BB_CART_SESSION_SHIPPING_TYPE]);
+	}
+}
+
 /**
  * Add a column to the List of Orders page in WordPress admin
  *
@@ -1084,6 +1097,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                 }
                 $line_item_id = wp_insert_post($line_item);
                 update_post_meta($line_item_id, 'fund_code', $bb_line_item['fund_code']);
+                update_post_meta($line_item_id, 'transaction_id', $transaction_id);
                 update_post_meta($line_item_id, 'price', $bb_line_item['price']);
                 update_post_meta($line_item_id, 'quantity', $bb_line_item['quantity']);
 
