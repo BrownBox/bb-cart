@@ -69,19 +69,8 @@ function bb_cart_donor_history_profile_tab() {
     foreach ($transactions as $transaction) {
         $can_delete = strtolower(get_post_meta($transaction->ID, 'transaction_type', true)) == 'offline';
         $deductible = get_post_meta($transaction->ID, 'is_tax_deductible', true) == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
-        $args = array(
-                'post_type' => 'transactionlineitem',
-                'posts_per_page' => -1,
-                'tax_query' => array(
-                        array(
-                                'taxonomy' => 'transaction',
-                                'field' => 'slug',
-                                'terms' => $transaction->ID,
-                        ),
-                ),
-        );
-        $line_items = get_posts($args);
-        if (count($line_items) > 0) {
+        $line_items = bb_cart_get_transaction_line_items($transaction->ID);
+        if ($line_items && count($line_items) > 0) {
             foreach ($line_items as $line_item) {
                 $txn_fund_codes = wp_get_object_terms($line_item->ID, 'fundcode');
                 if (!empty($txn_fund_codes)) {
@@ -125,6 +114,20 @@ function bb_cart_donor_history_profile_tab() {
                 }
                 echo '            </tr>'."\n";
             }
+        } else {
+        	$fund_code = get_post_meta($transaction->ID, 'fund_code', true);
+        	if (empty($fund_code)) {
+        		$fund_code = 'Blank/Unknown';
+        	}
+        	$amount = get_post_meta($transaction->ID, 'total_amount', true);
+        	echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="transaction-'.$transaction->ID.'">'."\n";
+        	echo '                <td class="date">'.date_i18n(get_option('date_format'), strtotime($transaction->post_date))."\n";
+        	echo '                <td class="">'.$fund_code.'</td>'."\n";
+        	echo '                <td class=""></td>'."\n";
+        	echo '                <td style="text-align: right;">'.bb_cart_format_currency($amount).'</td>'."\n";
+        	echo '                <td style="text-align: center;">'.$deductible.'</td>'."\n";
+        	echo '                <td></td>'."\n";
+        	echo '            </tr>'."\n";
         }
     }
     echo '        </tbody>'."\n";
