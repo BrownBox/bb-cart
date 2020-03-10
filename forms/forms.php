@@ -1600,7 +1600,10 @@ function bb_cart_form_locking() {
             }
 
             protected function check_lock($object_id) {
-                list($subview, $form_id) = explode('-', $object_id);
+            	list($subview, $form_id) = explode('-', $object_id);
+            	if ($subview == 'settings' && isset($_GET['subview'])) { // If subview contains hyphen GF doesn't pass it through properly
+            		$subview = $_GET['subview'];
+            	}
                 if (in_array($form_id, $this->bb_cart_forms) && (empty($subview) || in_array($subview, $this->locked_subviews))) {
                     return bb_cart_get_cart_user()->ID;
                 }
@@ -1610,6 +1613,9 @@ function bb_cart_form_locking() {
             public function get_strings() {
                 $object_id = $this->get_object_id();
                 list($subview, $form_id) = explode('-', $object_id);
+                if ($subview == 'settings' && isset($_GET['subview'])) { // If subview contains hyphen GF doesn't pass it through properly
+                	$subview = $_GET['subview'];
+                }
                 if (in_array($form_id, $this->bb_cart_forms) && (empty($subview) || in_array($subview, $this->locked_subviews))) {
                     $strings = array(
                             'currently_locked'  => __( 'This form is managed by BB Cart. You cannot edit this form.', 'gravityforms' ),
@@ -1624,6 +1630,9 @@ function bb_cart_form_locking() {
             public function get_lock_ui($user_id) {
                 $object_id = $this->get_object_id();
                 list($subview, $form_id) = explode('-', $object_id);
+                if ($subview == 'settings' && isset($_GET['subview'])) { // If subview contains hyphen GF doesn't pass it through properly
+                	$subview = $_GET['subview'];
+                }
                 if (in_array($form_id, $this->bb_cart_forms) && (empty($subview) || in_array($subview, $this->locked_subviews))) {
                     $html = '<div id="gform-lock-dialog" class="notification-dialog-wrap">
                             <div class="notification-dialog-background"></div>
