@@ -1000,22 +1000,44 @@ function bb_cart_post_purchase_actions($entry, $form){
                                 $order = wc_get_order($order_id);
 
                                 // Get user address details for WooCommerce order
-                                foreach ($form['fields'] as $field) {
-                                    if ($field['type'] == 'address') {
-                                        $customer_address = array(
-                                                'country'    => rgpost("input_".$field["id"]."_6"),
-                                                'state'      => rgpost("input_".$field["id"]."_4"),
-                                                'postcode'   => rgpost("input_".$field["id"]."_5"),
-                                                'city'       => rgpost("input_".$field["id"]."_3"),
-                                                'address_1'  => rgpost("input_".$field["id"]."_1"),
-                                                'address_2'  => rgpost("input_".$field["id"]."_2"),
-                                        );
-                                    }
-                                }
+                                $use_shipping = rgpost('input_28_1') == 'shipping_address';
+                                $use_billing = rgpost('input_28_2') == 'address';
+                                if ($use_shipping || $use_billing) {
+                                	$shipping_address = array(
+                                			'first_name' => $firstname,
+                                			'last_name'  => $lastname,
+                                			'company'    => rgpost('input_34'),
+                                			'email'      => $email,
+                                			'phone'      => rgpost('input_19'),
+                                			'address_1'  => rgpost('input_50_1'),
+                                			'address_2'  => rgpost('input_50_2'),
+                                			'city'       => rgpost('input_50_3'),
+                                			'state'      => rgpost('input_50_4'),
+                                			'postcode'   => rgpost('input_50_5'),
+                                			'country'    => rgpost('input_50_6'),
+                                	);
+                                	$billing_address = array(
+                                			'first_name' => $firstname,
+                                			'last_name'  => $lastname,
+                                			'company'    => rgpost('input_34'),
+                                			'email'      => $email,
+                                			'phone'      => rgpost('input_19'),
+                                			'address_1'  => rgpost('input_2_1'),
+                                			'address_2'  => rgpost('input_2_2'),
+                                			'city'       => rgpost('input_2_3'),
+                                			'state'      => rgpost('input_2_4'),
+                                			'postcode'   => rgpost('input_2_5'),
+                                			'country'    => rgpost('input_2_6'),
+                                	);
+                                	if (!$use_shipping) {
+                                		$shipping_address = $billing_address;
+                                	} elseif ($use_shipping && $use_billing && rgpost('input_51_1') == 'same_address') {
+                                		$billing_address = $shipping_address;
+                                	}
 
-                                $order->set_address($customer_address, 'shipping');
-                                $order->set_address($customer_address); // billing
-                                $order->add_order_note('Customer name: ' . $firstname . ' ' . $lastname, true);
+                                	$order->set_address($shipping_address, 'shipping');
+                                	$order->set_address($billing_address); // billing
+                                }
                                 $total = 0;
                                 foreach ($items as $product) {
                                     $price = $woo_cart[$product['cart_item_key']]['line_total'];
