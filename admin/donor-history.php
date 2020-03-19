@@ -84,7 +84,7 @@ function bb_cart_donor_history_profile_tab() {
                 }
                 $amount = get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
                 echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="lineitem-'.$line_item->ID.'">'."\n";
-                echo '                <td class="date">'.$transaction->post_date.'</td>'."\n";
+                echo '                <td class="date">'.date_i18n(get_option('date_format'), strtotime($transaction->post_date)).'</td>'."\n";
                 echo '                <td class="">'.$fund_code.'</td>'."\n";
                 echo '                <td class="">'.apply_filters('the_content', $line_item->post_content).'</td>'."\n";
                 echo '                <td style="text-align: right;">'.bb_cart_format_currency($amount).'</td>'."\n";
