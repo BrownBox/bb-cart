@@ -3,7 +3,7 @@ add_action('admin_init', 'bb_cart_create_modal');
 function bb_cart_create_modal() {
     add_thickbox();
     add_action('admin_footer', function() {
-        ?>
+?>
 <div id="bb_cart_modal" style="display: none;">
     <div style="overflow: scroll;" id="bb_cart_thickbox_contents">Loading, please wait...</div>
 </div>
