@@ -130,7 +130,7 @@ switch($data['event']) {
                     }
 
                     $line_items = bb_cart_get_transaction_line_items($transaction_details->ID);
-                    if ($prev_amount == $amount || count($line_items) == 1) {
+                    if ($line_items && ($prev_amount == $amount || count($line_items) == 1)) {
                         foreach ($line_items as $previous_line_item) {
                             $previous_meta = get_post_meta($previous_line_item->ID);
                             $line_item_id = wp_insert_post($line_item);
@@ -148,7 +148,7 @@ switch($data['event']) {
                                 wp_set_post_terms($line_item_id, $fund_code_term->term_id, 'fundcode');
                             }
                         }
-                    } else { // Amount has changed but we have multiple line items - just create one line item with default fund code
+                    } else { // Amount has changed but we have multiple line items, or we couldn't locate the previous line items - just create one line item with default fund code
                         $fund_code = bb_cart_get_default_fund_code();
                         $line_item_id = wp_insert_post($line_item);
                         update_post_meta($line_item_id, 'fund_code', $fund_code);
