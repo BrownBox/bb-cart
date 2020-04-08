@@ -464,7 +464,9 @@ function bb_cart_get_donate_form() {
 
     if (!$donate_form_id || !GFAPI::form_id_exists($donate_form_id)) { // If form doesn't exist, create it
         $donate_form_id = GFAPI::add_form($donate_form);
-        update_option('bb_cart_donate_form_id', $donate_form_id);
+        if (is_int($donate_form_id)) {
+        	update_option('bb_cart_donate_form_id', $donate_form_id);
+        }
     } else { // Otherwise if we've created it previously, just update it to make sure it hasn't been modified and is the latest version
     	$donate_form['id'] = $donate_form_id;
     	$donate_form = array_merge_recursive(GFAPI::get_form($donate_form_id), $donate_form); // Make sure we don't lose additional third-party settings etc
@@ -1369,8 +1371,10 @@ Your details will also allow us to give you a personal reference number to inclu
     }
 
     if (!$checkout_form_id || !GFAPI::form_id_exists($checkout_form_id)) { // If form doesn't exist, create it
-        $checkout_form_id = GFAPI::add_form($checkout_form);
-        update_option('bb_cart_checkout_form_id', $checkout_form_id);
+    	$checkout_form_id = GFAPI::add_form($checkout_form);
+    	if (is_int($checkout_form_id)) {
+        	update_option('bb_cart_checkout_form_id', $checkout_form_id);
+    	}
     } else { // Otherwise if we've created it previously, just update it to make sure it hasn't been modified and is the latest version
     	$checkout_form['id'] = $checkout_form_id;
     	$checkout_form = array_merge_recursive(GFAPI::get_form($checkout_form_id), $checkout_form); // Make sure we don't lose additional third-party settings etc
@@ -1470,8 +1474,10 @@ function bb_cart_get_shipping_form() {
             ),
     );
     if (!$shipping_form_id || !GFAPI::form_id_exists($shipping_form_id)) { // If form doesn't exist, create it
-        $shipping_form_id = GFAPI::add_form($shipping_form);
-        update_option('bbcart_shipping_form_id', $shipping_form_id);
+    	$shipping_form_id = GFAPI::add_form($shipping_form);
+    	if (is_int($shipping_form_id)) {
+        	update_option('bbcart_shipping_form_id', $shipping_form_id);
+    	}
     } else { // Otherwise if we've created it previously, just update it to make sure it hasn't been modified and is the latest version
     	$shipping_form['id'] = $shipping_form_id;
     	$shipping_form = array_merge_recursive(GFAPI::get_form($shipping_form_id), $shipping_form); // Make sure we don't lose additional third-party settings etc
