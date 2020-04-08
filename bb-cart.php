@@ -779,6 +779,14 @@ function bb_cart_calculate_shipping($total_price = null) {
     return apply_filters('bb_cart_calculate_shipping', $shipping, $total_price, $_SESSION[BB_CART_SESSION_ITEM]);
 }
 
+add_filter('bb_cart_calculate_shipping', 'bb_cart_woocommerce_shipping', 1, 3);
+function bb_cart_woocommerce_shipping($shipping, $total_price, $cart_items) {
+	if (!empty($cart_items['woo']) && function_exists('WC')) {
+		return WC()->cart->get_cart_shipping_total();
+	}
+	return $shipping;
+}
+
 function bb_cart_shipping_label() {
     return apply_filters('bb_cart_shipping_label', 'Shipping');
 }
