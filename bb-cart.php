@@ -1331,7 +1331,9 @@ function bb_cart_get_transaction_from_entry($entry_id) {
     $args = array(
             'post_type' => 'transaction',
             'post_status' => 'any',
-            'posts_per_page' => 1,
+    		'posts_per_page' => 1,
+    		'orderby' => 'date',
+    		'order' => 'ASC',
             'meta_query' => array(
                     array(
                             'key' => 'gf_entry_id',
