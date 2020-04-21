@@ -1432,11 +1432,74 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
 
 add_action('gform_paypal_post_ipn', 'bb_cart_complete_paypal_transaction', 10, 4);
 function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) {
-    $now = date('Y-m-d H:i:s');
-    $transaction = bb_cart_get_transaction_from_entry($entry['id']);
-    if ($transaction) {
-        bb_cart_complete_pending_transaction($transaction->ID, $now, $entry);
-    }
+	if ($cancel) {
+		return;
+	}
+
+	$transaction = bb_cart_get_transaction_from_entry($entry['id']);
+	$timezone = bb_cart_get_timezone();
+	$ipn_date = new DateTime($ipn_post['payment_date']);
+	$ipn_date->setTimezone($timezone);
+	if ($transaction) {
+		$transaction_date = new DateTime($transaction->post_date, $timezone);
+		if ($transaction_date->format('Ymd') == $ipn_date->format('Ymd')) {
+			bb_cart_complete_pending_transaction($transaction->ID, current_time('mysql'), $entry);
+			return;
+		}
+	}
+
+	if (in_array(strtolower($ipn_post['txn_type']), array('subscr_payment', 'web_accept'))) {
+		// They've made a payment but it doesn't correspond to the original transaction (or we couldn't load the original)
+		$amount = $ipn_post['mc_gross'];
+		$frequency = $ipn_post['item_name'];
+		$deductible = false;
+		$donor_id = null;
+
+		if ($transaction) {
+			$donor_id = $transaction->post_author;
+			$donor = new WP_User($donor_id);
+			$was_deductible = get_post_meta($transaction->ID, 'is_tax_deductible', true);
+			if (strlen($was_deductible) > 0) {
+				$deductible = $was_deductible == 'true';
+			}
+		} else {
+			$donor = get_user_by('email', $ipn_post['payer_email']);
+			$donor_id = $donor->ID;
+		}
+
+		if ($donor instanceof WP_User) {
+			$donor_name = $donor->user_firstname.' '.$donor->user_lastname;
+		} else {
+			$donor_name = $ipn_post['first_name'].' '.$ipn_post['last_name'];
+		}
+
+		// Create transaction record
+		$new_transaction = array(
+				'post_title' => $donor_name.'-'.$amount,
+				'post_content' => serialize($ipn_post),
+				'post_status' => 'publish',
+				'post_author' => $donor_id,
+				'post_type' => 'transaction',
+				'post_date' => $ipn_date->format('Y-m-d H:i:s'),
+				'post_modified' => current_time('mysql'),
+		);
+
+		// Insert the post into the database
+		$transaction_id = wp_insert_post($new_transaction);
+
+		update_post_meta($transaction_id, 'frequency', $frequency);
+		update_post_meta($transaction_id, 'donation_amount', $amount);
+		update_post_meta($transaction_id, 'total_amount', $amount);
+		update_post_meta($transaction_id, 'is_tax_deductible', var_export($deductible, true));
+		update_post_meta($transaction_id, 'payment_method', 'PayPal');
+		update_post_meta($transaction_id, 'transaction_type', 'online');
+		update_post_meta($transaction_id, 'is_receipted', 'true');
+		update_post_meta($transaction_id, 'subscription_id', $ipn_post['subscr_id']);
+
+		$form = GFAPI::get_form($entry['form_id']);
+		$batch_id = bb_cart_get_web_batch($transaction['post_date'], $form, $entry);
+		update_post_meta($transaction_id, 'batch_id', $batch_id);
+	}
 }
 
 /**
