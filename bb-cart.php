@@ -2,15 +2,15 @@
 /**
  * Plugin Name: BB Cart
  * Plugin URI: n/a
- * Description: A cart system to extend Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
- * Version: 3.5.3
+ * Description: A cart system for Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
+ * Version: 3.6.0
  * Author: Spark Web Solutions
  * Author URI: https://sparkweb.com.au
  */
 
 define('BB_CART_DIR', plugin_dir_path(__FILE__));
 define('BB_CART_URL', plugin_dir_url(__FILE__));
-define('BB_CART_VERSION', '3.5.3');
+define('BB_CART_VERSION', '3.6.0');
 
 require_once(BB_CART_DIR.'time.php');
 require_once(BB_CART_DIR.'ia/cpt_.php');
