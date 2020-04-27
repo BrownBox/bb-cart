@@ -469,7 +469,7 @@ function bb_cart_get_donate_form() {
         }
     } else { // Otherwise if we've created it previously, just update it to make sure it hasn't been modified and is the latest version
     	$donate_form['id'] = $donate_form_id;
-    	$donate_form = array_merge_recursive(GFAPI::get_form($donate_form_id), $donate_form); // Make sure we don't lose additional third-party settings etc
+    	$donate_form = wp_parse_args($donate_form, GFAPI::get_form($donate_form_id)); // Make sure we don't lose additional third-party settings etc
         GFAPI::update_form($donate_form);
     }
 
@@ -501,7 +501,7 @@ function bb_cart_get_checkout_form(){
                             'queryString' => 'n={Name (First):1.3}&e={entry_id}&f={form_id}',
                     ),
             ),
-            'fields' => array( // Next field ID: 52
+            'fields' => array( // Next field ID: 53
                     array(
                             'type' => 'checkbox',
                             'id' => 28,
@@ -1220,6 +1220,15 @@ Your details will also allow us to give you a personal reference number to inclu
                             'inputName' => '',
                             'visibility' => 'visible',
                     ),
+            		array(
+            				'type' => 'total',
+            				'id' => 52,
+            				'label' => 'Total',
+            				'isRequired' => false,
+            				'allowsPrepopulate' => true,
+            				'inputName' => 'bb_cart_total',
+            				'visibility' => 'visible',
+            		),
                     array(
                             'type' => 'hidden',
                             'id' => 10,
@@ -1377,7 +1386,7 @@ Your details will also allow us to give you a personal reference number to inclu
     	}
     } else { // Otherwise if we've created it previously, just update it to make sure it hasn't been modified and is the latest version
     	$checkout_form['id'] = $checkout_form_id;
-    	$checkout_form = array_merge_recursive(GFAPI::get_form($checkout_form_id), $checkout_form); // Make sure we don't lose additional third-party settings etc
+    	$checkout_form = wp_parse_args($checkout_form, GFAPI::get_form($checkout_form_id)); // Make sure we don't lose additional third-party settings etc
         GFAPI::update_form($checkout_form);
     }
 
@@ -1480,7 +1489,7 @@ function bb_cart_get_shipping_form() {
     	}
     } else { // Otherwise if we've created it previously, just update it to make sure it hasn't been modified and is the latest version
     	$shipping_form['id'] = $shipping_form_id;
-    	$shipping_form = array_merge_recursive(GFAPI::get_form($shipping_form_id), $shipping_form); // Make sure we don't lose additional third-party settings etc
+    	$shipping_form = wp_parse_args($shipping_form, GFAPI::get_form($shipping_form_id)); // Make sure we don't lose additional third-party settings etc
         GFAPI::update_form($shipping_form);
     }
 
