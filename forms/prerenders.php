@@ -281,6 +281,46 @@ function bb_cart_populate_payment_method_choices($choices, $form, $field) {
     return $choices;
 }
 
+add_filter('gform_pre_render', 'bb_cart_fill_address_from_woocommerce');
+function bb_cart_fill_address_from_woocommerce($form) {
+	if (in_array('bb_cart_checkout', explode(' ', $form['cssClass']))) {
+		global $woocommerce;
+		if (!empty($woocommerce->customer) && $woocommerce->customer instanceof WC_Customer) {
+			/**
+			 * @var WC_Customer $customer
+			 */
+			$customer = $woocommerce->customer;
+			foreach ($form['fields'] as &$field) {
+				if ($field->type == 'address') {
+					foreach ($field->inputs as &$input) {
+						switch ($input['id']) {
+							case $field->id.'.1':
+								$input['defaultValue'] = $customer->get_shipping_address_1();
+								break;
+							case $field->id.'.2':
+								$input['defaultValue'] = $customer->get_shipping_address_2();
+								break;
+							case $field->id.'.3':
+								$input['defaultValue'] = $customer->get_shipping_city();
+								break;
+							case $field->id.'.4':
+								$input['defaultValue'] = $customer->get_shipping_state();
+								break;
+							case $field->id.'.5':
+								$input['defaultValue'] = $customer->get_shipping_postcode();
+								break;
+							case $field->id.'.6':
+								$input['defaultValue'] = $customer->get_shipping_country();
+								break;
+						}
+					}
+				}
+			}
+		}
+	}
+	return $form;
+}
+
 add_filter("gform_submit_button", "bb_cart_form_submit_button", 1, 2);
 function bb_cart_form_submit_button($button, $form) {
     $cssClasses = explode(" ", $form['cssClass']);
