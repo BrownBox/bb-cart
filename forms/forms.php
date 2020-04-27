@@ -1510,6 +1510,16 @@ function bb_cart_get_cart_user() {
     return $user;
 }
 
+function bb_cart_get_protected_forms() {
+	$bb_cart_forms = apply_filters('bb_cart_protected_forms', array());
+
+	// Add our forms after the filter so they can't be removed
+	$bb_cart_forms[] = bb_cart_get_donate_form();
+	$bb_cart_forms[] = bb_cart_get_checkout_form();
+	$bb_cart_forms[] = bb_cart_get_shipping_form();
+	return $bb_cart_forms;
+}
+
 add_action('init', 'bb_cart_form_locking', 9999); // Run as late as possible to make sure GF has inited first
 function bb_cart_form_locking() {
     if (class_exists('GFFormLocking')) {
@@ -1517,10 +1527,7 @@ function bb_cart_form_locking() {
             private $bb_cart_forms = array();
 
             public function __construct() {
-                $this->bb_cart_forms[] = bb_cart_get_donate_form();
-                $this->bb_cart_forms[] = bb_cart_get_checkout_form();
-                $this->bb_cart_forms[] = bb_cart_get_shipping_form();
-
+            	$this->bb_cart_forms = bb_cart_get_protected_forms();
                 $this->_redirect_url = admin_url('admin.php?page=gf_edit_forms');
 
 //                 add_action('gform_form_list_column_title', array($this, 'form_list_form_title'));  @todo this conflicts with Connexions' corresponding logic, resulting in 2 form titles being displayed
@@ -1592,10 +1599,7 @@ function bb_cart_form_locking() {
             );
 
             public function __construct() {
-                $this->bb_cart_forms[] = bb_cart_get_donate_form();
-                $this->bb_cart_forms[] = bb_cart_get_checkout_form();
-                $this->bb_cart_forms[] = bb_cart_get_shipping_form();
-
+            	$this->bb_cart_forms = bb_cart_get_protected_forms();
                 $this->_redirect_url = admin_url('admin.php?page=gf_edit_forms&view=settings&id='.rgget('id').'&subview=notification');
 
                 add_filter('gform_form_settings_menu', array($this, 'form_settings_hide_locked_subviews'), 10, 2);
