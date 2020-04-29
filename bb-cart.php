@@ -1191,7 +1191,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             }
 
             do_action('bb_cart_post_purchase', $cart_items, $entry, $form, $transaction_id);
-            if (function_exists('WC')) {
+            if (function_exists('WC') && WC()->cart instanceof WC_Cart) {
                 WC()->cart->empty_cart();
             }
             $_SESSION['last_checkout'] = $entry['id'];
