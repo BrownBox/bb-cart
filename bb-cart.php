@@ -791,6 +791,8 @@ function bb_cart_shipping_label() {
     return apply_filters('bb_cart_shipping_label', 'Shipping');
 }
 
+add_filter('woocommerce_checkout_redirect_empty_cart', '__return_false');
+add_filter('woocommerce_checkout_update_order_review_expired', '__return_false');
 add_action('woocommerce_add_to_cart', 'bb_cart_reset_shipping');
 add_action('woocommerce_cart_item_removed', 'bb_cart_reset_shipping');
 add_action('woocommerce_cart_item_restored', 'bb_cart_reset_shipping');
