@@ -21,6 +21,7 @@ require_once(BB_CART_DIR.'ia/ia.php');
 require_once(BB_CART_DIR.'forms/forms.php');
 require_once(BB_CART_DIR.'forms/prerenders.php');
 require_once(BB_CART_DIR.'forms/presubmission.php');
+require_once(BB_CART_DIR.'forms/post-process.php');
 require_once(BB_CART_DIR.'forms/confirmation.php');
 require_once(BB_CART_DIR.'forms/update-entry.php');
 require_once(BB_CART_DIR.'admin/fx.php');
@@ -39,9 +40,18 @@ if (is_admin()) {
     new BbCartUpdates(__FILE__, 'BrownBox', 'bb-cart');
 }
 
+// Session variable keys
 define('BB_CART_SESSION_ITEM', 'bb_cart_item');
 define('BB_CART_SESSION_SHIPPING_TYPE', 'bb_cart_shipping_type');
+define('BB_CART_SESSION_SHIPPING_ADDRESS', 'bb_cart_shipping_address');
+/**
+ * @deprecated Use BB_CART_SESSION_SHIPPING_ADDRESS instead
+ */
 define('BB_CART_SESSION_SHIPPING_POSTCODE', 'bb_cart_shipping_postcode');
+/**
+ * @deprecated Use BB_CART_SESSION_SHIPPING_ADDRESS instead
+ */
+define('BB_CART_SESSION_SHIPPING_SUBURB', 'bb_cart_shipping_suburb');
 
 // JUST DO SOME SESSION STUFF HERE TO KEEP IT CLEAN + NOT CREATE ANY SESSION PROBLEMS
 add_action('init', 'bb_cart_start_session', 1);
@@ -800,6 +810,9 @@ add_action('woocommerce_after_cart_item_quantity_update', 'bb_cart_reset_shippin
 function bb_cart_reset_shipping() {
 	if (!empty($_SESSION[BB_CART_SESSION_SHIPPING_TYPE])) {
 		unset($_SESSION[BB_CART_SESSION_SHIPPING_TYPE]);
+	}
+	if (!empty($_SESSION[BB_CART_SESSION_SHIPPING_ADDRESS])) {
+		unset($_SESSION[BB_CART_SESSION_SHIPPING_ADDRESS]);
 	}
 }
 

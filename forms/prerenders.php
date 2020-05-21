@@ -281,37 +281,67 @@ function bb_cart_populate_payment_method_choices($choices, $form, $field) {
     return $choices;
 }
 
-add_filter('gform_pre_render', 'bb_cart_fill_address_from_woocommerce');
-function bb_cart_fill_address_from_woocommerce($form) {
+add_filter('gform_pre_render', 'bb_cart_populate_shipping_address');
+function bb_cart_populate_shipping_address($form) {
 	if (in_array('bb_cart_checkout', explode(' ', $form['cssClass']))) {
-		global $woocommerce;
-		if (!empty($woocommerce->customer) && $woocommerce->customer instanceof WC_Customer) {
-			/**
-			 * @var WC_Customer $customer
-			 */
-			$customer = $woocommerce->customer;
+		if (!empty($_SESSION[BB_CART_SESSION_SHIPPING_ADDRESS])) {
+			$shipping_address = $_SESSION[BB_CART_SESSION_SHIPPING_ADDRESS];
 			foreach ($form['fields'] as &$field) {
 				if ($field->type == 'address') {
 					foreach ($field->inputs as &$input) {
 						switch ($input['id']) {
 							case $field->id.'.1':
-								$input['defaultValue'] = $customer->get_shipping_address_1();
+								$input['defaultValue'] = $shipping_address['address_line_1'];
 								break;
 							case $field->id.'.2':
-								$input['defaultValue'] = $customer->get_shipping_address_2();
+								$input['defaultValue'] = $shipping_address['address_line_2'];
 								break;
 							case $field->id.'.3':
-								$input['defaultValue'] = $customer->get_shipping_city();
+								$input['defaultValue'] = $shipping_address['address_city'];
 								break;
 							case $field->id.'.4':
-								$input['defaultValue'] = $customer->get_shipping_state();
+								$input['defaultValue'] = $shipping_address['address_state'];
 								break;
 							case $field->id.'.5':
-								$input['defaultValue'] = $customer->get_shipping_postcode();
+								$input['defaultValue'] = $shipping_address['address_postcode'];
 								break;
 							case $field->id.'.6':
-								$input['defaultValue'] = $customer->get_shipping_country();
+								$input['defaultValue'] = $shipping_address['address_country'];
 								break;
+						}
+					}
+				}
+			}
+		} elseif (class_exists('WC_Customer')) {
+			global $woocommerce;
+			if (!empty($woocommerce->customer) && $woocommerce->customer instanceof WC_Customer) {
+				/**
+				 * @var WC_Customer $customer
+				 */
+				$customer = $woocommerce->customer;
+				foreach ($form['fields'] as &$field) {
+					if ($field->type == 'address') {
+						foreach ($field->inputs as &$input) {
+							switch ($input['id']) {
+								case $field->id.'.1':
+									$input['defaultValue'] = $customer->get_shipping_address_1();
+									break;
+								case $field->id.'.2':
+									$input['defaultValue'] = $customer->get_shipping_address_2();
+									break;
+								case $field->id.'.3':
+									$input['defaultValue'] = $customer->get_shipping_city();
+									break;
+								case $field->id.'.4':
+									$input['defaultValue'] = $customer->get_shipping_state();
+									break;
+								case $field->id.'.5':
+									$input['defaultValue'] = $customer->get_shipping_postcode();
+									break;
+								case $field->id.'.6':
+									$input['defaultValue'] = $customer->get_shipping_country();
+									break;
+							}
 						}
 					}
 				}
