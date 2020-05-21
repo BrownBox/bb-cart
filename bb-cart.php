@@ -1200,7 +1200,7 @@ function bb_cart_post_purchase_actions($entry, $form){
     }
 }
 
-function bb_cart_get_web_batch($date = null, $form = null, $entry = null) {
+function bb_cart_get_web_batch($date = null, $form = null, $entry = null, $context = null) {
     if (empty($date)) {
         $date = current_time('mysql');
     }
@@ -1209,7 +1209,7 @@ function bb_cart_get_web_batch($date = null, $form = null, $entry = null) {
     $batch_date = $date_obj->format('Y-m-d');
     $batch_name = 'WEB '.$batch_date;
 
-    $existing_batch = apply_filters('bb_cart_get_web_batch', get_page_by_title($batch_name, OBJECT, 'transactionbatch'), $batch_date, $form, $entry);
+    $existing_batch = apply_filters('bb_cart_get_web_batch', get_page_by_title($batch_name, OBJECT, 'transactionbatch'), $batch_date, $form, $entry, $context);
 
     if ($existing_batch instanceof WP_Post && in_array($existing_batch->post_status, array('pending', 'future'))) {
         return $existing_batch->ID;
@@ -1499,7 +1499,7 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 		update_post_meta($transaction_id, 'subscription_id', $ipn_post['subscr_id']);
 
 		$form = GFAPI::get_form($entry['form_id']);
-		$batch_id = bb_cart_get_web_batch($transaction['post_date'], $form, $entry);
+		$batch_id = bb_cart_get_web_batch($transaction['post_date'], $form, $entry, 'paypal');
 		update_post_meta($transaction_id, 'batch_id', $batch_id);
 	}
 }

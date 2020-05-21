@@ -110,7 +110,7 @@ switch($data['event']) {
                 update_post_meta($transaction_id, 'is_receipted', 'false');
                 update_post_meta($transaction_id, 'subscription_id', $subscription_id);
 
-                $batch_id = bb_cart_get_web_batch($transaction_date);
+                $batch_id = bb_cart_get_web_batch($transaction_date, null, null, 'paydock');
                 update_post_meta($transaction_id, 'batch_id', $batch_id);
 
                 $transaction_term = get_term_by('slug', $transaction_id, 'transaction'); // Have to pass term ID rather than slug
