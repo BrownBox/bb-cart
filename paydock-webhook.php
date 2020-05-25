@@ -8,8 +8,10 @@ usleep(rand(1000000, 5000000)); // Sleep for random interval between 1 and 5 sec
 // @todo check for live vs sandbox gateway
 switch($data['event']) {
     case 'transaction_success':
-        // Mark Direct Debit transactions as complete
-        if ($data['data']['customer']['payment_source']['type'] == 'bsb') {
+    	$payment_method = 'Credit Card';
+    	// Mark Direct Debit transactions as complete
+    	if ($data['data']['customer']['payment_source']['type'] == 'bsb') {
+    		$payment_method = 'Direct Debit';
             // PayDock have changed the data structure at some point, but some customers still seem to get the old format
             if (!empty($data['data']['_id'])) { // So we have to cater to both new...
                 $pd_id = $data['data']['_id'];
@@ -34,7 +36,7 @@ switch($data['event']) {
                         $action['amount']           = $data['data']['amount'];
                         $action['entry_id']         = $entry['id'];
                         $action['payment_date']     = gmdate('y-m-d H:i:s');
-                        $action['payment_method']	= 'Direct Debit';
+                        $action['payment_method']	= $payment_method;
                         $action['ready_to_fulfill'] = !$entry['is_fulfilled'] ? true : false;
                         GFAPI::send_notifications(GFAPI::get_form($entry['form_id']), $entry, rgar($action, 'type'), array('payment_action' => $action));
                     }
@@ -80,9 +82,14 @@ switch($data['event']) {
             // Make sure we haven't already tracked this transaction
             $transaction_details = bb_cart_get_transaction_for_subscription($subscription_id);
             $duplicate = false;
+            $deductible = false;
             if ($transaction_details) {
                 $previous_date = bb_cart_get_datetime($transaction_details->post_date);
                 $duplicate = $previous_date->format('Ymd') >= $pd_date->format('Ymd');
+                $was_deductible = get_post_meta($transaction->ID, 'is_tax_deductible', true);
+                if (strlen($was_deductible) > 0) {
+                	$deductible = $was_deductible == 'true';
+                }
             }
             if (!$duplicate) {
                 $frequency = 'recurring';
@@ -105,6 +112,8 @@ switch($data['event']) {
                 update_post_meta($transaction_id, 'frequency', $frequency);
                 update_post_meta($transaction_id, 'donation_amount', $amount); // Virtually all subscriptions will be donations - we update it below based on the previous transaction (if found) though just in case
                 update_post_meta($transaction_id, 'total_amount', $amount);
+                update_post_meta($transaction_id, 'is_tax_deductible', var_export($deductible, true));
+                update_post_meta($transaction_id, 'payment_method', $payment_method);
                 update_post_meta($transaction_id, 'currency', $currency);
                 update_post_meta($transaction_id, 'transaction_type', 'online');
                 update_post_meta($transaction_id, 'is_receipted', 'false');
