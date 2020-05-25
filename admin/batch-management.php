@@ -268,7 +268,9 @@ class bb_cart_batch_management {
                 'url' => add_query_arg(array('action' => 'bb_cart_load_edit_batch', 'id' => $batch->ID), $ajax_url),
         );
         echo '<p style="float: right;">'."\n";
-        echo '<a href="'.add_query_arg(array('action' => 'email_receipts')).'" class="button" onclick="return confirm(\'This will email receipts for all transactions in this batch which have not yet been receipted and where the donor has a valid email address. Are you sure you wish to continue?\');">Email Receipts</a>'."\n";
+        if (!empty(get_option('bb_cart_offline_receipt_subject')) && !empty(get_option('bb_cart_offline_receipt_template'))) {
+        	echo '<a href="'.add_query_arg(array('action' => 'email_receipts')).'" class="button" onclick="return confirm(\'This will email receipts for all transactions in this batch which have not yet been receipted and where the donor has a valid email address. Are you sure you wish to continue?\');">Email Receipts</a>'."\n";
+        }
         if ($can_edit) {
             echo bb_cart_ajax_modal_link('Edit Batch Details', $edit_args)."\n";
         }
