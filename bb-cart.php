@@ -1467,6 +1467,7 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 		// They've made a payment but it doesn't correspond to the original transaction (or we couldn't load the original)
 		$amount = $ipn_post['mc_gross'];
 		$frequency = $ipn_post['item_name'];
+		$currency = $ipn_post['mc_currency'];
 		$deductible = false;
 		$donor_id = null;
 
@@ -1507,13 +1508,77 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 		update_post_meta($transaction_id, 'total_amount', $amount);
 		update_post_meta($transaction_id, 'is_tax_deductible', var_export($deductible, true));
 		update_post_meta($transaction_id, 'payment_method', 'PayPal');
+		update_post_meta($transaction_id, 'currency', $currency);
 		update_post_meta($transaction_id, 'transaction_type', 'online');
-		update_post_meta($transaction_id, 'is_receipted', 'true');
+		update_post_meta($transaction_id, 'is_receipted', 'false');
 		update_post_meta($transaction_id, 'subscription_id', $ipn_post['subscr_id']);
 
 		$form = GFAPI::get_form($entry['form_id']);
 		$batch_id = bb_cart_get_web_batch($transaction['post_date'], $form, $entry, 'paypal');
 		update_post_meta($transaction_id, 'batch_id', $batch_id);
+
+		$transaction_term = get_term_by('slug', $transaction_id, 'transaction'); // Have to pass term ID rather than slug
+		$line_item = array(
+				'post_title' => 'PayPal Subscription Payment',
+				'post_status' => 'publish',
+				'post_author' => $donor_id,
+				'post_type' => 'transactionlineitem',
+				'post_date' => $transaction_date,
+				'post_modified' => current_time('mysql'),
+		);
+		if ($transaction) { // Get details from original transaction
+			$prev_amount = get_post_meta($transaction->ID, 'total_amount');
+			if ($prev_amount == $amount) {
+				update_post_meta($transaction_id, 'donation_amount', get_post_meta($transaction->ID, 'donation_amount', true)); // Subscriptions should generally be donations but just to be safe...
+			}
+
+			$line_items = bb_cart_get_transaction_line_items($transaction->ID);
+			if ($line_items && ($prev_amount == $amount || count($line_items) == 1)) {
+				foreach ($line_items as $previous_line_item) {
+					$previous_meta = get_post_meta($previous_line_item->ID);
+					$line_item_id = wp_insert_post($line_item);
+					$price = $previous_meta['price'][0];
+					if ($prev_amount != $amount) { // Amount has changed, use new amount
+						$price = $amount;
+					}
+					update_post_meta($line_item_id, 'fund_code', $previous_meta['fund_code'][0]);
+					update_post_meta($line_item_id, 'price', $price);
+					update_post_meta($line_item_id, 'quantity', $previous_meta['quantity'][0]);
+
+					wp_set_post_terms($line_item_id, $transaction_term->term_id, 'transaction');
+					$previous_fund_codes = wp_get_object_terms($previous_line_item->ID, 'fundcode');
+					foreach ($previous_fund_codes as $fund_code_term) {
+						wp_set_post_terms($line_item_id, $fund_code_term->term_id, 'fundcode');
+					}
+				}
+			} else { // Amount has changed but we have multiple line items, or we couldn't locate the previous line items - just create one line item with default fund code
+				$fund_code = bb_cart_get_default_fund_code();
+				$line_item_id = wp_insert_post($line_item);
+				update_post_meta($line_item_id, 'fund_code', $fund_code);
+				update_post_meta($line_item_id, 'price', $amount);
+				update_post_meta($line_item_id, 'quantity', 1);
+
+				wp_set_post_terms($line_item_id, $transaction_term->term_id, 'transaction');
+				if (!empty($fund_code)) {
+					$fund_code_term = get_term_by('slug', $fund_code, 'fundcode'); // Have to pass term ID rather than slug
+					wp_set_post_terms($line_item_id, $fund_code_term->term_id, 'fundcode');
+				}
+			}
+		} else { // No previous tranaction found
+			$fund_code = bb_cart_get_default_fund_code(); // No way to get this directly from PayPal, so if we can't find an existing transaction for this subscription, just use the default fund code
+			$line_item_id = wp_insert_post($line_item);
+			update_post_meta($line_item_id, 'fund_code', $fund_code);
+			update_post_meta($line_item_id, 'price', $amount);
+			update_post_meta($line_item_id, 'quantity', 1);
+
+			wp_set_post_terms($line_item_id, $transaction_term->term_id, 'transaction');
+			if (!empty($fund_code)) {
+				$fund_code_term = get_term_by('slug', $fund_code, 'fundcode'); // Have to pass term ID rather than slug
+				wp_set_post_terms($line_item_id, $fund_code_term->term_id, 'fundcode');
+			}
+		}
+
+		do_action('bb_cart_webhook_paypal_recurring_success', $donor, $amount, $transaction_id);
 	}
 }
 
