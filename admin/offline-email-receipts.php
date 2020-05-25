@@ -51,7 +51,8 @@ class bb_cart_offline_email_receipts {
 
         // Additional hooks
         if (get_option('bb_cart_offline_receipt_send_to_online_recurring_donors') == 1) {
-            add_action('bb_cart_webhook_paydock_recurring_success', array($this, 'after_transaction_import'), 10, 3);
+        	add_action('bb_cart_webhook_paydock_recurring_success', array($this, 'after_transaction_import'), 10, 3);
+        	add_action('bb_cart_webhook_paypal_recurring_success', array($this, 'after_transaction_import'), 10, 3);
         }
         if (get_option('bb_cart_offline_receipt_send_immediately') == 1) {
             add_action('bb_cart_post_import', array($this, 'after_transaction_import'), 10, 3);
