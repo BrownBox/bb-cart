@@ -358,7 +358,7 @@ class bb_cart_fund_code_report {
             echo '<div class="filters">'."\n";
             echo '<form action="" method="get">'."\n";
             echo '<input type="hidden" name="page" value="'.$this->slug.'">'."\n";
-            echo '<input type="hidden" name="fund_code" value="'.$this->selected_fund_code.'">'."\n";
+            echo '<input type="hidden" name="fund_code" value="'.urlencode($this->selected_fund_code).'">'."\n";
             echo 'Select Month: <select id="fund_code_report_filter_month" name="month">'."\n";
             foreach ($months as $month => $label) {
                 echo '<option value="'.$month.'" '.selected($month, $this->selected_month, false).'>'.$label.'</option>'."\n";
