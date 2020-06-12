@@ -1,83 +1,84 @@
 <?php
 class bb_cart_offline_email_receipts {
-    static $merge_tags = array(
-            '{{today_date}}',
-            '{{transaction_date}}',
-            '{{donor_name}}',
-            '{{donor_nickname}}',
-            '{{organisation_name}}',
-            '{{donor_address}}',
-            '{{donor_id}}',
-            '{{transaction_amount}}',
-            '{{fund_code}}',
-            '{{receipt_number}}',
-    );
+	static $merge_tags = array(
+			'{{today_date}}',
+			'{{transaction_date}}',
+			'{{donor_name}}',
+			'{{donor_nickname}}',
+			'{{organisation_name}}',
+			'{{donor_address}}',
+			'{{donor_id}}',
+			'{{transaction_amount}}',
+			'{{fund_code}}',
+			'{{receipt_number}}',
+	);
 
-    var $demo_content = array();
+	var $demo_content = array();
 
-    public function __construct() {
-        if (is_admin()) {
-            add_action('admin_menu', array($this, 'add_plugin_page'), 15);
-            add_action('admin_init', array($this, 'init'));
-        }
-        $current_user = wp_get_current_user();
-        $this->demo_content = array(
-                '{{today_date}}' => current_time(get_option('date_format')),
-                '{{transaction_date}}' => current_time(get_option('date_format')),
-                '{{donor_name}}' => $current_user->display_name,
-                '{{donor_nickname}}' => $current_user->nickname,
-                '{{organisation_name}}' => 'An Organisation',
-                '{{donor_address}}' => '123 A Street<br>City State 9999<br>Country',
-                '{{donor_id}}' => '1234',
-                '{{transaction_amount}}' => '123.45',
-                '{{fund_code}}' => 'Where Most Needed',
-                '{{receipt_number}}' => '98765',
-        );
-    }
+	public function __construct() {
+		if (is_admin()) {
+			add_action('admin_menu', array($this, 'add_plugin_page'), 15);
+			add_action('admin_init', array($this, 'init'));
+		}
+		$current_user = wp_get_current_user();
+		$this->demo_content = array(
+				'{{today_date}}' => current_time(get_option('date_format')),
+				'{{transaction_date}}' => current_time(get_option('date_format')),
+				'{{donor_name}}' => $current_user->display_name,
+				'{{donor_nickname}}' => $current_user->nickname,
+				'{{organisation_name}}' => 'An Organisation',
+				'{{donor_address}}' => '123 A Street<br>City State 9999<br>Country',
+				'{{donor_id}}' => '1234',
+				'{{transaction_amount}}' => '123.45',
+				'{{fund_code}}' => 'Where Most Needed',
+				'{{receipt_number}}' => '98765',
+		);
+	}
 
-    public function add_plugin_page() {
-        add_submenu_page('bb_cart_settings', 'Offline Email Receipts', 'Offline Receipts', 'add_users', 'bb_cart_offline_email_receipts', array($this, 'create_admin_page'));
-    }
+	public function add_plugin_page() {
+		add_submenu_page('bb_cart_settings', 'Offline Email Receipts', 'Offline Receipts', 'add_users', 'bb_cart_offline_email_receipts', array($this, 'create_admin_page'));
+	}
 
-    public function init() {
-        // Register settings
-        register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_subject');
-        register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_sender_name');
-        register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_sender_email');
-        register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_template');
-        register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_send_immediately');
-        register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_bcc_recipient');
-        register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_send_to_online_recurring_donors');
+	public function init() {
+		// Register settings
+		register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_sender_name');
+		register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_sender_email');
+		register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_subject');
+		register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_template');
+		register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_template_tax');
+		register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_send_immediately');
+		register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_bcc_recipient');
+		register_setting('bb-cart-offline-receipt-settings-group', 'bb_cart_offline_receipt_send_to_online_recurring_donors');
 
-        // Additional hooks
-        if (get_option('bb_cart_offline_receipt_send_to_online_recurring_donors') == 1) {
-        	add_action('bb_cart_webhook_paydock_recurring_success', array($this, 'after_transaction_import'), 10, 3);
-        	add_action('bb_cart_webhook_paypal_recurring_success', array($this, 'after_transaction_import'), 10, 3);
-        }
-        if (get_option('bb_cart_offline_receipt_send_immediately') == 1) {
-            add_action('bb_cart_post_import', array($this, 'after_transaction_import'), 10, 3);
-        }
-    }
+		// Additional hooks
+		if (get_option('bb_cart_offline_receipt_send_to_online_recurring_donors') == 1) {
+			add_action('bb_cart_webhook_paydock_recurring_success', array($this, 'after_transaction_import'), 10, 3);
+			add_action('bb_cart_webhook_paypal_recurring_success', array($this, 'after_transaction_import'), 10, 3);
+		}
+		if (get_option('bb_cart_offline_receipt_send_immediately') == 1) {
+			add_action('bb_cart_post_import', array($this, 'after_transaction_import'), 10, 3);
+		}
+	}
 
-    public function create_admin_page() {
-        $user_email = wp_get_current_user()->user_email;
-        if ($_GET['test_email'] == 'true') {
-            $subject = str_replace(array_keys($this->demo_content), $this->demo_content, get_option('bb_cart_offline_receipt_subject'));
-            $message = str_replace(array_keys($this->demo_content), $this->demo_content, get_option('bb_cart_offline_receipt_template'));
-            $headers = array(
-                    'From: '.get_option('bb_cart_offline_receipt_sender_name').' <'.get_option('bb_cart_offline_receipt_sender_email').'>',
-                    'Content-Type: text/html; charset=UTF-8',
-            );
-            if (is_email(get_option('bb_cart_offline_receipt_bcc_recipient'))) {
-                $headers[] = 'Bcc: '.get_option('bb_cart_offline_receipt_bcc_recipient');
-            }
-            if (wp_mail($user_email, $subject, wpautop($message), $headers)) {
-                echo '<div class="notice notice-success"><p>Test email sent successfully.</p></div>';
-            } else {
-                echo '<div class="notice notice-error"><p>Test email sending failed.</p></div>';
-            }
-        }
-        ?>
+	public function create_admin_page() {
+		$user_email = wp_get_current_user()->user_email;
+		if ($_GET['test_email'] == 'true') {
+			$subject = str_replace(array_keys($this->demo_content), $this->demo_content, get_option('bb_cart_offline_receipt_subject'));
+			$message = str_replace(array_keys($this->demo_content), $this->demo_content, get_option('bb_cart_offline_receipt_template'));
+			$headers = array(
+					'From: '.get_option('bb_cart_offline_receipt_sender_name').' <'.get_option('bb_cart_offline_receipt_sender_email').'>',
+					'Content-Type: text/html; charset=UTF-8',
+			);
+			if (is_email(get_option('bb_cart_offline_receipt_bcc_recipient'))) {
+				$headers[] = 'Bcc: '.get_option('bb_cart_offline_receipt_bcc_recipient');
+			}
+			if (wp_mail($user_email, $subject, wpautop($message), $headers)) {
+				echo '<div class="notice notice-success"><p>Test email sent successfully.</p></div>';
+			} else {
+				echo '<div class="notice notice-error"><p>Test email sending failed.</p></div>';
+			}
+		}
+		?>
 <div class="wrap">
     <h2>Offline Email Receipts</h2>
     <p><a href="<?php echo add_query_arg('test_email', 'true'); ?>" class="button-primary" onclick="return confirm('Send sample receipt email to <?php echo $user_email; ?> now? Please ensure you have saved your changes first.');">Send Test Email</a></p>
@@ -100,11 +101,17 @@ class bb_cart_offline_email_receipts {
             <td><input type="text" size="75" name="bb_cart_offline_receipt_subject" value="<?php echo get_option('bb_cart_offline_receipt_subject'); ?>"></td>
         </tr>
         <tr valign="top">
-            <th scope="row">Email Content<br>
+            <th scope="row">Default Email Content<br>
             <p>The following merge fields are available:</p>
             <p><em><?php echo implode('<br>', self::$merge_tags); ?></em></p>
             </th>
             <td><?php wp_editor(get_option('bb_cart_offline_receipt_template'), 'bb_cart_offline_receipt_template'); ?></td>
+        </tr>
+        <tr valign="top">
+            <th scope="row">Tax Deductible Email Content<br>
+	            <p>If set, will be used for tax deductible transactions. Leave empty to use the default email above for all transactions. The same merge tags as above are supported.</p>
+            </th>
+            <td><?php wp_editor(get_option('bb_cart_offline_receipt_template_tax'), 'bb_cart_offline_receipt_template_tax'); ?></td>
         </tr>
         <tr valign="top">
             <th scope="row">Send Immediately</th>
@@ -141,8 +148,14 @@ class bb_cart_offline_email_receipts {
     public static function send_email_receipt(WP_Post $transaction) {
         $user = new WP_User($transaction->post_author);
         if (!empty($user->user_email) && strpos($user->user_email, '@example.com') === false && substr($user->user_email, -8) != '.invalid') {
+        	$deductible = get_post_meta($transaction->ID, 'is_tax_deductible', true) == 'true';
+            $message = get_option('bb_cart_offline_receipt_template');
+            $tax_message = get_option('bb_cart_offline_receipt_template_tax');
+            if (!empty($tax_message) && $deductible) {
+            	$message = $tax_message;
+            }
             $subject = self::replace_merge_tags(get_option('bb_cart_offline_receipt_subject'), $transaction);
-            $message = self::replace_merge_tags(get_option('bb_cart_offline_receipt_template'), $transaction);
+            $message = self::replace_merge_tags($message, $transaction);
             $headers = array(
                     'From: '.get_option('bb_cart_offline_receipt_sender_name').' <'.get_option('bb_cart_offline_receipt_sender_email').'>',
                     'Content-Type: text/html; charset=UTF-8',

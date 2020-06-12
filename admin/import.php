@@ -324,10 +324,12 @@ class bb_cart_import {
                 return 'Invalid Fund Code: '.$data['Source'];
             }
 
+            $fund_code_deductible = get_post_meta($fund_code->slug, 'deductible', true);
+            $deductible = $fund_code_deductible == 'true';
             update_post_meta($transaction_id, 'frequency', 'one-off');
             update_post_meta($transaction_id, 'donation_amount', get_post_meta($fund_code->slug, 'transaction_type', true) == 'donation' ? $data['Amount'] : 0);
             update_post_meta($transaction_id, 'total_amount', $data['Amount']);
-            update_post_meta($transaction_id, 'is_tax_deductible', '0');
+            update_post_meta($transaction_id, 'is_tax_deductible', var_export($deductible, true));
             update_post_meta($transaction_id, 'batch_id', $batch_id);
             update_post_meta($transaction_id, 'raw', $data);
             update_post_meta($transaction_id, 'transaction_type', 'offline');

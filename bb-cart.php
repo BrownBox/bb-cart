@@ -997,7 +997,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             update_post_meta($transaction_id, 'is_receipted', 'true');
 
             if (isset($deductible)) {
-                update_post_meta($transaction_id, 'is_tax_deductible', (string)$deductible);
+            	update_post_meta($transaction_id, 'is_tax_deductible', var_export($deductible, true));
             }
             if (!empty($GLOBALS['subscription_id'])) {
                 update_post_meta($transaction_id, 'subscription_id', $GLOBALS['subscription_id']);
