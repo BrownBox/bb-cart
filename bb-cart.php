@@ -269,7 +269,7 @@ function bb_cart_field_value_total_price($value = '') {
 
 function bb_cart_total_price($include_shipping = true, array $cart_items = array()) {
     $total = 0;
-    if (empty($cart_items)) {
+    if (empty($cart_items) && !empty($_SESSION[BB_CART_SESSION_ITEM])) {
         $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
     }
     foreach ($cart_items as $section => $items) {
@@ -307,7 +307,7 @@ function bb_cart_events_total(array $cart_items = array()) {
     }
     if (!empty($cart_items['event'])) {
         foreach ($cart_items['event'] as $event) {
-            $events_total += $event['price']*100;
+            $events_total += $event['price'];
         }
     }
     return $events_total;
@@ -512,14 +512,16 @@ function bb_cart_item_types($value = '') {
 
 add_filter("gform_field_value_bb_cart_checkout_items_array", "bb_cart_checkout_items_array");
 function bb_cart_checkout_items_array($value){
-    $entry_ids = array();
-    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
-        foreach ($items as $item) {
-            if (!empty($item['entry_id'])) {
-                $entry_ids[] = $item['entry_id'];
-            }
-        }
-    }
+	$entry_ids = array();
+	if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+	    foreach ($_SESSION[BB_CART_SESSION_ITEM] as $section => $items) {
+	        foreach ($items as $item) {
+	            if (!empty($item['entry_id'])) {
+	                $entry_ids[] = $item['entry_id'];
+	            }
+	        }
+	    }
+	}
     return implode(',', $entry_ids);
 }
 
