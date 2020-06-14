@@ -1410,6 +1410,7 @@ add_filter('gform_paypal_query', 'bb_cart_paypal_line_items', 10, 5);
 function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submission_data) {
     parse_str(ltrim($query_string, '&'), $query);
     $i = 1;
+    $currency = null;
     $donation = $feed['meta']['transactionType'] == 'donation' || $feed['meta']['transactionType'] == 'subscription';
     $donation_types = apply_filters('bb_cart_donation_types', array('donations'));
     if ($donation) {
@@ -1421,11 +1422,17 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
                 $query['item_name'] = 'Donation';
                 foreach ($items as $cart_item) {
                     $query['amount'] += $cart_item['price']/100;
+					if (is_null($currency)) {
+						$currency = $cart_item['currency'];
+					}
                 }
             } else {
                 foreach ($items as $cart_item) {
                     $query['item_name'] = $cart_item['label'];
                     $query['amount'] = $cart_item['price']/100;
+                    if (is_null($currency)) {
+                    	$currency = $cart_item['currency'];
+                    }
                 }
             }
         } elseif (!$donation && !in_array($section, $donation_types)) {
@@ -1433,6 +1440,9 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
                 $query['item_name_'.$i] = $cart_item['label'];
                 $query['amount_'.$i] = $cart_item['price']/100;
                 $query['quantity_'.$i] = $cart_item['quantity'];
+                if (is_null($currency)) {
+                	$currency = $cart_item['currency'];
+                }
                 $i++;
             }
         }
@@ -1443,6 +1453,9 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
             $query['shipping_1'] = $shipping;
         }
     }
+	if (!is_null($currency)) {
+		$query['currency_code'] = $currency;
+	}
     $query_string = '&' . http_build_query($query);
     return $query_string;
 }
