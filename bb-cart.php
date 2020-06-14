@@ -1408,6 +1408,9 @@ function bb_cart_get_transaction_line_items($transaction_id) {
 
 add_filter('gform_paypal_query', 'bb_cart_paypal_line_items', 10, 5);
 function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submission_data) {
+	if (bb_cart_total_quantity() <= 0) {
+		return $query_string;
+	}
     parse_str(ltrim($query_string, '&'), $query);
     $i = 1;
     $currency = null;
