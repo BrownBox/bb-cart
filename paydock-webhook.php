@@ -55,6 +55,9 @@ switch($data['event']) {
                 $author_id = $user->ID;
                 $firstname = get_user_meta($author_id, 'first_name', true);
                 $lastname = get_user_meta($author_id, 'last_name', true);
+                if (is_multisite() && !is_user_member_of_blog($author_id)) {
+                	add_user_to_blog(get_current_blog_id(), $author_id, 'subscriber');
+                }
             } else {
                 $firstname = $data['data']['customer']['first_name'];
                 $lastname = $data['data']['customer']['last_name'];
