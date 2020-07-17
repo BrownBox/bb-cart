@@ -9,6 +9,7 @@ class bb_cart_offline_email_receipts {
 			'{{donor_address}}',
 			'{{donor_id}}',
 			'{{transaction_amount}}',
+			'{{transaction_description}}',
 			'{{fund_code}}',
 			'{{receipt_number}}',
 	);
@@ -30,6 +31,7 @@ class bb_cart_offline_email_receipts {
 				'{{donor_address}}' => '123 A Street<br>City State 9999<br>Country',
 				'{{donor_id}}' => '1234',
 				'{{transaction_amount}}' => '123.45',
+				'{{transaction_description}}' => 'Please use my donation as you see fit',
 				'{{fund_code}}' => 'Where Most Needed',
 				'{{receipt_number}}' => '98765',
 		);
@@ -193,6 +195,7 @@ class bb_cart_offline_email_receipts {
      */
     public static function replace_merge_tag($content, WP_Post $transaction, $merge_tag) {
         $meta = get_user_meta($transaction->post_author);
+        $replace = '';
         switch ($merge_tag) {
             case '{{today_date}}':
                 $replace = current_time(get_option('date_format'));
@@ -243,6 +246,16 @@ EOR;
                     $replace = $fund_codes[0];
                 }
                 break;
+            case '{{transaction_description}}':
+            	$line_items = bb_cart_get_transaction_line_items($transaction->ID);
+            	$fund_codes = array();
+            	foreach ($line_items as $line_item) {
+            		if (!empty($line_item->post_content)) {
+            			$replace = $line_item->post_content;
+            			break;
+            		}
+            	}
+            	break;
             case '{{receipt_number}}':
                 $replace = $transaction->ID;
                 break;
