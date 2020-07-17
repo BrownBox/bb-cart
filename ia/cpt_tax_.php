@@ -86,7 +86,16 @@ class cptTaxClass extends taxClass {
                 $wpdb->query($wpdb->prepare( 'DELETE FROM '.$wpdb->term_relationships.' WHERE term_taxonomy_id = %d', $category->term_id));
 
                 // Delete from users
-                $users = get_users();
+                $args = array(
+                		'meta_query' => array(
+                				array(
+                						'key' => $this->tax->taxonomy,
+                						'value' => $category->term_id,
+                						'compare' => 'LIKE',
+                				),
+                		),
+                );
+                $users = get_users($args);
                 foreach ($users as $user) {
                     $posts = get_user_meta($user->ID, $this->tax->taxonomy, true);
                     $postArr = explode(',',$posts);
