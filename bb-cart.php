@@ -998,6 +998,9 @@ function bb_cart_post_purchase_actions($entry, $form){
             if (isset($deductible)) {
             	update_post_meta($transaction_id, 'is_tax_deductible', var_export($deductible, true));
             }
+            if (!empty($GLOBALS['transaction_id'])) {
+            	update_post_meta($transaction_id, 'pd_transaction_id', $GLOBALS['transaction_id']);
+            }
             if (!empty($GLOBALS['subscription_id'])) {
                 update_post_meta($transaction_id, 'subscription_id', $GLOBALS['subscription_id']);
             }
@@ -1305,6 +1308,25 @@ function bb_cart_transaction_exists(array $data) {
     }
     // No match
     return false;
+}
+
+function bb_cart_get_transaction_for_paydock_transaction($pd_transaction_id) {
+	$args = array(
+			'post_type' => 'transaction',
+			'post_status' => 'any',
+			'posts_per_page' => 1,
+			'meta_query' => array(
+					array(
+							'key' => 'pd_transaction_id',
+							'value' => $pd_transaction_id,
+					),
+			),
+	);
+	$transactions = get_posts($args);
+	if (count($transactions)) {
+		return array_shift($transactions);
+	}
+	return false;
 }
 
 function bb_cart_get_transaction_for_subscription($subscription_id) {
