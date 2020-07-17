@@ -1483,8 +1483,8 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 	if (in_array(strtolower($ipn_post['txn_type']), array('subscr_payment', 'web_accept'))) {
 		// They've made a payment but it doesn't correspond to the original transaction (or we couldn't load the original)
 		$amount = $ipn_post['mc_gross'];
-		$frequency = $ipn_post['item_name'];
 		$currency = $ipn_post['mc_currency'];
+		$frequency = 'recurring';
 		$deductible = false;
 		$donor_id = null;
 
@@ -1531,11 +1531,11 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 		update_post_meta($transaction_id, 'subscription_id', $ipn_post['subscr_id']);
 
 		$form = GFAPI::get_form($entry['form_id']);
-		$batch_id = bb_cart_get_web_batch($transaction['post_date'], $form, $entry, 'paypal');
+		$batch_id = bb_cart_get_web_batch($new_transaction->post_date, $form, $entry, 'paypal');
 		update_post_meta($transaction_id, 'batch_id', $batch_id);
 
 		$transaction_term = get_term_by('slug', $transaction_id, 'transaction'); // Have to pass term ID rather than slug
-		$line_item = array(
+		$base_line_item = array(
 				'post_title' => 'PayPal Subscription Payment',
 				'post_status' => 'publish',
 				'post_author' => $donor_id,
@@ -1552,6 +1552,8 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 			$line_items = bb_cart_get_transaction_line_items($transaction->ID);
 			if ($line_items && ($prev_amount == $amount || count($line_items) == 1)) {
 				foreach ($line_items as $previous_line_item) {
+					$line_item = $base_line_item;
+					$line_item['post_content'] = $previous_line_item['post_content'];
 					$previous_meta = get_post_meta($previous_line_item->ID);
 					$line_item_id = wp_insert_post($line_item);
 					$price = $previous_meta['price'][0];
@@ -1570,6 +1572,7 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 				}
 			} else { // Amount has changed but we have multiple line items, or we couldn't locate the previous line items - just create one line item with default fund code
 				$fund_code = bb_cart_get_default_fund_code();
+				$line_item = $base_line_item;
 				$line_item_id = wp_insert_post($line_item);
 				update_post_meta($line_item_id, 'fund_code', $fund_code);
 				update_post_meta($line_item_id, 'price', $amount);
@@ -1583,6 +1586,7 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 			}
 		} else { // No previous tranaction found
 			$fund_code = bb_cart_get_default_fund_code(); // No way to get this directly from PayPal, so if we can't find an existing transaction for this subscription, just use the default fund code
+			$line_item = $base_line_item;
 			$line_item_id = wp_insert_post($line_item);
 			update_post_meta($line_item_id, 'fund_code', $fund_code);
 			update_post_meta($line_item_id, 'price', $amount);
