@@ -2,74 +2,74 @@
 add_filter('gform_pre_render', 'bb_cart_setup_filters_to_populate_field', 1);
 add_filter('gform_admin_pre_render', 'bb_cart_setup_filters_to_populate_field', 1);
 function bb_cart_setup_filters_to_populate_field($form) {
-    global $post;
-    foreach ($form['fields'] as &$field) {
-        if ($field->inputName == 'bb_cart_form_setup') {
-            $field->choices = apply_filters('bb_cart_form_setup_choices', $field->choices, $form, $field);
-        } elseif ($field->inputName == 'bb_cart_checkout_form_setup') {
-            $field->choices = apply_filters('bb_cart_checkout_form_setup_choices', $field->choices, $form, $field);
-        } elseif ($field->inputName == 'bb_cart_donation_for') {
-            $field->choices = apply_filters('bb_cart_donation_for_choices', $field->choices, $form, $field);
-        } elseif ($field->inputName == 'bb_cart_interval') {
-            $field->choices = apply_filters('bb_cart_interval_choices', $field->choices, $form, $field);
-        } elseif ($field->inputName == 'bb_cart_donation_member') {
-            $field->choices = apply_filters('bb_cart_donation_member_choices', $field->choices, $form, $field);
-            if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices) && isset(Brownbox\Config\BB_Cart::$donation_for_choices['sponsorship'])) {
-                $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['sponsorship'];
-            }
-        } elseif ($field->inputName == 'bb_cart_donation_campaign') {
-            $field->choices = apply_filters('bb_cart_donation_campaign_choices', $field->choices, $form, $field);
-            if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices) && isset(Brownbox\Config\BB_Cart::$donation_for_choices['campaign'])) {
-                $field->label = Brownbox\Config\BB_Cart::$donation_for_choices['campaign'];
-            }
-        } elseif ($field->inputName == 'bb_cart_payment_method') {
-            $field->choices = apply_filters('bb_cart_payment_method_choices', $field->choices, $form, $field);
-        } elseif ($field->inputName == 'bb_cart_currency') {
-            $field->choices = apply_filters('bb_cart_currency_choices', $field->choices, $form, $field);
-            $field->visibility = count($field->choices) > 1 ? 'visible' : 'hidden';
-        } elseif ($field->inputName == 'bb_donation_amounts') {
-            $field->choices = apply_filters('bb_cart_donation_amount_choices', $field->choices, $form, $field);
-            $field->enableOtherChoice = apply_filters('bb_cart_donation_amount_enable_other', $field->enableOtherChoice, $form, $field);
-            if ($field->enableOtherChoice) {
-                $field->field_bb_click_array_other_label = apply_filters('bb_cart_donation_amount_other_label', $field->field_bb_click_array_other_label, $form, $field);
-            }
-        } elseif ($field->inputName == 'payment_method') {
-            $field->choices = apply_filters('bb_cart_checkout_payment_method_choices', $field->choices, $form, $field);
-        }
-    }
-    return $form;
+	global $post;
+	foreach ($form['fields'] as &$field) {
+		if ($field->inputName == 'bb_cart_form_setup') {
+			$field->choices = apply_filters('bb_cart_form_setup_choices', $field->choices, $form, $field);
+		} elseif ($field->inputName == 'bb_cart_checkout_form_setup') {
+			$field->choices = apply_filters('bb_cart_checkout_form_setup_choices', $field->choices, $form, $field);
+		} elseif ($field->inputName == 'bb_cart_donation_for') {
+			$field->choices = apply_filters('bb_cart_donation_for_choices', $field->choices, $form, $field);
+		} elseif ($field->inputName == 'bb_cart_interval') {
+			$field->choices = apply_filters('bb_cart_interval_choices', $field->choices, $form, $field);
+		} elseif ($field->inputName == 'bb_cart_donation_member') {
+			$field->choices = apply_filters('bb_cart_donation_member_choices', $field->choices, $form, $field);
+			if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$donation_for_choices) && !empty(Brownbox\Config\BB_Cart::$donation_for_choices['sponsorship'])) {
+				$field->label = Brownbox\Config\BB_Cart::$donation_for_choices['sponsorship'];
+			}
+		} elseif ($field->inputName == 'bb_cart_donation_campaign') {
+			$field->choices = apply_filters('bb_cart_donation_campaign_choices', $field->choices, $form, $field);
+			if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$donation_for_choices) && !empty(Brownbox\Config\BB_Cart::$donation_for_choices['campaign'])) {
+				$field->label = Brownbox\Config\BB_Cart::$donation_for_choices['campaign'];
+			}
+		} elseif ($field->inputName == 'bb_cart_payment_method') {
+			$field->choices = apply_filters('bb_cart_payment_method_choices', $field->choices, $form, $field);
+		} elseif ($field->inputName == 'bb_cart_currency') {
+			$field->choices = apply_filters('bb_cart_currency_choices', $field->choices, $form, $field);
+			$field->visibility = count($field->choices) > 1 ? 'visible' : 'hidden';
+		} elseif ($field->inputName == 'bb_donation_amounts') {
+			$field->choices = apply_filters('bb_cart_donation_amount_choices', $field->choices, $form, $field);
+			$field->enableOtherChoice = apply_filters('bb_cart_donation_amount_enable_other', $field->enableOtherChoice, $form, $field);
+			if ($field->enableOtherChoice) {
+				$field->field_bb_click_array_other_label = apply_filters('bb_cart_donation_amount_other_label', $field->field_bb_click_array_other_label, $form, $field);
+			}
+		} elseif ($field->inputName == 'payment_method') {
+			$field->choices = apply_filters('bb_cart_checkout_payment_method_choices', $field->choices, $form, $field);
+		}
+	}
+	return $form;
 }
 
 add_filter('bb_cart_form_setup_choices','bb_cart_populate_form_setup_choices', 1, 3);
 function bb_cart_populate_form_setup_choices($choices, $form, $field) {
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$form_setup_choices)) {
-        foreach ($choices as &$choice) {
-            $choice['isSelected'] = false;
-            foreach (Brownbox\Config\BB_Cart::$form_setup_choices as $value) {
-                if ($choice['value'] == $value) {
-                    $choice['isSelected'] = true;
-                    continue(2);
-                }
-            }
-        }
-    }
-    return $choices;
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$form_setup_choices)) {
+		foreach ($choices as &$choice) {
+			$choice['isSelected'] = false;
+			foreach (Brownbox\Config\BB_Cart::$form_setup_choices as $value) {
+				if ($choice['value'] == $value) {
+					$choice['isSelected'] = true;
+					continue(2);
+				}
+			}
+		}
+	}
+	return $choices;
 }
 
 add_filter('bb_cart_checkout_form_setup_choices','bb_cart_populate_checkout_form_setup_choices', 1, 3);
 function bb_cart_populate_checkout_form_setup_choices($choices, $form, $field) {
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$checkout_form_setup_choices)) {
-        foreach ($choices as &$choice) {
-            $choice['isSelected'] = false;
-            foreach (Brownbox\Config\BB_Cart::$checkout_form_setup_choices as $value) {
-                if ($choice['value'] == $value) {
-                    $choice['isSelected'] = true;
-                    continue(2);
-                }
-            }
-        }
-    }
-    return $choices;
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$checkout_form_setup_choices)) {
+		foreach ($choices as &$choice) {
+			$choice['isSelected'] = false;
+			foreach (Brownbox\Config\BB_Cart::$checkout_form_setup_choices as $value) {
+				if ($choice['value'] == $value) {
+					$choice['isSelected'] = true;
+					continue(2);
+				}
+			}
+		}
+	}
+	return $choices;
 }
 
 /*
@@ -77,27 +77,27 @@ function bb_cart_populate_checkout_form_setup_choices($choices, $form, $field) {
  */
 add_filter('bb_cart_donation_for_choices', 'bb_cart_populate_donation_for_choices', 1, 3);
 function bb_cart_populate_donation_for_choices($choices, $form, $field) {
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_for_choices)) {
-        $choices = array();
-        global $post;
-        if (isset(Brownbox\Config\BB_Cart::$member) && !empty(Brownbox\Config\BB_Cart::$member['post_type']) && Brownbox\Config\BB_Cart::$member['post_type'] == $post->post_type) {
-            $default = 'sponsorship';
-        } elseif (isset(Brownbox\Config\BB_Cart::$member) && !empty(Brownbox\Config\BB_Cart::$member['user'])) {
-            $default = 'sponsorship';
-        } elseif (isset(Brownbox\Config\BB_Cart::$project) && in_array($post->post_type, Brownbox\Config\BB_Cart::$project)) {
-            $default = 'campaign';
-        } else {
-            $default = 'default';
-        }
-        foreach (Brownbox\Config\BB_Cart::$donation_for_choices as $value => $text) {
-            $choices[] = array(
-                    'text' => $text,
-                    'value' => $value,
-                    'isSelected' => $value == $default,
-            );
-        }
-    }
-    return $choices;
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$donation_for_choices)) {
+		$choices = array();
+		global $post;
+		if (isset(Brownbox\Config\BB_Cart::$member) && !empty(Brownbox\Config\BB_Cart::$member['post_type']) && Brownbox\Config\BB_Cart::$member['post_type'] == $post->post_type) {
+			$default = 'sponsorship';
+		} elseif (isset(Brownbox\Config\BB_Cart::$member) && !empty(Brownbox\Config\BB_Cart::$member['user'])) {
+			$default = 'sponsorship';
+		} elseif (isset(Brownbox\Config\BB_Cart::$project) && in_array($post->post_type, Brownbox\Config\BB_Cart::$project)) {
+			$default = 'campaign';
+		} else {
+			$default = 'default';
+		}
+		foreach (Brownbox\Config\BB_Cart::$donation_for_choices as $value => $text) {
+			$choices[] = array(
+					'text' => $text,
+					'value' => $value,
+					'isSelected' => $value == $default,
+			);
+		}
+	}
+	return $choices;
 }
 
 /*
@@ -105,17 +105,17 @@ function bb_cart_populate_donation_for_choices($choices, $form, $field) {
  */
 add_filter('bb_cart_interval_choices', 'bb_cart_populate_interval_choices', 1, 3);
 function bb_cart_populate_interval_choices($choices, $form, $field) {
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$intervals)) {
-        $choices = array();
-        foreach (Brownbox\Config\BB_Cart::$intervals as $value => $text) {
-            $choices[] = array(
-                    'text' => $text,
-                    'value' => $value,
-                    'isSelected' => $value == 'one-off',
-            );
-        }
-    }
-    return $choices;
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$intervals)) {
+		$choices = array();
+		foreach (Brownbox\Config\BB_Cart::$intervals as $value => $text) {
+			$choices[] = array(
+					'text' => $text,
+					'value' => $value,
+					'isSelected' => $value == 'one-off',
+			);
+		}
+	}
+	return $choices;
 }
 
 /*
@@ -123,26 +123,26 @@ function bb_cart_populate_interval_choices($choices, $form, $field) {
  */
 add_filter('bb_cart_currency_choices', 'bb_cart_populate_currency_choices', 1, 3);
 function bb_cart_populate_currency_choices($choices, $form, $field) {
-    if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
-        // If cart not empty, always use the previously selected currency
-        $choices = array(
-                array(
-                        'text' => bb_cart_get_default_currency(),
-                        'value' => bb_cart_get_default_currency(),
-                        'isSelected' => $value == bb_cart_get_default_currency(),
-                ),
-        );
-    } elseif (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$currencies)) {
-        $choices = array();
-        foreach (Brownbox\Config\BB_Cart::$currencies as $value => $text) {
-            $choices[] = array(
-                    'text' => $text,
-                    'value' => $value,
-                    'isSelected' => $value == bb_cart_get_default_currency(),
-            );
-        }
-    }
-    return $choices;
+	if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
+		// If cart not empty, always use the previously selected currency
+		$choices = array(
+				array(
+						'text' => bb_cart_get_default_currency(),
+						'value' => bb_cart_get_default_currency(),
+						'isSelected' => true,
+				),
+		);
+	} elseif (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$currencies)) {
+		$choices = array();
+		foreach (Brownbox\Config\BB_Cart::$currencies as $value => $text) {
+			$choices[] = array(
+					'text' => $text,
+					'value' => $value,
+					'isSelected' => $value == bb_cart_get_default_currency(),
+			);
+		}
+	}
+	return $choices;
 }
 
 /*
@@ -150,11 +150,11 @@ function bb_cart_populate_currency_choices($choices, $form, $field) {
  */
 add_filter('bb_cart_donation_amount_choices', 'bb_cart_populate_donation_amount_choices', 1, 3);
 function bb_cart_populate_donation_amount_choices($choices, $form, $field) {
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_amounts)) {
-        $choices = Brownbox\Config\BB_Cart::$donation_amounts;
-    }
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$donation_amounts)) {
+		$choices = Brownbox\Config\BB_Cart::$donation_amounts;
+	}
 
-    return $choices;
+	return $choices;
 }
 
 /*
@@ -162,11 +162,11 @@ function bb_cart_populate_donation_amount_choices($choices, $form, $field) {
  */
 add_filter('bb_cart_donation_amount_enable_other', 'bb_cart_populate_donation_amount_enable_other', 1, 3);
 function bb_cart_populate_donation_amount_enable_other($enable, $form, $field) {
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_amount_enable_other)) {
-        $enable = Brownbox\Config\BB_Cart::$donation_amount_enable_other;
-    }
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$donation_amount_enable_other)) {
+		$enable = Brownbox\Config\BB_Cart::$donation_amount_enable_other;
+	}
 
-    return $enable;
+	return $enable;
 }
 
 /*
@@ -174,11 +174,11 @@ function bb_cart_populate_donation_amount_enable_other($enable, $form, $field) {
  */
 add_filter('bb_cart_donation_amount_other_label', 'bb_cart_populate_donation_amount_other_label', 1, 3);
 function bb_cart_populate_donation_amount_other_label($label, $form, $field) {
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$donation_amount_other_label)) {
-        $label = Brownbox\Config\BB_Cart::$donation_amount_other_label;
-    }
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$donation_amount_other_label)) {
+		$label = Brownbox\Config\BB_Cart::$donation_amount_other_label;
+	}
 
-    return $label;
+	return $label;
 }
 
 /*
@@ -186,45 +186,45 @@ function bb_cart_populate_donation_amount_other_label($label, $form, $field) {
  */
 add_filter('bb_cart_donation_member_choices', 'bb_cart_populate_donation_member_choices', 1, 3);
 function bb_cart_populate_donation_member_choices($choices, $form, $field){
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$member)) {
-        $choices = array(
-                array(
-                        'text' => '-- Please select --',
-                        'value' => ''
-                ),
-        );
-        foreach (Brownbox\Config\BB_Cart::$member as $type => $value) {
-            if ($type == 'post_type') {
-                $args = array(
-                        'post_type' => $value,
-                        'post_status' => 'publish',
-                        'posts_per_page' => -1,
-                        'orderby' => 'title',
-                        'order' => 'ASC'
-                );
-                $members = get_posts($args);
-                foreach ($members as $member) {
-                    $label = $member->post_title;
-                    $fund_code = get_post_meta($member->ID, 'bb_give_fund_code', true);
-                    $choices[] = array('text' => $label, 'value' => $member->ID);
-                }
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$member)) {
+		$choices = array(
+				array(
+						'text' => '-- Please select --',
+						'value' => ''
+				),
+		);
+		foreach (Brownbox\Config\BB_Cart::$member as $type => $value) {
+			if ($type == 'post_type') {
+				$args = array(
+						'post_type' => $value,
+						'post_status' => 'publish',
+						'posts_per_page' => -1,
+						'orderby' => 'title',
+						'order' => 'ASC'
+				);
+				$members = get_posts($args);
+				foreach ($members as $member) {
+					$label = $member->post_title;
+					$fund_code = get_post_meta($member->ID, 'bb_give_fund_code', true);
+					$choices[] = array('text' => $label, 'value' => $member->ID);
+				}
 
-            } else if($type == 'user'){
-                $args = array(
-                        'role' => $value,
-                        'orderby' => 'first_name',
-                        'order' => 'ASC',
-                );
+			} else if($type == 'user'){
+				$args = array(
+						'role' => $value,
+						'orderby' => 'first_name',
+						'order' => 'ASC',
+				);
 
-                $members = get_users($args);
-                foreach ($members as $member) {
-                    $label = $member->display_name;
-                    $choices[] = array('text' => $label, 'value' => $member->ID);
-                }
-            }
-        }
-    }
-    return $choices;
+				$members = get_users($args);
+				foreach ($members as $member) {
+					$label = $member->display_name;
+					$choices[] = array('text' => $label, 'value' => $member->ID);
+				}
+			}
+		}
+	}
+	return $choices;
 }
 
 /*
@@ -232,38 +232,38 @@ function bb_cart_populate_donation_member_choices($choices, $form, $field){
  */
 add_filter('bb_cart_donation_campaign_choices', 'bb_cart_populate_donation_campaign_choices', 1, 3);
 function bb_cart_populate_donation_campaign_choices($choices, $form, $field) {
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$project)) {
-        global $post;
-        $choices = array(
-                array(
-                        'text' => '-- Please select --',
-                        'value' => '',
-                ),
-        );
-        $project_args = array(
-                'post_type' => Brownbox\Config\BB_Cart::$project,
-                'post_status' => 'publish',
-                'posts_per_page' => -1,
-                'orderby' => 'title',
-                'order' => 'ASC',
-        );
-        $projects = get_posts($project_args);
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$project)) {
+		global $post;
+		$choices = array(
+				array(
+						'text' => '-- Please select --',
+						'value' => '',
+				),
+		);
+		$project_args = array(
+				'post_type' => Brownbox\Config\BB_Cart::$project,
+				'post_status' => 'publish',
+				'posts_per_page' => -1,
+				'orderby' => 'title',
+				'order' => 'ASC',
+		);
+		$projects = get_posts($project_args);
 
-        foreach ($projects as $project) {
-            $label = $project->post_title;
-            $campaign_id = $project->ID;
-            $terms = wp_get_object_terms($campaign_id, 'give');
-            if ($terms && !is_wp_error($terms)) {
-                $campaign_id = $terms[0]->term_id;
-            }
-            $choices[] = array(
-                    'text' => $label,
-                    'value' => $campaign_id,
-                    'isSelected' => $post->ID == $project->ID,
-            );
-        }
-    }
-    return $choices;
+		foreach ($projects as $project) {
+			$label = $project->post_title;
+			$campaign_id = $project->ID;
+			$terms = wp_get_object_terms($campaign_id, 'give');
+			if ($terms && !is_wp_error($terms)) {
+				$campaign_id = $terms[0]->term_id;
+			}
+			$choices[] = array(
+					'text' => $label,
+					'value' => $campaign_id,
+					'isSelected' => $post->ID == $project->ID,
+			);
+		}
+	}
+	return $choices;
 }
 
 /*
@@ -272,13 +272,13 @@ function bb_cart_populate_donation_campaign_choices($choices, $form, $field) {
 add_filter('bb_cart_payment_method_choices', 'bb_cart_populate_payment_method_choices', 1, 3);
 add_filter('bb_cart_checkout_payment_method_choices', 'bb_cart_populate_payment_method_choices', 1, 3);
 function bb_cart_populate_payment_method_choices($choices, $form, $field) {
-    if (class_exists('Brownbox\Config\BB_Cart') && isset(Brownbox\Config\BB_Cart::$payment_methods)) {
-        $choices = array();
-        foreach (Brownbox\Config\BB_Cart::$payment_methods as $choice) {
-            $choices[] = $choice;
-        }
-    }
-    return $choices;
+	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$payment_methods)) {
+		$choices = array();
+		foreach (Brownbox\Config\BB_Cart::$payment_methods as $choice) {
+			$choices[] = $choice;
+		}
+	}
+	return $choices;
 }
 
 add_filter('gform_pre_render', 'bb_cart_populate_shipping_address');
@@ -353,20 +353,20 @@ function bb_cart_populate_shipping_address($form) {
 
 add_filter("gform_submit_button", "bb_cart_form_submit_button", 1, 2);
 function bb_cart_form_submit_button($button, $form) {
-    $cssClasses = explode(" ", $form['cssClass']);
-    foreach ($cssClasses as $cssClass) {
-        if ($cssClass == 'bb_cart_donations') {
-            $content = '<p>Your payment method</p>';
-            foreach ($form['fields'] as &$field){
-                if ($field->inputName == 'bb_cart_payment_method'){
-                    foreach ($field->choices as &$choice){
-                        $content .= '<a data-paymentmethod="'.$choice['value'].'" id="gform_submit_button_'.$form['id'].'" class="gform_button pseudo-submit payment-method button">'.$choice['text'].'</a> ';
-                    }
-                }
-            }
-            $content .= '<div class="hide">' . $button . '</div>';
+	$cssClasses = explode(" ", $form['cssClass']);
+	foreach ($cssClasses as $cssClass) {
+		if ($cssClass == 'bb_cart_donations') {
+			$content = '<p>Your payment method</p>';
+			foreach ($form['fields'] as &$field){
+				if ($field->inputName == 'bb_cart_payment_method'){
+					foreach ($field->choices as &$choice){
+						$content .= '<a data-paymentmethod="'.$choice['value'].'" id="gform_submit_button_'.$form['id'].'" class="gform_button pseudo-submit payment-method button">'.$choice['text'].'</a> ';
+					}
+				}
+			}
+			$content .= '<div class="hide">' . $button . '</div>';
 
-            $js = <<<MULTI
+			$js = <<<MULTI
             <script type="text/javascript">
                 jQuery(document).on('gform_post_render', function() {
                     jQuery(".pseudo-submit").on("click", function() {
@@ -378,8 +378,8 @@ function bb_cart_form_submit_button($button, $form) {
                 });
             </script>
 MULTI;
-            return $content.$js;
-        }
-        return $button;
-    }
+			return $content.$js;
+		}
+		return $button;
+	}
 }
