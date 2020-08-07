@@ -1575,7 +1575,7 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 			if ($line_items && ($prev_amount == $amount || count($line_items) == 1)) {
 				foreach ($line_items as $previous_line_item) {
 					$line_item = $base_line_item;
-					$line_item['post_content'] = $previous_line_item['post_content'];
+					$line_item['post_content'] = $previous_line_item->post_content;
 					$previous_meta = get_post_meta($previous_line_item->ID);
 					$line_item_id = wp_insert_post($line_item);
 					$price = $previous_meta['price'][0];
@@ -1766,6 +1766,36 @@ function bb_cart_configure_notifications($notification, $form, $entry) {
         }
     }
     return $notification;
+}
+
+add_filter('gfpdf_pdf_html_output', 'bb_cart_gfpdf_pdf_html_output', 10, 5);
+function bb_cart_gfpdf_pdf_html_output($html, $form, $entry, $settings, $Helper_PDF) {
+	$cart_items = bb_cart_get_cart_from_entry($entry);
+	$shipping = null;
+	if (empty($cart_items) && bb_cart_total_quantity() > 0) {
+		$cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+	} else {
+		$gf_line_items = bb_cart_gf_product_info(array(), $form, $entry);
+		$total = $entry['payment_amount'];
+		$shipping = $gf_line_items['shipping']['price'];
+	}
+
+	if (!empty($cart_items)) {
+		$html = str_replace("!!!items!!!", bb_cart_table('email', $cart_items, $total, $shipping), $html);
+		if ($form['id'] == bb_cart_get_checkout_form()) {
+			$campaign = $fund_code = '';
+			$fund_code_id = $entry[11];
+			$campaign_id = $entry[32];
+			if (!empty($fund_code_id)) {
+				$fund_code = get_the_title($fund_code_id);
+			}
+			if (!empty($campaign_id)) {
+				$campaign = get_the_title($campaign_id);
+			}
+			$html = str_replace('!!!fund!!!', $campaign.' ('.$fund_code.')', $html);
+		}
+	}
+	return $html;
 }
 
 add_filter('gform_product_info', 'bb_cart_gf_product_info', 10, 3);
