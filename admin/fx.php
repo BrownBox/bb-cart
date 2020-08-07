@@ -455,13 +455,27 @@ function bb_cart_change_transaction_date($transaction_id, $new_date) {
 }
 
 function bb_cart_change_post_dates(array $post_ids, $new_date) {
-    // We can't use wp_update_post() here as it will clear all the meta values, so we'll do a custom query instead
-    global $wpdb;
-    $format = array_fill(0, count($post_ids), '%d');
-    $update_data = $post_ids;
-    array_unshift($update_data, $new_date);
-    $query = $wpdb->prepare('UPDATE '.$wpdb->posts.' SET post_date = %s WHERE ID in ('.implode(',', $format).')', $update_data);
-    $wpdb->query($query);
+	// We can't use wp_update_post() here as it will clear all the meta values, so we'll do a custom query instead
+	global $wpdb;
+	$format = array_fill(0, count($post_ids), '%d');
+	$update_data = $post_ids;
+
+	// Make sure post has correct status
+	$status = $new_date <= current_time('mysql') ? 'publish' : 'future';
+	// Push status to beginning of data array
+	array_unshift($update_data, $status);
+
+	// Calculate GMT date
+	$gmt_date = new DateTime($new_date, bb_cart_get_timezone());
+	$gmt_date->setTimeZone(new DateTimeZone('UTC'));
+	// Push GMT date to beginning of data array
+	array_unshift($update_data, $gmt_date->format('Y-m-d H:i:s'));
+
+	// Push local date to beginning of data array
+	array_unshift($update_data, $new_date);
+
+	$query = $wpdb->prepare('UPDATE '.$wpdb->posts.' SET post_date = %s, post_date_gmt = %s, post_status = %s WHERE ID in ('.implode(',', $format).')', $update_data);
+	$wpdb->query($query);
 }
 
 function bb_cart_move_line_items_to_batch($items, $new_batch_id) {
