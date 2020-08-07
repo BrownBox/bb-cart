@@ -208,7 +208,7 @@ switch ($data['event']) {
 					if ($line_items && ($prev_amount == $amount || count($line_items) == 1)) {
 						foreach ($line_items as $previous_line_item) {
 							$line_item = $base_line_item;
-							$line_item['post_content'] = $previous_line_item['post_content'];
+							$line_item['post_content'] = $previous_line_item->post_content;
 							$previous_meta = get_post_meta($previous_line_item->ID);
 							$line_item_id = wp_insert_post($line_item);
 							$price = $previous_meta['price'][0];
