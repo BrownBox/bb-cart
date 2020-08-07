@@ -124,7 +124,7 @@ class bb_cart_fund_code_report {
 		$results = $totals = array();
 		$transactions = $this->get_transactions();
 		foreach ($transactions as $transaction) {
-			$line_items = $this->get_line_items($transaction->ID);
+			$line_items = bb_cart_get_transaction_line_items($transaction->ID);
 			if (count($line_items) > 0) {
 				foreach ($line_items as $line_item) {
 					$fund_code = $this->get_line_item_fund_code($line_item);
@@ -212,7 +212,7 @@ class bb_cart_fund_code_report {
 		foreach ($transactions as $transaction) {
 			$batch_id = get_post_meta($transaction->ID, 'batch_id', true);
 			$batch = '<a href="?page=bb_cart_batch_management&amp;batch='.urlencode($batch_id).'&amp;action=edit&amp;_wpnonce='.$nonce.'">'.get_the_title($batch_id).'</a>';
-			$line_items = $this->get_line_items($transaction->ID);
+			$line_items = bb_cart_get_transaction_line_items($transaction->ID);
 			if (count($line_items) > 0) {
 				foreach ($line_items as $line_item) {
 					$fund_code = $this->get_line_item_fund_code($line_item);
@@ -306,21 +306,6 @@ class bb_cart_fund_code_report {
 										'day'   => $end->format('d'),
 								),
 								'inclusive' => true,
-						),
-				),
-		);
-		return get_posts($args);
-	}
-
-	private function get_line_items($transaction_id) {
-		$args = array(
-				'post_type' => 'transactionlineitem',
-				'posts_per_page' => -1,
-				'tax_query' => array(
-						array(
-								'taxonomy' => 'transaction',
-								'field' => 'slug',
-								'terms' => $transaction_id,
 						),
 				),
 		);

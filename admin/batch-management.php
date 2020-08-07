@@ -330,18 +330,7 @@ class bb_cart_batch_management {
             $author = new WP_User($transaction->post_author);
             $can_delete = strtolower(get_post_meta($transaction->ID, 'transaction_type', true)) == 'offline';
             $receipted = get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
-            $args = array(
-                    'post_type' => 'transactionlineitem',
-                    'posts_per_page' => -1,
-                    'tax_query' => array(
-                            array(
-                                    'taxonomy' => 'transaction',
-                                    'field' => 'slug',
-                                    'terms' => $transaction->ID,
-                            ),
-                    ),
-            );
-            $line_items = get_posts($args);
+            $line_items = bb_cart_get_transaction_line_items($transaction->ID);
             if (count($line_items) > 0) {
                 foreach ($line_items as $line_item) {
                     $txn_fund_codes = wp_get_object_terms($line_item->ID, 'fundcode');
@@ -513,18 +502,7 @@ class bb_cart_batch_management {
                 'total' => 0,
         );
         foreach ($transactions as $transaction) {
-            $args = array(
-                    'post_type' => 'transactionlineitem',
-                    'posts_per_page' => -1,
-                    'tax_query' => array(
-                            array(
-                                    'taxonomy' => 'transaction',
-                                    'field' => 'slug',
-                                    'terms' => $transaction->ID,
-                            ),
-                    ),
-            );
-            $line_items = get_posts($args);
+        	$line_items = bb_cart_get_transaction_line_items($transaction->ID);
             if (count($line_items) > 0) {
                 foreach ($line_items as $line_item) {
                     $txn_fund_codes = wp_get_object_terms($line_item->ID, 'fundcode');
