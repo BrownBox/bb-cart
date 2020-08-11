@@ -1103,28 +1103,28 @@ Your details will also allow us to give you a personal reference number to inclu
                                     ),
                             ),
                     ),
-                    array(
-                            'type' => 'text',
-                            'id' => 19,
-                            'label' => 'Phone Number',
-                            'isRequired' => false,
-                            'allowsPrepopulate' => true,
-                            'description' => 'Please use numbers only',
-                            'cssClass' => 'phone-number',
-                            'inputName' => 'phone',
-                            'visibility' => 'visible',
-                            'conditionalLogic' => array(
-                                    'actionType' => 'show',
-                                    'logicType' => 'all',
-                                    'rules' => array(
-                                            0 => array(
-                                                    'fieldId' => '28',
-                                                    'operator' => 'is',
-                                                    'value' => 'phone',
-                                            ),
-                                    ),
-                            ),
-                    ),
+            		array(
+            				'type' => 'phone',
+            				'id' => 19,
+            				'label' => 'Phone Number',
+            				'isRequired' => false,
+            				'allowsPrepopulate' => true,
+            				'cssClass' => 'phone-number',
+            				'inputName' => 'phone',
+            				'phoneFormat' => 'international',
+            				'visibility' => 'visible',
+            				'conditionalLogic' => array(
+            						'actionType' => 'show',
+            						'logicType' => 'all',
+            						'rules' => array(
+            								0 => array(
+            										'fieldId' => '28',
+            										'operator' => 'is',
+            										'value' => 'phone',
+            								),
+            						),
+            				),
+            		),
                     array(
                             'type' => 'checkbox',
                             'id' => 43,
