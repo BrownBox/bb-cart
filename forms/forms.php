@@ -471,6 +471,7 @@ function bb_cart_get_donate_form() {
     	$donate_form['id'] = $donate_form_id;
     	$donate_form = wp_parse_args($donate_form, GFAPI::get_form($donate_form_id)); // Make sure we don't lose additional third-party settings etc
         GFAPI::update_form($donate_form);
+    	GFAPI::update_form_property($donate_form_id, 'is_trash', '0'); // Make sure it's not in the trash
     }
 
     return $donate_form_id;
@@ -1388,6 +1389,7 @@ Your details will also allow us to give you a personal reference number to inclu
     	$checkout_form['id'] = $checkout_form_id;
     	$checkout_form = wp_parse_args($checkout_form, GFAPI::get_form($checkout_form_id)); // Make sure we don't lose additional third-party settings etc
         GFAPI::update_form($checkout_form);
+    	GFAPI::update_form_property($checkout_form_id, 'is_trash', '0'); // Make sure it's not in the trash
     }
 
     return $checkout_form_id;
@@ -1533,6 +1535,7 @@ function bb_cart_get_shipping_form() {
     	$shipping_form['id'] = $shipping_form_id;
     	$shipping_form = wp_parse_args($shipping_form, GFAPI::get_form($shipping_form_id)); // Make sure we don't lose additional third-party settings etc
         GFAPI::update_form($shipping_form);
+    	GFAPI::update_form_property($shipping_form_id, 'is_trash', '0'); // Make sure it's not in the trash
     }
 
     return $shipping_form_id;
