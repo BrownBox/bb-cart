@@ -2041,3 +2041,160 @@ function bb_cart_load_fund_code($fund_code) {
     }
     return get_page_by_title($fund_code, OBJECT, 'fundcode');
 }
+
+add_action('init', 'bb_cart_register_cron');
+function bb_cart_register_cron() {
+	if (!wp_next_scheduled('bb_cart_daily_cron ')) {
+		wp_schedule_event(current_time('timestamp'), 'hourly', 'bb_cart_hourly_cron');
+	}
+}
+
+add_action('bb_cart_hourly_cron', 'bb_cart_hourly_cron');
+function bb_cart_hourly_cron() {
+	$last_processed = get_option('bb_cart_last_transaction_reviewed');
+	if ($last_processed) {
+		$date = get_post_datetime($last_processed);
+		$start = array(
+				'year' => $date->format('Y'),
+				'month' => $date->format('m'),
+				'day' => $date->format('d'),
+				'hour' => $date->format('h'),
+				'minute' => $date->format('i'),
+				'second' => $date->format('s'),
+		);
+	} else {
+		$start = array(
+				'year' => 2019,
+				'month' => 1,
+				'day' => 1,
+		);
+	}
+	bb_cart_create_missing_transaction_line_items($start);
+}
+
+/**
+ * (Hopefully) temporary fix for missing line items
+ * Will check a maximum of 100 transactions at a time.
+ * @param array $from_date Earliest date to find transactions for. Must contain year, month and day keys with relevant values. May also contain hour, minute and second if desired.
+ */
+function bb_cart_create_missing_transaction_line_items(array $from_date) {
+	$args = array(
+			'post_type' => 'transaction',
+			'posts_per_page' => 100,
+			'post_status' => 'all',
+			'orderby' => 'date',
+			'order' => 'ASC',
+			'date_query' => array(
+					array(
+							'after' => $from_date,
+							'inclusive' => true,
+					),
+			),
+	);
+	$transactions = get_posts($args);
+
+	foreach ($transactions as $transaction) {
+		$amount = get_post_meta($transaction->ID, 'total_amount', true);
+		if (empty($amount)) {
+			wp_delete_post($transaction->ID, true);
+			continue;
+		}
+		$line_items = bb_cart_get_transaction_line_items($transaction->ID);
+		if (is_array($line_items)) {
+			foreach ($line_items as $line_item) {
+				if ($line_item->post_author == 0) {
+					$line_item->post_author = $transaction->post_author;
+					wp_update_post($line_item);
+				}
+			}
+		} else {
+			$transaction_date = new DateTime($transaction->post_date);
+			$transaction_term = get_term_by('slug', $transaction->ID, 'transaction'); // Have to pass term ID rather than slug
+
+			// Look for line item in case it just isn't connected
+			$args = array(
+					'post_type' => 'transactionlineitem',
+					'posts_per_page' => -1,
+					'post_status' => 'all',
+					'author' => $transaction->post_author,
+					'date_query' => array(
+							array(
+									'year' => $transaction_date->format('Y'),
+									'month' => $transaction_date->format('m'),
+									'day' => $transaction_date->format('d'),
+							),
+					),
+			);
+			$line_items = get_posts($args);
+			$line_item_exists = false;
+			foreach ($line_items as $line_item) {
+				$line_transaction_terms = wp_get_object_terms($line_item->ID, 'transaction');
+				if (count($line_transaction_terms) == 0) { // Line item for same donor on date of transaction but not connected to a transaction - let's connect it
+					$line_amount = get_post_meta($line_item->ID, 'total_amount', true);
+					if (empty($line_amount)) {
+						update_post_meta($line_item->ID, 'price', $amount);
+						update_post_meta($line_item->ID, 'quantity', 1);
+					}
+					wp_set_post_terms($line_item->ID, $transaction_term->term_id, 'transaction');
+					$line_item_exists = true;
+					$fund_codes = wp_get_object_terms($line_item->ID, 'fundcode');
+					if (count($fund_codes)) {
+						$fund_code_term = $fund_codes[0];
+					} else {
+						$fund_code_post = get_page_by_title(get_post_meta($line_item->ID, 'fund_code', true), OBJECT, 'fundcode');
+						$fund_code_term = get_term_by('slug', $fund_code_post->ID, 'fundcode');
+						wp_set_post_terms($line_item->ID, $fund_code_term->term_id, 'fundcode');
+					}
+				}
+			}
+
+			if (!$line_item_exists) { // No existing line item found, we'll have to create it
+				$line_item_created = false;
+				$line_item = array(
+						'post_title' => 'PayDock Subscription Payment',
+						'post_status' => 'publish',
+						'post_author' => $transaction->post_author,
+						'post_type' => 'transactionlineitem',
+						'post_date' => $transaction->post_date,
+						'post_modified' => current_time('mysql'),
+				);
+
+				$subscription_id = get_post_meta($transaction->ID, 'subscription_id', true);
+				if (!empty($subscription_id)) {
+					$previous_transaction = bb_cart_get_transaction_for_subscription($subscription_id);
+					$prev_amount = get_post_meta($previous_transaction->ID, 'total_amount');
+					$previous_line_items = bb_cart_get_transaction_line_items($previous_transaction->ID);
+					if ($previous_line_items && ($prev_amount == $amount || count($previous_line_items) == 1)) {
+						foreach ($previous_line_items as $previous_line_item) {
+							$previous_meta = get_post_meta($previous_line_item->ID);
+							$line_item_id = wp_insert_post($line_item);
+							$line_item_created = true;
+							$price = $previous_meta['price'][0];
+							if ($prev_amount != $amount) { // Amount has changed, use new amount
+								$price = $amount;
+							}
+							update_post_meta($line_item_id, 'fund_code', $previous_meta['fund_code'][0]);
+							update_post_meta($line_item_id, 'price', $price);
+							update_post_meta($line_item_id, 'quantity', $previous_meta['quantity'][0]);
+
+							wp_set_post_terms($line_item_id, $transaction_term->term_id, 'transaction');
+							$previous_fund_codes = wp_get_object_terms($previous_line_item->ID, 'fundcode');
+							foreach ($previous_fund_codes as $fund_code_term) {
+								wp_set_post_terms($line_item_id, $fund_code_term->term_id, 'fundcode');
+							}
+						}
+					}
+				}
+
+				if (!$line_item_created) {
+					$line_item_id = wp_insert_post($line_item);
+					update_post_meta($line_item_id, 'price', $amount);
+					update_post_meta($line_item_id, 'quantity', 1);
+
+					wp_set_post_terms($line_item_id, $transaction_term->term_id, 'transaction');
+				}
+			}
+		}
+		update_option('bb_cart_last_transaction_reviewed', $transaction->ID);
+	}
+}
