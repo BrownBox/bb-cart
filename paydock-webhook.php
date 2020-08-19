@@ -3,8 +3,6 @@ require_once("../../../wp-load.php");
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-$debug = var_export($data, true)."\n\n";
-
 usleep(rand(1000000, 5000000)); // Sleep for random interval between 1 and 5 seconds in an attempt to prevent duplicate requests from being processed simultaneously
 
 // Get gateway details
@@ -44,7 +42,6 @@ if (empty($gateway_mode) && !empty($gateway_id)) {
 			curl_close($ch);
 
 			$response = json_decode($result);
-			$debug .= var_export($response, true)."\n\n";
 			if (is_object($response) && $response->status == 200) {
 				$gateway_mode = $response->resource->data->mode;
 				break;
@@ -60,8 +57,6 @@ if (empty($gateway_mode)) {
 
 // Check gateway type against environment config
 $env = get_option('bb_cart_environment', 'production');
-$debug .= var_export($gateway_mode, true)."\n\n".var_export($env, true);
-wp_mail('mark@sparkweb.com.au', 'PD Debug', $debug);
 if ('production' == $env && 'live' != $gateway_mode || 'production' != $env && 'live' == $gateway_mode) {
 	return;
 }
