@@ -2044,8 +2044,8 @@ function bb_cart_load_fund_code($fund_code) {
 
 add_action('init', 'bb_cart_register_cron');
 function bb_cart_register_cron() {
-	if (!wp_next_scheduled('bb_cart_daily_cron ')) {
-		wp_schedule_event(current_time('timestamp'), 'hourly', 'bb_cart_hourly_cron');
+	if (!wp_next_scheduled('bb_cart_hourly_cron')) {
+		wp_schedule_event(time(), 'hourly', 'bb_cart_hourly_cron');
 	}
 }
 
