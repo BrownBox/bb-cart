@@ -187,7 +187,7 @@ class bb_cart_export {
         foreach ($csv as $line) {
             fputcsv($fp, $line);
         }
-        fclose($output);
+        fclose($fp);
         exit;
     }
 
