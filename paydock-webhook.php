@@ -3,7 +3,7 @@ require_once("../../../wp-load.php");
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-usleep(rand(1000000, 5000000)); // Sleep for random interval between 1 and 5 seconds in an attempt to prevent duplicate requests from being processed simultaneously
+usleep(rand(5000000, 15000000)); // Sleep for random interval between 5 and 15 seconds in an attempt to prevent duplicate requests from being processed simultaneously
 
 // Get gateway details
 switch ($data['event']) {
@@ -254,7 +254,7 @@ switch ($data['event']) {
 		} else {
 			// Handle one-off payments
 			// In the vast majority of cases the transaction should already exist, but let's just check to be sure
-			usleep(rand(10000000, 15000000)); // Sleep for another 10-15 seconds to ensure that the regular process has had a chance to record the transaction first
+			usleep(rand(20000000, 30000000)); // Sleep for another 20-30 seconds to ensure that the regular process has had a chance to record the transaction first
 			$transaction_details = bb_cart_get_transaction_for_paydock_transaction($pd_id);
 			if (!$transaction_details) {
 				// Transaction doesn't exist - let's create one
@@ -285,13 +285,13 @@ switch ($data['event']) {
 				update_post_meta($transaction_id, 'is_receipted', 'false');
 				update_post_meta($transaction_id, 'pd_transaction_id', $pd_id);
 
-				$batch_id = bb_cart_get_web_batch($transaction_date, null, null, 'paydock');
+				$batch_id = bb_cart_get_web_batch($transaction_date, null, null, 'web');
 				update_post_meta($transaction_id, 'batch_id', $batch_id);
 
 				$transaction_term = get_term_by('slug', $transaction_id, 'transaction'); // Have to pass term ID rather than slug
 
 				$line_item = array(
-						'post_title' => 'PayDock Subscription Payment',
+						'post_title' => 'PayDock Transaction',
 						'post_status' => 'publish',
 						'post_author' => $author_id,
 						'post_type' => 'transactionlineitem',
