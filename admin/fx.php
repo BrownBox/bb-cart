@@ -436,32 +436,37 @@ function bb_cart_move_transactions() {
 }
 
 function bb_cart_change_batch_date($batch_id, $new_date, $update_transactions = false) {
-    bb_cart_change_post_dates(array($batch_id), $new_date);
-    if ($update_transactions) {
-        $transactions = bb_cart_get_batch_transactions($batch_id);
-        foreach ($transactions as $transaction) {
-            bb_cart_change_transaction_date($transaction->ID, $new_date);
-        }
-    }
+	bb_cart_change_post_dates(array($batch_id), $new_date, 'batch');
+	if ($update_transactions) {
+		$transactions = bb_cart_get_batch_transactions($batch_id);
+		foreach ($transactions as $transaction) {
+			bb_cart_change_transaction_date($transaction->ID, $new_date);
+		}
+	}
 }
 
 function bb_cart_change_transaction_date($transaction_id, $new_date) {
-    $posts_to_update = array($transaction_id);
-    $line_items = bb_cart_get_transaction_line_items($transaction_id);
-    foreach ($line_items as $line_item) {
-        $posts_to_update[] = $line_item->ID;
-    }
-    bb_cart_change_post_dates($posts_to_update, $new_date);
+	$posts_to_update = array($transaction_id);
+	$line_items = bb_cart_get_transaction_line_items($transaction_id);
+	foreach ($line_items as $line_item) {
+		$posts_to_update[] = $line_item->ID;
+	}
+	bb_cart_change_post_dates($posts_to_update, $new_date);
 }
 
-function bb_cart_change_post_dates(array $post_ids, $new_date) {
+function bb_cart_change_post_dates(array $post_ids, $new_date, $context = 'transaction') {
 	// We can't use wp_update_post() here as it will clear all the meta values, so we'll do a custom query instead
 	global $wpdb;
 	$format = array_fill(0, count($post_ids), '%d');
 	$update_data = $post_ids;
 
 	// Make sure post has correct status
-	$status = $new_date <= current_time('mysql') ? 'publish' : 'future';
+	if ('batch' == $context) {
+		$status = 'pending';
+	} else {
+		$status = $new_date <= current_time('mysql') ? 'publish' : 'future';
+	}
+
 	// Push status to beginning of data array
 	array_unshift($update_data, $status);
 
