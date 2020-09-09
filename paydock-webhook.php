@@ -137,6 +137,8 @@ switch ($data['event']) {
 		$pd_date = bb_cart_get_datetime($data['data']['transactions'][0]['created_at'], new DateTimeZone('UTC'));
 		$pd_date->setTimezone(bb_cart_get_timezone()); // PayDock always sends dates in UTC so need to convert to local time
 
+		$pd_date = apply_filters('bb_cart_paydock_webhook_transaction_date', $pd_date, $data['data']['transactions'][0], $payment_method);
+
 		if ($data['data']['one_off'] == false) {
 			// Handle subscription payments
 			$subscription_id = $data['data']['subscription_id'];
