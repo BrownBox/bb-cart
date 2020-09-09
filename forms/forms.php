@@ -1373,8 +1373,8 @@ Your details will also allow us to give you a personal reference number to inclu
     if (!empty(get_option('rg_gforms_captcha_public_key')) && !empty(get_option('rg_gforms_captcha_private_key'))) {
         $checkout_form['fields'][] = array(
                 'type' => 'captcha',
-                'id' => 47,
-                'label' => 'Security Check',
+        		'id' => 47,
+        		'label' => 'invisible' == get_option('gforms_captcha_type') ? '' : 'Security Check',
                 'captchaLanguage' => 'en-GB',
                 'visibility' => 'hidden',
         );
