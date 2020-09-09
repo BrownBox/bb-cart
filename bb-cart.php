@@ -715,7 +715,48 @@ function bb_cart_add_from_querystring() {
         }
         wp_redirect(remove_query_arg(array('add_to_cart', 'sku', 'frequency', 'label', 'type')));
         exit;
+    } elseif (isset($_GET['cover_costs']) && '1' == $_GET['cover_costs']) {
+    	bb_cart_cover_costs();
+    	wp_redirect(remove_query_arg(array('cover_costs')));
+    	exit;
     }
+}
+
+add_action('wp', 'bb_cart_recalculate_costs');
+function bb_cart_recalculate_costs() {
+	// Recalculate costs in case the cart has changed
+	if (!empty($_SESSION[BB_CART_SESSION_ITEM]['other']['costs'])) {
+		bb_cart_cover_costs();
+	}
+}
+
+function bb_cart_calculate_costs() {
+	$total = bb_cart_total_price();
+	if (!empty($_SESSION[BB_CART_SESSION_ITEM]['other']['costs'])) {
+		$total -= $_SESSION[BB_CART_SESSION_ITEM]['other']['costs']['price']/100;
+	}
+	$rate = apply_filters('bb_cart_cost_rate', 0.015);
+	$costs = round($total * $rate, 2);
+	return $costs;
+}
+
+function bb_cart_cover_costs() {
+	$costs = bb_cart_calculate_costs();
+	$_SESSION[BB_CART_SESSION_ITEM]['other']['costs'] = array(
+			'label' => 'Gift to cover transaction costs',
+			'price' => $costs*100,
+			'quantity' => 1,
+			'frequency' => 'one-off',
+	);
+	// Make sure "other" section is always last
+	uksort($_SESSION[BB_CART_SESSION_ITEM], function($a, $b) {
+		if ('other' == $a) {
+			return 1;
+		} elseif ('other' == $b) {
+			return -1;
+		}
+		return 0;
+	});
 }
 
 add_action('em_booking_add', 'bb_cart_set_event_person_id', 10, 3);
