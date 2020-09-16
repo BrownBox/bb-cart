@@ -1258,7 +1258,7 @@ function bb_cart_post_purchase_actions($entry, $form){
     }
 }
 
-function bb_cart_get_web_batch($date = null, $form = null, $entry = null, $context = null) {
+function bb_cart_get_web_batch($date = null, $form = null, $entry = null, $context = null, $frequency = 'one-off') {
     if (empty($date)) {
         $date = current_time('mysql');
     }
@@ -1267,7 +1267,7 @@ function bb_cart_get_web_batch($date = null, $form = null, $entry = null, $conte
     $batch_date = $date_obj->format('Y-m-d');
     $batch_name = 'WEB '.$batch_date;
 
-    $existing_batch = apply_filters('bb_cart_get_web_batch', get_page_by_title($batch_name, OBJECT, 'transactionbatch'), $batch_date, $form, $entry, $context);
+    $existing_batch = apply_filters('bb_cart_get_web_batch', get_page_by_title($batch_name, OBJECT, 'transactionbatch'), $batch_date, $form, $entry, $context, $frequency);
 
     if ($existing_batch instanceof WP_Post && in_array($existing_batch->post_status, array('pending', 'future'))) {
         return $existing_batch->ID;
