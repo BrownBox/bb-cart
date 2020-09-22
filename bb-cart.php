@@ -1603,7 +1603,7 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 				'post_status' => 'publish',
 				'post_author' => $donor_id,
 				'post_type' => 'transactionlineitem',
-				'post_date' => $transaction_date,
+				'post_date' => $ipn_date->format('Y-m-d H:i:s'),
 				'post_modified' => current_time('mysql'),
 		);
 		if ($transaction) { // Get details from original transaction
