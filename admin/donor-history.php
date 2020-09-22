@@ -14,7 +14,6 @@ function bb_cart_donor_history_profile_tab() {
     global $user_id;
     $can_edit = current_user_can('manage_options');
     $ajax_url = admin_url('admin-ajax.php');
-    $transactions = bb_cart_get_user_transactions($user_id);
     $batch_nonce = wp_create_nonce('bb_cart_batches');
 
     $clean_url = remove_query_arg(array('trans_action', 'item'));
@@ -52,6 +51,7 @@ function bb_cart_donor_history_profile_tab() {
         }
     }
 
+    $transactions = bb_cart_get_user_transactions($user_id);
     echo '    <table class="wp-list-table widefat fixed striped">'."\n";
     echo '        <thead>'."\n";
     echo '            <tr>'."\n";
