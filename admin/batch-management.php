@@ -220,6 +220,7 @@ class bb_cart_batch_management {
         $batch_id = (int)$_GET['batch'];
         $batch = get_post($batch_id);
         $can_edit = current_user_can('manage_options') && $batch->post_status == 'pending';
+        $can_edit_users = current_user_can('edit_users');
         $ajax_url = admin_url('admin-ajax.php');
 
         if (!$batch instanceof WP_Post || $batch->post_type != 'transactionbatch') {
@@ -327,7 +328,11 @@ class bb_cart_batch_management {
         echo '        <tbody id="the-list">'."\n";
         $total = 0;
         foreach ($transactions as $transaction) {
-            $author = new WP_User($transaction->post_author);
+        	$author = new WP_User($transaction->post_author);
+        	$author_display = $author->display_name;
+        	if ($can_edit_users) {
+        		$author_display = '<a href="'.get_edit_user_link($author->ID).'">'.$author_display.'</a>';
+        	}
             $can_delete = strtolower(get_post_meta($transaction->ID, 'transaction_type', true)) == 'offline';
             $receipted = get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
             $line_items = bb_cart_get_transaction_line_items($transaction->ID);
@@ -368,7 +373,7 @@ class bb_cart_batch_management {
                         echo '                        <span class="edit">'.bb_cart_ajax_modal_link('Split', $split_args).'</span>'."\n";
                         echo '                    </div>'."\n";
                     }
-                    echo '                <td class="post-author page-author column-author">'.$author->display_name.'</td>'."\n";
+                    echo '                <td class="post-author page-author column-author">'.$author_display.'</td>'."\n";
                     echo '                <td class="">'.$fund_code.'</td>'."\n";
                     echo '                <td class="">'.apply_filters('the_content', $line_item->post_content).'</td>'."\n";
                     echo '                <td style="text-align: center;">'.$receipted.'</td>'."\n";
@@ -385,7 +390,7 @@ class bb_cart_batch_management {
             	echo '            <tr class="type-page status-publish hentry iedit author-other level-0" id="transaction-'.$transaction->ID.'">'."\n";
             	echo '                <th scope="row" class="check-column"></th>'."\n";
             	echo '                <td class="post-date has-row-actions page-date column-date"><strong>'.date_i18n(get_option('date_format'), strtotime($transaction->post_date)).'</strong>'."\n";
-            	echo '                <td class="post-author page-author column-author">'.$author->display_name.'</td>'."\n";
+            	echo '                <td class="post-author page-author column-author">'.$author_display.'</td>'."\n";
             	echo '                <td class="">'.$fund_code.'</td>'."\n";
             	echo '                <td class=""></td>'."\n";
             	echo '                <td style="text-align: center;">'.$receipted.'</td>'."\n";
