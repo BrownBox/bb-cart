@@ -336,7 +336,7 @@ class bb_cart_batch_management {
             $can_delete = strtolower(get_post_meta($transaction->ID, 'transaction_type', true)) == 'offline';
             $receipted = get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
             $line_items = bb_cart_get_transaction_line_items($transaction->ID);
-            if (count($line_items) > 0) {
+            if ($line_items && count($line_items) > 0) {
                 foreach ($line_items as $line_item) {
                     $txn_fund_codes = wp_get_object_terms($line_item->ID, 'fundcode');
                     if (!empty($txn_fund_codes)) {
@@ -508,7 +508,7 @@ class bb_cart_batch_management {
         );
         foreach ($transactions as $transaction) {
         	$line_items = bb_cart_get_transaction_line_items($transaction->ID);
-            if (count($line_items) > 0) {
+        	if ($line_items && count($line_items) > 0) {
                 foreach ($line_items as $line_item) {
                     $txn_fund_codes = wp_get_object_terms($line_item->ID, 'fundcode');
                     if (!empty($txn_fund_codes)) {
