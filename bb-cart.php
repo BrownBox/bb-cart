@@ -839,8 +839,15 @@ function bb_cart_woocommerce_shipping($shipping, $total_price, $cart_items) {
 	return $shipping;
 }
 
-function bb_cart_shipping_label() {
-    return apply_filters('bb_cart_shipping_label', 'Shipping');
+function bb_cart_shipping_label($transaction_id = null) {
+	$label = 'Shipping';
+	if (!empty($transaction_id)) {
+		$transaction_label = get_post_meta($transaction_id, 'shipping_label', true);
+		if (!empty($transaction_label)) {
+			$label = $transaction_label;
+		}
+	}
+	return apply_filters('bb_cart_shipping_label', $label, $transaction_id);
 }
 
 add_filter('woocommerce_checkout_redirect_empty_cart', '__return_false');
@@ -918,11 +925,12 @@ function bb_cart_post_purchase_actions($entry, $form){
             $payment_method = 'Credit Card';
             $transaction_type = 'online';
             $currency = bb_cart_get_default_currency();
+            $shipping_label = bb_cart_shipping_label();
             $bb_line_items = array();
             $gf_line_items = array(
                     'products' => array(),
-                    'shipping' => array(
-                            'name' => bb_cart_shipping_label(),
+            		'shipping' => array(
+            				'name' => $shipping_label,
                             'price' => bb_cart_calculate_shipping(),
                     ),
             );
@@ -1035,6 +1043,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             update_post_meta($transaction_id, 'payment_method', $payment_method);
             update_post_meta($transaction_id, 'transaction_type', $transaction_type);
             update_post_meta($transaction_id, 'is_receipted', 'true');
+            update_post_meta($transaction_id, 'shipping_label', $shipping_label);
 
             if (isset($deductible)) {
             	update_post_meta($transaction_id, 'is_tax_deductible', var_export($deductible, true));
@@ -1122,7 +1131,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                                 $shipping = bb_cart_calculate_shipping($total);
                                 if ($shipping > 0) {
                                     $bb_line_items[] = array(
-                                            'name' => bb_cart_shipping_label(),
+                                            'name' => $shipping_label,
                                             'price' => $shipping,
                                             'quantity' => '1',
                                             'fund_code' => 'Postage',
@@ -1781,17 +1790,21 @@ function bb_cart_is_checkout_form($form) {
 add_filter("gform_notification", "bb_cart_configure_notifications", 10, 3);
 function bb_cart_configure_notifications($notification, $form, $entry) {
     $cart_items = bb_cart_get_cart_from_entry($entry);
-    $shipping = null;
+    $shipping = $shipping_label = null;
     if (empty($cart_items) && bb_cart_total_quantity() > 0) {
         $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
     } else {
         $gf_line_items = bb_cart_gf_product_info(array(), $form, $entry);
         $total = $entry['payment_amount'];
         $shipping = $gf_line_items['shipping']['price'];
+        $transaction = bb_cart_get_transaction_from_entry($entry['id']);
+        if ($transaction instanceof WP_Post) {
+        	$shipping_label = bb_cart_shipping_label($transaction->ID);
+        }
     }
 
     if (!empty($cart_items)) {
-        $notification['message'] = str_replace("!!!items!!!", bb_cart_table('email', $cart_items, $total, $shipping), $notification['message']);
+        $notification['message'] = str_replace("!!!items!!!", bb_cart_table('email', $cart_items, $total, $shipping, $shipping_label), $notification['message']);
         if ($form['id'] == bb_cart_get_checkout_form()) {
             $campaign = $fund_code = '';
             $fund_code_id = $entry[11];
@@ -1892,7 +1905,7 @@ function bb_cart_gf_product_info($product_info, $form, $entry) {
                 $meta = get_post_meta($line_item->ID);
                 if ($meta['fund_code'][0] == 'Postage') {
                     $gf_line_items['shipping'] = array(
-                            'name' => bb_cart_shipping_label(),
+                    		'name' => bb_cart_shipping_label($transaction->ID),
                             'price' => $meta['price'][0],
                     );
                 } else {
@@ -1915,7 +1928,7 @@ function bb_cart_shortcode() {
 }
 add_shortcode('bb_cart_table', 'bb_cart_shortcode');
 
-function bb_cart_table($purpose = 'table', array $cart_items = array(), $total = null, $shipping = null) {
+function bb_cart_table($purpose = 'table', array $cart_items = array(), $total = null, $shipping = null, $shipping_label = null) {
     if (empty($cart_items)) {
         $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
     }
@@ -1959,7 +1972,10 @@ function bb_cart_table($purpose = 'table', array $cart_items = array(), $total =
                     if (is_numeric($shipping)) {
                     	$shipping = bb_cart_format_currency($shipping);
                     }
-                    $html .= '<tr><td>'.bb_cart_shipping_label().'</td>'."\n";
+                    if (empty($shipping_label)) {
+                    	$shipping_label = bb_cart_shipping_label();
+                    }
+                    $html .= '<tr><td>'.$shipping_label.'</td>'."\n";
                     $html .= '<td style="text-align: right;">'.$shipping.'</td>'."\n";
                     if ($purpose != 'email') {
                     	$html .= '<td>&nbsp;</td>'."\n";
