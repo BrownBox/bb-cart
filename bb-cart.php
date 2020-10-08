@@ -591,91 +591,112 @@ function bb_cart_check_for_cart_additions($entry, $form){
             }
         }
         foreach ($form['fields'] as $field) {
-            $amount = '';
-            $old_quantity = $quantity;
-            $old_label = $label;
+        	$amount = 0;
+        	$old_quantity = $quantity;
+        	$old_label = $label;
 
-            if ($field['type']=="product") {
-                if (!empty($entry[$field["id"]])) {
-                    $amount = $entry[$field["id"]];
-                } elseif (!empty($field['inputs'])) {
-                    foreach ($field['inputs'] as $input) {
-                        if ($input['name'] == 'bb_product_price') {
-                            $amount = $entry[(string)$input["id"]];
-                        } elseif ($input['name'] == 'bb_product_quantity' && !$field->disableQuantity) {
-                            $quantity = (int)$entry[(string)$input["id"]];
-                        } elseif ($input['name'] == 'bb_product_name' && !empty($entry[(string)$input["id"]])) {
-                            $label = $entry[(string)$input["id"]];
-                        }
-                    }
-                }
-            } elseif ($field['type'] == 'envoyrecharge') { // @deprecated
-                $amount = $entry[$field["id"].'.1'];
-                if ($entry[$field["id"].'.5'] == 'recurring') {
-                    $frequency = $entry[$field["id"].'.2'];
-                }
-            } elseif ($field['type'] == 'bb_click_array') {
-                $amount = $entry[$field["id"].'.1'];
-            }
-            if (!empty($amount) && $quantity > 0) {
-                // now we can add products to our session
-                // only problem is that the 'price' field is a joke in GF so many different formats.. so we need to clean that
-                $clean_price = bb_cart_clean_amount($amount, $currency); // this will now be the correctly formatted amount in cents
-                if ($clean_price>0) {
-                    if ($label == '') {
-                        if (is_numeric($campaign)) {
-                            $label = get_the_title($campaign);
-                        } else {
-                            $label = $field['label'];
-                        }
-                    }
-                    if (empty($fund_code) && !empty($campaign)) {
-                        if (is_numeric($campaign)) {
-                            $fund_code = bb_cart_get_fund_code($campaign);
-                        } else {
-                            $fund_code = $campaign;
-                        }
-                    }
-                    if (empty($fund_code)) {
-                        $fund_code = bb_cart_get_default_fund_code();
-                    }
-                    $original_fund_code = $fund_code;
+        	if ($field->type == "product") {
+        		if (!empty($entry[$field->id])) {
+        			$amount = bb_cart_clean_amount($entry[$field->id], $currency);
+        		} elseif (!empty($field->inputs)) {
+        			foreach ($field->inputs as $input) {
+        				if ($input['id'] == $field->id.'.1' && !empty($entry[(string)$input["id"]])) {
+        					$label = $entry[(string)$input["id"]];
+        				} elseif ($input['id'] == $field->id.'.2') {
+        					$amount = bb_cart_clean_amount($entry[(string)$input["id"]], $currency);
+        				} elseif ($input['id'] == $field->id.'.3' && !$field->disableQuantity) {
+        					$quantity = (int)$entry[(string)$input["id"]];
+        				}
+        			}
+        		}
+        		// Look for any optional extras for this product
+        		foreach ($form['fields'] as $maybe_option_field) {
+        			if ($maybe_option_field->type == 'option' && $maybe_option_field->productField == $field->id) {
+        				if (!empty($entry[$maybe_option_field->id])) {
+        					list($options_label, $option_amount) = explode('|', $entry[$field->id]);
+        					$amount += bb_cart_clean_amount($option_amount, $currency);
+        				} elseif (!empty($maybe_option_field->inputs)) {
+        					$options_label = '';
+        					foreach ($maybe_option_field->inputs as $input) {
+        						list($option_label, $option_amount) = explode('|', $entry[(string)$input["id"]]);
+        						if (empty($option_amount)) {
+        							continue;
+        						}
+        						if (!empty($options_label)) {
+        							$options_label .= ', ';
+        						}
+        						$options_label .= '+'.$option_label;
+        						$amount += bb_cart_clean_amount($option_amount, $currency);
+        					}
+        				}
+        				if (!empty($options_label)) {
+        					$label .= ' ('.$options_label.')';
+        				}
+        			}
+        		}
+        	} elseif ($field->type == 'envoyrecharge') { // @deprecated
+        		$amount = bb_cart_clean_amount($entry[$field["id"].'.1'], $currency);
+        		if ($entry[$field["id"].'.5'] == 'recurring') {
+        			$frequency = $entry[$field["id"].'.2'];
+        		}
+        	} elseif ($field->type == 'bb_click_array') {
+        		$amount = bb_cart_clean_amount($entry[$field["id"].'.1'], $currency);
+        	}
+        	if ($amount > 0 && $quantity > 0) {
+        		// Now we can add products to our session
+        		if ($label == '') {
+        			if (is_numeric($campaign)) {
+        				$label = get_the_title($campaign);
+        			} else {
+        				$label = $field['label'];
+        			}
+        		}
+        		if (empty($fund_code) && !empty($campaign)) {
+        			if (is_numeric($campaign)) {
+        				$fund_code = bb_cart_get_fund_code($campaign);
+        			} else {
+        				$fund_code = $campaign;
+        			}
+        		}
+        		if (empty($fund_code)) {
+        			$fund_code = bb_cart_get_default_fund_code();
+        		}
+        		$original_fund_code = $fund_code;
 
-                    $fund_code = apply_filters('bb_cart_fund_code', $fund_code, $entry);
+        		$fund_code = apply_filters('bb_cart_fund_code', $fund_code, $entry);
 
-                    $fund_code_post = bb_cart_load_fund_code($fund_code);
-                    if ($fund_code_post instanceof WP_Post) {
-                        $fund_code_deductible = get_post_meta($fund_code_post->ID, 'deductible', true);
-                        $deductible = $fund_code_deductible == 'true';
-                        $transaction_type = get_post_meta($fund_code_post->ID, 'transaction_type', true);
-                    }
+        		$fund_code_post = bb_cart_load_fund_code($fund_code);
+        		if ($fund_code_post instanceof WP_Post) {
+        			$fund_code_deductible = get_post_meta($fund_code_post->ID, 'deductible', true);
+        			$deductible = $fund_code_deductible == 'true';
+        			$transaction_type = get_post_meta($fund_code_post->ID, 'transaction_type', true);
+        		}
 
-                    global $blog_id;
-                    $cart_item = array(
-                            'label' => $label,
-                            'currency' => $currency,
-                            'price' => $clean_price,
-                            'form_id' => $form['id'],
-                            'entry_id' => $entry['id'],
-                            'frequency' => $frequency,
-                            'page_id' => $page_id,
-                            'campaign' => $campaign,
-                            'fund_code' => $fund_code,
-                            'deductible' => $deductible,
-                            'transaction_type' => $transaction_type,
-                            'original_fund_code' => $original_fund_code,
-                            'blog_id' => $blog_id,
-                            'quantity' => $quantity,
-                            'variation' => $variations,
-                            'sku' => $sku,
-                            'target' => $donation_target,
-                            'donation_for' => $donation_for,
-                    );
-                    $_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section);
-                }
-            }
-            $quantity = $old_quantity;
-            $label = $old_label;
+        		global $blog_id;
+        		$cart_item = array(
+        				'label' => $label,
+        				'currency' => $currency,
+        				'price' => $amount,
+        				'form_id' => $form['id'],
+        				'entry_id' => $entry['id'],
+        				'frequency' => $frequency,
+        				'page_id' => $page_id,
+        				'campaign' => $campaign,
+        				'fund_code' => $fund_code,
+        				'deductible' => $deductible,
+        				'transaction_type' => $transaction_type,
+        				'original_fund_code' => $original_fund_code,
+        				'blog_id' => $blog_id,
+        				'quantity' => $quantity,
+        				'variation' => $variations,
+        				'sku' => $sku,
+        				'target' => $donation_target,
+        				'donation_for' => $donation_for,
+        		);
+        		$_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section);
+        	}
+        	$quantity = $old_quantity;
+        	$label = $old_label;
         }
     }
 }
