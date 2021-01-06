@@ -134,8 +134,9 @@ function bb_cart_get_donate_form() {
                             'type' => 'select',
                             'id' => 5,
                             'label' => 'Sponsor a member',
-                            'isRequired' => false,
-                            'choices' => array(),
+                            'isRequired' => true,
+                    		'choices' => array(),
+                    		'enableChoiceValue' => true,
                             'allowsPrepopulate' => true,
                             'inputName' => 'bb_cart_donation_member',
                             'conditionalLogic' => array(
@@ -154,8 +155,9 @@ function bb_cart_get_donate_form() {
                             'type' => 'select',
                             'id' => 6,
                             'label' => 'Support project/campaign/appeal',
-                            'isRequired' => false,
-                            'choices' => array(),
+                            'isRequired' => true,
+                    		'choices' => array(),
+                    		'enableChoiceValue' => true,
                             'allowsPrepopulate' => true,
                             'inputName' => 'bb_cart_donation_campaign',
                             'conditionalLogic' => array(

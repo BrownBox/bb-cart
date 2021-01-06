@@ -190,7 +190,7 @@ function bb_cart_populate_donation_member_choices($choices, $form, $field){
 		$choices = array(
 				array(
 						'text' => '-- Please select --',
-						'value' => ''
+						'value' => '',
 				),
 		);
 		foreach (Brownbox\Config\BB_Cart::$member as $type => $value) {
@@ -205,7 +205,6 @@ function bb_cart_populate_donation_member_choices($choices, $form, $field){
 				$members = get_posts($args);
 				foreach ($members as $member) {
 					$label = $member->post_title;
-					$fund_code = get_post_meta($member->ID, 'bb_give_fund_code', true);
 					$choices[] = array('text' => $label, 'value' => $member->ID);
 				}
 
