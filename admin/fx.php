@@ -54,6 +54,7 @@ function bb_cart_load_edit_transaction_line() {
     }
 ?>
         </select></p>
+        <p><label for="edit_deductible">Tax Deductible: </label> <input id="edit_deductible" name="edit_deductible" type="checkbox" value="true" <?php checked('true', get_post_meta($transaction->ID, 'is_tax_deductible', true)); ?>></p>
         <p><label for="edit_date">Date: </label> <input id="edit_date" name="edit_date" type="date" value="<?php echo date('Y-m-d', strtotime($line_item->post_date)); ?>"></p>
         <p><label for="edit_description">Description: </label> <input id="edit_description" name="edit_description" type="text" value="<?php echo $line_item->post_content; ?>"></p>
 <?php
@@ -71,6 +72,7 @@ function bb_cart_load_edit_transaction_line() {
                     'action': 'bb_cart_update_transaction_line',
                     'id': <?php echo $line_item->ID; ?>,
                     'fund_code': jQuery('#edit_fund_code').val(),
+                    'deductible': jQuery('#edit_deductible').is(':checked'),
                     'date': jQuery('#edit_date').val(),
                     'description': jQuery('#edit_description').val(),
                     'amount': jQuery('#edit_amount').val()
@@ -118,6 +120,8 @@ function bb_cart_update_transaction_line() {
     // Changes impacting the whole transaction
     $transaction = bb_cart_get_transaction_from_line_item($line_item);
     $transaction_type = get_post_meta($transaction->ID, 'transaction_type', true);
+    $deductible = 'true' == $_POST['deductible'];
+    update_post_meta($transaction->ID, 'is_tax_deductible', var_export($deductible, true));
     if (strtolower($transaction_type) == 'offline') {
         if (!empty($_POST['amount'])) {
             $new_amount = $_POST['amount'];
