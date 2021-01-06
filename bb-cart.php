@@ -768,6 +768,7 @@ function bb_cart_cover_costs() {
 			'price' => $costs*100,
 			'quantity' => 1,
 			'frequency' => 'one-off',
+			'fund_code' => apply_filters('bb_cart_cover_costs_fund_code', bb_cart_get_default_fund_code()),
 	);
 	// Make sure "other" section is always last
 	uksort($_SESSION[BB_CART_SESSION_ITEM], function($a, $b) {
