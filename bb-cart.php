@@ -722,7 +722,7 @@ function bb_cart_add_from_querystring() {
             $section = !empty($_GET['type']) ? $_GET['type'] : 'donations';
             $label = !empty($_GET['label']) ? $_GET['label'] : 'My Donation';
             $frequency = !empty($_GET['frequency']) ? $_GET['frequency'] : 'one-off';
-            $sku = !empty($_GET['sku']) ? $_GET['sku'] : null;
+            $sku = !empty($_GET['sku']) ? sanitize_text_field($_GET['sku']) : null;
             $fund_code = !empty($_GET['fund_code']) ? (int)$_GET['fund_code'] : bb_cart_get_default_fund_code();
             $fund_code_post = bb_cart_load_fund_code($fund_code);
             if ($fund_code_post instanceof WP_Post) {
@@ -1314,21 +1314,47 @@ function bb_cart_get_web_batch($date = null, $form = null, $entry = null, $conte
 
     $existing_batch = apply_filters('bb_cart_get_web_batch', get_page_by_title($batch_name, OBJECT, 'transactionbatch'), $batch_date, $form, $entry, $context, $frequency);
 
-    if ($existing_batch instanceof WP_Post && in_array($existing_batch->post_status, array('pending', 'future'))) {
-        return $existing_batch->ID;
+    if ($existing_batch instanceof WP_Post && in_array($existing_batch->post_status, array('draft', 'pending', 'future'))) {
+    	return $existing_batch->ID;
     } else {
-        // Create batch
-        $batch = array(
-                'post_title' => $batch_name,
-                'post_content' => '',
-                'post_status' => 'pending',
-                'post_type' => 'transactionbatch',
-                'post_date' => $batch_date,
-        );
+    	// Create batch
+    	$batch = array(
+    			'post_title' => $batch_name,
+    			'post_content' => '',
+    			'post_status' => 'draft',
+    			'post_type' => 'transactionbatch',
+    			'post_date' => $batch_date,
+    	);
 
-        // Insert the post into the database
-        return wp_insert_post($batch);
+    	// Insert the post into the database
+    	return wp_insert_post($batch);
     }
+}
+
+add_filter('update_post_metadata', 'bb_cart_update_post_metadata', 10, 5);
+function bb_cart_update_post_metadata($null, $post_id, $meta_key, $meta_value, $prev_value) {
+	if ('batch_id' == $meta_key && 'transaction' == get_post_type($post_id) && 'publish' == get_post_status($post_id)) {
+		$batch_post = array(
+				'ID' => $meta_value,
+				'post_status' => 'pending',
+		);
+		wp_update_post($batch_post);
+	}
+	return $null;
+}
+
+add_action('transition_post_status', 'bb_cart_transition_post_status', 10, 3);
+function bb_cart_transition_post_status($new_status, $old_status, $post) {
+	if ('transaction' == get_post_type($post) && 'publish' == $new_status) {
+		$batch_id = get_post_meta($post->ID, 'batch_id', true);
+		if ($batch_id) {
+			$batch_post = array(
+					'ID' => $batch_id,
+					'post_status' => 'pending',
+			);
+			wp_update_post($batch_post);
+		}
+	}
 }
 
 /**
