@@ -1,3 +1,4 @@
 .bb-table {width: 100%;}
 .bb-table th {text-align: left;}
+.bb-table .tax {font-size: 0.75rem;}
 #table_fund_code_report.fund_code_detail {max-width: 100%; white-space: nowrap; overflow: hidden; overflow-x: scroll; display: block;}

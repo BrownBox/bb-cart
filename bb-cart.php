@@ -100,6 +100,12 @@ function bb_cart_start_session() {
                 $fund_code_id = bb_cart_get_fund_code($woo_item['product_id']);
                 $fund_code_deductible = get_post_meta($fund_code_id, 'deductible', true);
                 $deductible = $fund_code_deductible == 'true';
+                $price = $woo_item['line_total'];
+                if (!empty($woo_item['line_tax'])) {
+                	$price += $woo_item['line_tax'];
+                }
+                $price /= $woo_item['quantity'];
+                $price *= 100;
                 if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
                     foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as &$cart_item) {
                         if ($cart_item['cart_item_key'] == $woo_idx) { // Found it - let's make sure the details are the same
@@ -107,7 +113,7 @@ function bb_cart_start_session() {
                                     'label' => $label,
                                     'cart_item_key' => $woo_idx,
                                     'product_id' => $woo_item['product_id'],
-                                    'price' => 100*$woo_item['line_total']/$woo_item['quantity'],
+                            		'price' => $price,
                                     'quantity' => $woo_item['quantity'],
                                     'variation_id' => $woo_item['variation_id'],
                                     'variation' => $woo_item['variation'],
@@ -115,7 +121,8 @@ function bb_cart_start_session() {
                                     'fund_code' => $fund_code_id,
                                     'transaction_type' => 'purchase',
                                     'deductible' => $deductible,
-                                    'currency' => $currency,
+                            		'currency' => $currency,
+                            		'tax' => $woo_item['line_tax'] ?: 0,
                             );
                             continue(2); // Found it - go to next $woo_item
                         }
@@ -127,7 +134,7 @@ function bb_cart_start_session() {
                         'label' => $label,
                         'cart_item_key' => $woo_idx,
                         'product_id' => $woo_item['product_id'],
-                        'price' => 100*$woo_item['line_total']/$woo_item['quantity'],
+                		'price' => $price,
                         'quantity' => $woo_item['quantity'],
                         'variation_id' => $woo_item['variation_id'],
                         'variation' => $woo_item['variation'],
@@ -135,7 +142,8 @@ function bb_cart_start_session() {
                         'fund_code' => $fund_code_id,
                         'transaction_type' => 'purchase',
                         'deductible' => $deductible,
-                        'currency' => $currency,
+                		'currency' => $currency,
+                		'tax' => $woo_item['line_tax'] ?: 0,
                 );
             }
         }
@@ -287,7 +295,10 @@ function bb_cart_products_total($include_shipping = true, array $cart_items = ar
         if (is_object($wc_session)) {
             $cart = $wc_session->get('cart', array());
             foreach ($cart as $product) {
-                $woo_total += $product['line_total'];
+            	$woo_total += $product['line_total'];
+            	if (!empty($product['line_tax'])) {
+            		$woo_total += $product['line_tax'];
+            	}
             }
         }
 
@@ -1139,7 +1150,10 @@ function bb_cart_post_purchase_actions($entry, $form){
                                 }
                                 $total = 0;
                                 foreach ($items as $product) {
-                                    $price = $woo_cart[$product['cart_item_key']]['line_total'];
+                                	$price = $woo_cart[$product['cart_item_key']]['line_total'];
+                                	if (!empty($woo_cart[$product['cart_item_key']]['line_tax'])) {
+                                		$price += $woo_cart[$product['cart_item_key']]['line_tax'];
+                                	}
                                     $total += $price;
                                     $line_item = array(
                                             'name' => $product['label'],
@@ -1976,7 +1990,12 @@ function bb_cart_table($purpose = 'table', array $cart_items = array(), $total =
                         $price = ($product['price']*$product['quantity'])/100;
                         $product_total += $price;
                         $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.apply_filters('bb_cart_table_item_label_display', $product['label'], $purpose, $product, $section, $idx).'</a></td>'."\n";
-                        $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($price).'</td>'."\n";
+                        $html .= '<td style="text-align: right; white-space: nowrap;">';
+                        $html .= bb_cart_format_currency($price);
+                        if (!empty($product['tax'])) {
+                        	$html .= '<br><span class="tax">incl. '.bb_cart_format_currency($product['tax']).' tax</span>';
+                        }
+                        $html .= '</td>'."\n";
                         if ($purpose != 'email') {
                             $html .= '<td style="width: 15px;">'."\n";
                             if ($product['removable'] !== false) {
