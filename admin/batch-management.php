@@ -219,7 +219,7 @@ class bb_cart_batch_management {
     private function edit_batch_page($back_url) {
         $batch_id = (int)$_GET['batch'];
         $batch = get_post($batch_id);
-        $can_edit = current_user_can('manage_options') && $batch->post_status == 'pending';
+        $can_edit = $can_delete = current_user_can('manage_options') && $batch->post_status == 'pending';
         $can_edit_users = current_user_can('edit_users');
         $ajax_url = admin_url('admin-ajax.php');
 
@@ -231,34 +231,38 @@ class bb_cart_batch_management {
         $clean_url = remove_query_arg(array('sub_action', 'item'));
         if (!empty($_GET['sub_action'])) {
             switch ($_GET['sub_action']) {
-                case 'trash':
-                    $items = $_GET['item'];
-                    // Before we delete the line items we need a list of transactions to update
-                    $check_transactions = array();
-                    foreach ($items as $item) {
-                        $check_transactions[] = bb_cart_get_transaction_from_line_item($item);
-                    }
-                    $check_transactions = array_unique($check_transactions);
-                    bb_cart_delete_line_items($items);
-                    foreach ($check_transactions as $check_transaction) {
-                        $remaining_line_items = bb_cart_get_transaction_line_items($check_transaction->ID);
-                        if (empty($remaining_line_items)) {
-                            bb_cart_delete_transactions(array($check_transaction->ID));
-                        } else {
-                            $donation_amount = $total_amount = 0;
-                            foreach ($remaining_line_items as $remaining_line_item) {
-                                $price = get_post_meta($remaining_line_item->ID, 'price', true);
-                                $total_amount += $price;
-                                $fund_code = bb_cart_get_fund_code($remaining_line_item->ID);
-                                if (get_post_meta($fund_code, 'transaction_type', true) == 'donation') {
-                                    $donation_amount += $price;
-                                }
-                            }
-                            update_post_meta($check_transaction->ID, 'total_amount', $total_amount);
-                            update_post_meta($check_transaction->ID, 'donation_amount', $donation_amount);
-                        }
-                    }
-                    echo '<div class="notice notice-success"><p>Deleted successfully.</p></div>';
+            	case 'trash':
+            		if ($can_delete) {
+	                    $items = $_GET['item'];
+	                    // Before we delete the line items we need a list of transactions to update
+	                    $check_transactions = array();
+	                    foreach ($items as $item) {
+	                        $check_transactions[] = bb_cart_get_transaction_from_line_item($item);
+	                    }
+	                    $check_transactions = array_unique($check_transactions);
+	                    bb_cart_delete_line_items($items);
+	                    foreach ($check_transactions as $check_transaction) {
+	                        $remaining_line_items = bb_cart_get_transaction_line_items($check_transaction->ID);
+	                        if (empty($remaining_line_items)) {
+	                            bb_cart_delete_transactions(array($check_transaction->ID));
+	                        } else {
+	                            $donation_amount = $total_amount = 0;
+	                            foreach ($remaining_line_items as $remaining_line_item) {
+	                                $price = get_post_meta($remaining_line_item->ID, 'price', true);
+	                                $total_amount += $price;
+	                                $fund_code = bb_cart_get_fund_code($remaining_line_item->ID);
+	                                if (get_post_meta($fund_code, 'transaction_type', true) == 'donation') {
+	                                    $donation_amount += $price;
+	                                }
+	                            }
+	                            update_post_meta($check_transaction->ID, 'total_amount', $total_amount);
+	                            update_post_meta($check_transaction->ID, 'donation_amount', $donation_amount);
+	                        }
+	                    }
+	                    echo '<div class="notice notice-success"><p>Deleted successfully.</p></div>';
+            		} else {
+            			echo '<div class="notice notice-error"><p>You do not have sufficient permissions to delete this transaction.</p></div>';
+            		}
                     break;
             }
         }
@@ -333,7 +337,6 @@ class bb_cart_batch_management {
         	if ($can_edit_users) {
         		$author_display = '<a href="'.get_edit_user_link($author->ID).'">'.$author_display.'</a>';
         	}
-            $can_delete = strtolower(get_post_meta($transaction->ID, 'transaction_type', true)) == 'offline';
             $receipted = get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-no"></span>';
             $line_items = bb_cart_get_transaction_line_items($transaction->ID);
             if ($line_items && count($line_items) > 0) {
