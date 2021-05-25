@@ -338,7 +338,7 @@ function bb_cart_populate_shipping_address($form) {
 									$input['defaultValue'] = $customer->get_shipping_postcode();
 									break;
 								case $field->id.'.6':
-									$input['defaultValue'] = $customer->get_shipping_country();
+									$input['defaultValue'] = WC()->countries->countries[$customer->get_shipping_country()];
 									break;
 							}
 						}
