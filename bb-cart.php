@@ -865,6 +865,13 @@ function bb_cart_calculate_shipping($total_price = null) {
     return apply_filters('bb_cart_calculate_shipping', $shipping, $total_price, $_SESSION[BB_CART_SESSION_ITEM]);
 }
 
+function bb_cart_calculate_shipping_tax($shipping = null) {
+	if (is_null($shipping)) {
+		$shipping = bb_cart_calculate_shipping();
+	}
+	return apply_filters('bb_cart_calculate_shipping_tax', 0, $shipping);
+}
+
 add_filter('bb_cart_calculate_shipping', 'bb_cart_woocommerce_shipping', 1, 3);
 function bb_cart_woocommerce_shipping($shipping, $total_price, $cart_items) {
 	if (!empty($cart_items['woo']) && function_exists('WC')) {
