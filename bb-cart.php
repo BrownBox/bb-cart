@@ -482,6 +482,7 @@ function bb_cart_primary_campaign($value = '') {
 
 add_filter("gform_field_value_bb_donation_frequency", "bb_cart_frequency");
 function bb_cart_frequency($value = '') {
+	$value = 'one-off';
     if (!empty($_SESSION[BB_CART_SESSION_ITEM]['donations'])) {
         foreach ($_SESSION[BB_CART_SESSION_ITEM]['donations'] as $item) {
             if (!empty($item['frequency'])) {
@@ -1991,116 +1992,128 @@ function bb_cart_shortcode() {
 add_shortcode('bb_cart_table', 'bb_cart_shortcode');
 
 function bb_cart_table($purpose = 'table', array $cart_items = array(), $total = null, $shipping = null, $shipping_label = null) {
-    if (empty($cart_items)) {
-        $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
-    }
+	if (empty($cart_items)) {
+		$cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+	}
 
-    switch ($purpose) {
-        case 'email':
-            $cols = 2;
-            break;
-        case 'table':
-        default:
-            $cols = 3;
-            break;
-    }
-    $html = '';
-    if (!empty($cart_items)) {
-        foreach ($cart_items as $section => $items) {
-            $html .= '<table class="bb-table" width="100%">'."\n";
-            switch ($section) {
-                case 'woo':
-                    $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Products</th></tr>';
-                    $product_total = 0;
-                    foreach ($items as $idx => $product) {
-                        $price = ($product['price']*$product['quantity'])/100;
-                        $product_total += $price;
-                        $html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.apply_filters('bb_cart_table_item_label_display', $product['label'], $purpose, $product, $section, $idx).'</a></td>'."\n";
-                        $html .= '<td style="text-align: right; white-space: nowrap;">';
-                        $html .= bb_cart_format_currency($price);
-                        if (!empty($product['tax'])) {
-                        	$html .= '<br><span class="tax">incl. '.bb_cart_format_currency($product['tax']).' tax</span>';
-                        }
-                        $html .= '</td>'."\n";
-                        if ($purpose != 'email') {
-                            $html .= '<td style="width: 15px;">'."\n";
-                            if ($product['removable'] !== false) {
-                                $html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
-                            } else {
-                                $html .= '&nbsp;';
-                            }
-                            $html .= '</td>'."\n";
-                        }
-                        $html .= '</tr>';
-                    }
-                    if (is_null($shipping)) {
-                        $shipping = bb_cart_calculate_shipping($product_total);
-                    }
-                    if (is_numeric($shipping)) {
-                    	$shipping = bb_cart_format_currency($shipping);
-                    }
-                    if (empty($shipping_label)) {
-                    	$shipping_label = bb_cart_shipping_label();
-                    }
-                    $html .= '<tr><td>'.$shipping_label.'</td>'."\n";
-                    $html .= '<td style="text-align: right;">'.$shipping.'</td>'."\n";
-                    if ($purpose != 'email') {
-                    	$html .= '<td>&nbsp;</td>'."\n";
-                    }
-                    $html .= '</tr>'."\n";
-                    break;
-                case 'event':
-                    $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Events</th></tr>';
-                    foreach ($items as $idx => $event) {
-                        $EM_Booking = new EM_Booking($event['booking_id']);
-                        $EM_Event = new EM_Event($EM_Booking->event_id);
-                        $html .= '<tr><td>'.apply_filters('bb_cart_table_item_label_display', $EM_Booking->booking_spaces.' registration/s for '.$EM_Event->event_name.' ('.$EM_Event->event_start_date.')', $purpose, $event, $section, $idx).'</td>'."\n";
-                        $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($EM_Booking->booking_price).'</td>'."\n";
-                        if ($purpose != 'email') {
-                            $html .= '<td style="width: 15px;">'."\n";
-                            if ($event['removable'] !== false) {
-                                $html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
-                            } else {
-                                $html .= '&nbsp;';
-                            }
-                            $html .= '</td>'."\n";
-                        }
-                        $html .= '</tr>';
-                    }
-                    break;
-                default:
-                    $html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">'.ucwords($section).'</th></tr>';
-                    foreach ($items as $idx => $item) {
-                        $html .= '<tr>'."\n";
-                        $label = $item['label'];
-                        if ($item['quantity'] > 1 || $section != 'donations') {
-                            $label = $item['quantity'].'x '.$label;
-                        }
-                        $html .= '<td>'.apply_filters('bb_cart_table_item_label_display', $label, $purpose, $item, $section, $idx).'</td>'."\n";
-                        $item_price = ($item['price']*$item['quantity'])/100;
-                        $frequency = empty($item['frequency']) || $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
-                        $html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($item_price).$frequency.'</td>'."\n";
-                        if ($purpose != 'email') {
-                            $html .= '<td style="width: 15px;">'."\n";
-                            if ($item['removable'] !== false) {
-                                $html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
-                            } else {
-                                $html .= '&nbsp;';
-                            }
-                            $html .= '</td>'."\n";
-                        }
-                        $html .= '</tr>'."\n";
-                    }
-                    break;
-            }
-            $html .= '</table>'."\n";
-        }
-        if (is_null($total)) {
-            $total = bb_cart_total_price(true, $cart_items);
-        }
-        $html .= '<p class="bb_cart_total" style="text-align: right;"><strong>Total: '.bb_cart_format_currency($total).'</strong></p>'."\n";
-    }
-    return $html;
+	switch ($purpose) {
+		case 'email':
+			$cols = 2;
+			break;
+		case 'table':
+		default:
+			$cols = 3;
+			break;
+	}
+	$html = '';
+	if (!empty($cart_items)) {
+		$total_tax = 0;
+		foreach ($cart_items as $section => $items) {
+			$html .= '<table class="bb-table" width="100%">'."\n";
+			switch ($section) {
+				case 'woo':
+					$html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Products</th></tr>';
+					$product_total = 0;
+					foreach ($items as $idx => $product) {
+						$price = ($product['price']*$product['quantity'])/100;
+						$product_total += $price;
+						$html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.apply_filters('bb_cart_table_item_label_display', $product['label'], $purpose, $product, $section, $idx).'</a></td>'."\n";
+						$html .= '<td style="text-align: right; white-space: nowrap;">';
+						$html .= bb_cart_format_currency($price);
+						if (!empty($product['tax'])) {
+							$total_tax += $product['tax'];
+							$html .= '<br><span class="tax">incl. '.bb_cart_format_currency($product['tax']).' '.__('Tax', 'woocommerce').'</span>';
+						}
+						$html .= '</td>'."\n";
+						if ($purpose != 'email') {
+							$html .= '<td style="width: 15px;">'."\n";
+							if ($product['removable'] !== false) {
+								$html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
+							} else {
+								$html .= '&nbsp;';
+							}
+							$html .= '</td>'."\n";
+						}
+						$html .= '</tr>';
+					}
+					if (is_null($shipping)) {
+						$shipping = bb_cart_calculate_shipping($product_total);
+					}
+					$shipping_tax = 0;
+					if (is_numeric($shipping)) {
+						$shipping_tax = bb_cart_calculate_shipping_tax($shipping);
+						$total_tax += $shipping_tax;
+						$shipping = bb_cart_format_currency($shipping);
+					}
+					if (empty($shipping_label)) {
+						$shipping_label = bb_cart_shipping_label();
+					}
+					if (!empty($shipping_tax)) {
+						$shipping .= '<br><span class="tax">incl. '.bb_cart_format_currency(bb_cart_calculate_shipping_tax()).' '.__('Tax', 'woocommerce').'</span>';
+					}
+					$html .= '<tr><td>'.$shipping_label.'</td>'."\n";
+					$html .= '<td style="text-align: right;">'.$shipping.'</td>'."\n";
+					if ($purpose != 'email') {
+						$html .= '<td>&nbsp;</td>'."\n";
+					}
+					$html .= '</tr>'."\n";
+					break;
+				case 'event':
+					$html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Events</th></tr>';
+					foreach ($items as $idx => $event) {
+						$EM_Booking = new EM_Booking($event['booking_id']);
+						$EM_Event = new EM_Event($EM_Booking->event_id);
+						$html .= '<tr><td>'.apply_filters('bb_cart_table_item_label_display', $EM_Booking->booking_spaces.' registration/s for '.$EM_Event->event_name.' ('.$EM_Event->event_start_date.')', $purpose, $event, $section, $idx).'</td>'."\n";
+						$html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($EM_Booking->booking_price).'</td>'."\n";
+						if ($purpose != 'email') {
+							$html .= '<td style="width: 15px;">'."\n";
+							if ($event['removable'] !== false) {
+								$html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
+							} else {
+								$html .= '&nbsp;';
+							}
+							$html .= '</td>'."\n";
+						}
+						$html .= '</tr>';
+					}
+					break;
+				default:
+					$html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">'.ucwords($section).'</th></tr>';
+					foreach ($items as $idx => $item) {
+						$html .= '<tr>'."\n";
+						$label = $item['label'];
+						if ($item['quantity'] > 1 || $section != 'donations') {
+							$label = $item['quantity'].'x '.$label;
+						}
+						$html .= '<td>'.apply_filters('bb_cart_table_item_label_display', $label, $purpose, $item, $section, $idx).'</td>'."\n";
+						$item_price = ($item['price']*$item['quantity'])/100;
+						$frequency = empty($item['frequency']) || $item['frequency'] == 'one-off' ? '' : '/'.ucfirst($item['frequency']);
+						$html .= '<td style="text-align: right; white-space: nowrap;">'.bb_cart_format_currency($item_price).$frequency.'</td>'."\n";
+						if ($purpose != 'email') {
+							$html .= '<td style="width: 15px;">'."\n";
+							if ($item['removable'] !== false) {
+								$html .= '<a href="'.add_query_arg('remove_item', $section.':'.$idx).'" title="Remove" class="delete" onclick="return confirm(\'Are you sure you want to remove this item?\');">x</a>'."\n";
+							} else {
+								$html .= '&nbsp;';
+							}
+							$html .= '</td>'."\n";
+						}
+						$html .= '</tr>'."\n";
+					}
+					break;
+			}
+			$html .= '</table>'."\n";
+		}
+		if (is_null($total)) {
+			$total = bb_cart_total_price(true, $cart_items);
+		}
+		$html .= '<p class="bb_cart_total" style="text-align: right;"><strong>Total: '.bb_cart_format_currency($total).'</strong>';
+		if (!empty($total_tax)) {
+			$html .= '<br><span class="tax">incl. '.bb_cart_format_currency($total_tax).' '.__('Tax', 'woocommerce').'</span>';
+		}
+		$html .= '</p>'."\n";
+	}
+	return $html;
 }
 
 add_filter('gform_validation', 'bb_cart_fraud_detection', 0); // Do this before anything else
