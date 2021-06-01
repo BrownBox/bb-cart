@@ -1173,15 +1173,25 @@ function bb_cart_post_purchase_actions($entry, $form){
                                     $bb_line_items[] = $line_item;
                                 }
                                 $shipping = bb_cart_calculate_shipping($total);
+                                $shipping_tax = bb_cart_calculate_shipping_tax($shipping);
                                 if ($shipping > 0) {
-                                    $bb_line_items[] = array(
-                                            'name' => $shipping_label,
-                                            'price' => $shipping,
-                                            'quantity' => '1',
-                                            'fund_code' => 'Postage',
-                                    );
+                                	$bb_line_items[] = array(
+                                			'name' => $shipping_label,
+                                			'price' => $shipping,
+                                			'quantity' => '1',
+                                			'fund_code' => 'Postage',
+                                	);
                                 }
-                                $order->set_total($shipping, 'shipping');
+                                $order->set_shipping_total($shipping);
+                                $shipping_item = new WC_Order_Item_Shipping();
+                                $shipping_item->set_props(array(
+                                		'method_title' => $shipping_label,
+                                		'total'        => $shipping,
+                                		'taxes'        => array(
+                                				'total' => array($shipping_tax),
+                                		),
+                                ));
+                                $order->add_item($shipping_item);
                                 $grand_total = $total+$shipping;
                                 $order->set_total($grand_total);
                                 if ($transaction_status == 'Approved') {
