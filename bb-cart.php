@@ -675,15 +675,6 @@ function bb_cart_check_for_cart_additions($entry, $form){
         		}
         		$original_fund_code = $fund_code;
 
-        		$fund_code = apply_filters('bb_cart_fund_code', $fund_code, $entry);
-
-        		$fund_code_post = bb_cart_load_fund_code($fund_code);
-        		if ($fund_code_post instanceof WP_Post) {
-        			$fund_code_deductible = get_post_meta($fund_code_post->ID, 'deductible', true);
-        			$deductible = $fund_code_deductible == 'true';
-        			$transaction_type = get_post_meta($fund_code_post->ID, 'transaction_type', true);
-        		}
-
         		global $blog_id;
         		$cart_item = array(
         				'label' => $label,
@@ -705,6 +696,20 @@ function bb_cart_check_for_cart_additions($entry, $form){
         				'target' => $donation_target,
         				'donation_for' => $donation_for,
         		);
+
+        		$fund_code = apply_filters('bb_cart_fund_code', $fund_code, $entry, $cart_item);
+
+        		$fund_code_post = bb_cart_load_fund_code($fund_code);
+        		if ($fund_code_post instanceof WP_Post) {
+        			$fund_code_deductible = get_post_meta($fund_code_post->ID, 'deductible', true);
+        			$deductible = $fund_code_deductible == 'true';
+        			$transaction_type = get_post_meta($fund_code_post->ID, 'transaction_type', true);
+        		}
+
+        		$cart_item['fund_code'] = $fund_code;
+        		$cart_item['deductible'] = $deductible;
+        		$cart_item['transaction_type'] = $transaction_type;
+
         		$_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section);
         	}
         	$quantity = $old_quantity;
@@ -1179,7 +1184,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                                 			'name' => $shipping_label,
                                 			'price' => $shipping,
                                 			'quantity' => '1',
-                                			'fund_code' => 'Postage',
+                                			'fund_code' => apply_filters('bb_cart_shipping_fund_code', 'Postage', $bb_line_items),
                                 	);
                                 }
                                 $order->set_shipping_total($shipping);
