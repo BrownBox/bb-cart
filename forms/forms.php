@@ -289,7 +289,8 @@ function bb_cart_get_donate_form() {
                             'id' => 8,
                             'label' => 'Supporting message',
                             'adminLabel' => '',
-                            'isRequired' => false,
+                    		'isRequired' => false,
+                    		'inputName' => 'bb_cart_donation_message',
                     		'maxLength' => 255,
                             'conditionalLogic' => array(
                                     'actionType' => 'show',

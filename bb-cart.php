@@ -566,7 +566,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
     $campaign = $post->ID;
     $quantity = 1;
     $variations = array();
-    $sku = $donation_target = $fund_code = '';
+    $sku = $donation_target = $message = $fund_code = '';
     $label = 'My Donation';
     $currency = bb_cart_get_default_currency();
     if (!empty($form['bb_cart_enable']) && $form['bb_cart_enable']=="cart_enabled") {
@@ -589,7 +589,9 @@ function bb_cart_check_for_cart_additions($entry, $form){
             } elseif ($field['inputName'] == 'bb_sku' && !empty($entry[$field['id']])) {
                 $sku = $entry[$field['id']];
             } elseif ($field['inputName'] == 'bb_cart_donation_for' && !empty($entry[$field['id']])) {
-                $donation_target = $entry[$field['id']];
+            	$donation_target = $entry[$field['id']];
+            } elseif ($field['inputName'] == 'bb_cart_donation_message' && !empty($entry[$field['id']])) {
+            	$message = $entry[$field['id']];
             } elseif (($field['inputName'] == 'bb_cart_donation_member' || $field['inputName'] == 'bb_cart_donation_campaign') && !empty($entry[$field['id']])) {
                 $campaign = $entry[$field['id']];
             } elseif ($field['inputName'] == 'bb_cart_purchase_type' && !empty($entry[$field['id']])) {
@@ -695,6 +697,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
         				'sku' => $sku,
         				'target' => $donation_target,
         				'donation_for' => $donation_for,
+        				'comments' => $message,
         		);
 
         		$fund_code = apply_filters('bb_cart_fund_code', $fund_code, $entry, $cart_item);
