@@ -506,7 +506,7 @@ function bb_cart_get_checkout_form(){
                             'queryString' => 'n={Name (First):1.3}&e={entry_id}&f={form_id}',
                     ),
             ),
-            'fields' => array( // Next field ID: 53
+            'fields' => array( // Next field ID: 54
                     array(
                             'type' => 'checkbox',
                             'id' => 28,
@@ -548,6 +548,11 @@ function bb_cart_get_checkout_form(){
                                             'value' => 'anonymous',
                                             'isSelected' => false,
                                     ),
+                            		array(
+                            				'text' => 'Show Comments',
+                            				'value' => 'comments',
+                            				'isSelected' => false,
+                            		),
                             ),
                             'inputs' => array(
                                     array(
@@ -578,6 +583,10 @@ function bb_cart_get_checkout_form(){
                                             'id' => '28.7',
                                             'label' => 'Form Setup: Show Anonymous',
                                     ),
+                            		array(
+                            				'id' => '28.8',
+                            				'label' => 'Form Setup: Show Comments',
+                            		),
                             ),
                             'allowsPrepopulate' => true,
                             'inputName' => 'bb_cart_checkout_form_setup',
@@ -1198,6 +1207,25 @@ Your details will also allow us to give you a personal reference number to inclu
                                     ),
                             ),
                     ),
+            		array(
+            				'type' => 'textarea',
+            				'id' => 53,
+            				'label' => 'Comments',
+            				'adminLabel' => '',
+            				'isRequired' => false,
+            				'inputName' => 'bb_cart_checkout_message',
+            				'conditionalLogic' => array(
+            						'actionType' => 'show',
+            						'logicType' => 'all',
+            						'rules' => array(
+            								0 => array(
+            										'fieldId' => '28',
+            										'operator' => 'is',
+            										'value' => 'comments',
+            								),
+            						),
+            				),
+            		),
                     array(
                             'type' => 'product',
                             'id' => 9,
