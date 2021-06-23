@@ -1190,20 +1190,23 @@ function bb_cart_post_purchase_actions($entry, $form){
                                 			'fund_code' => apply_filters('bb_cart_shipping_fund_code', 'Postage', $bb_line_items),
                                 	);
                                 }
-                                $order->set_shipping_total($shipping);
                                 $shipping_item = new WC_Order_Item_Shipping();
                                 $shipping_item->set_props(array(
                                 		'method_title' => $shipping_label,
-                                		'total'        => $shipping,
+                                		'method_id'    => 'flat_rate',
+                                		'total'        => $shipping, // Just show full amount for now as tax doesn't work. @todo $shipping - $shipping_tax, // WooCommerce always assumes shipping is exclusive of tax, even if product prices are inclusive
                                 		'taxes'        => array(
                                 				'total' => array($shipping_tax),
                                 		),
                                 ));
                                 $order->add_item($shipping_item);
+                                $order->set_shipping_total($shipping - $shipping_tax);
+                                $order->set_shipping_tax($shipping_tax);
                                 $grand_total = $total+$shipping;
                                 $order->set_total($grand_total);
+                                $order->save();
                                 if ($transaction_status == 'Approved') {
-                                    $order->payment_complete($transaction_id);
+                                	$order->payment_complete($transaction_id);
                                 }
                             }
                         }
