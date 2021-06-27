@@ -973,6 +973,7 @@ function bb_cart_post_purchase_actions($entry, $form){
             $donation_amount = 0;
             $payment_method = 'Credit Card';
             $transaction_type = 'online';
+            $transaction_date = $entry['date_created'];
             $currency = bb_cart_get_default_currency();
             $shipping_label = bb_cart_shipping_label();
             $bb_line_items = array();
@@ -1055,12 +1056,12 @@ function bb_cart_post_purchase_actions($entry, $form){
                 }
             }
 
-            if ($payment_method == 'Credit Card') {
-                $post_status = 'publish';
-                $transaction_status = 'Approved';
-            } else {
+            if (in_array(strtolower($payment_method), array('direct debit', 'paypal')) || strtotime($transaction_date) > strtotime(current_time('mysql'))) {
                 $post_status = 'draft';
                 $transaction_status = 'Pending';
+            } else {
+                $post_status = 'publish';
+                $transaction_status = 'Approved';
             }
 
             // Create post object
@@ -1070,14 +1071,8 @@ function bb_cart_post_purchase_actions($entry, $form){
                     'post_status' => $post_status,
                     'post_author' => $author_id,
                     'post_type' => 'transaction',
+            		'post_date' => $transaction_date,
             );
-
-            //check if transaction date exists
-            if (isset($transaction_date) && !empty($transaction_date)) {
-                $transaction['post_date'] = $transaction_date;
-            } else {
-                $transaction['post_date'] = current_time('mysql');
-            }
 
             // Insert the post into the database
             $transaction_id = wp_insert_post($transaction);
@@ -1284,7 +1279,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                         // Add payment details to the entry of the donate form
                         GFAPI::update_entry_property($item['entry_id'], "payment_status", $transaction_status);
                         GFAPI::update_entry_property($item['entry_id'], "payment_amount", $item['price']/100);
-                        GFAPI::update_entry_property($item['entry_id'], "payment_date",   $entry['date_created']);
+                        GFAPI::update_entry_property($item['entry_id'], "payment_date",   $transaction_date);
                         GFAPI::update_entry_property($item['entry_id'], "payment_method", $payment_method);
 
                         if ($switched) {
@@ -1297,11 +1292,11 @@ function bb_cart_post_purchase_actions($entry, $form){
             // Add payment details to the entry of the checkout form
             $entry['payment_amount'] = $total_amount;
             $entry['payment_status'] = $transaction_status;
-            $entry['payment_date'] = $entry['date_created'];
+            $entry['payment_date'] = $transaction_date;
             $entry['payment_method'] = $payment_method;
             GFAPI::update_entry_property($entry['id'], "payment_amount", $total_amount);
             GFAPI::update_entry_property($entry['id'], "payment_status", $transaction_status);
-            GFAPI::update_entry_property($entry['id'], "payment_date",   $entry['date_created']);
+            GFAPI::update_entry_property($entry['id'], "payment_date",   $transaction_date);
             GFAPI::update_entry_property($entry['id'], "payment_method", $payment_method);
             gform_update_meta($entry['id'], 'gform_product_info__', $gf_line_items);
             gform_update_meta($entry['id'], 'gform_product_info_1_', $gf_line_items);
@@ -1316,7 +1311,7 @@ function bb_cart_post_purchase_actions($entry, $form){
                 $action['transaction_id']   = $transaction_id;
                 $action['amount']           = $total_amount;
                 $action['entry_id']         = $entry['id'];
-                $action['payment_date']     = gmdate('y-m-d H:i:s');
+                $action['payment_date']     = $transaction_date;
                 $action['payment_method']	= $payment_method;
                 $action['ready_to_fulfill'] = !$entry['is_fulfilled'] ? true : false;
                 GFAPI::send_notifications($form, $entry, rgar($action, 'type'), array('payment_action' => $action));
@@ -1771,12 +1766,13 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
  * @param int $transaction_id Transaction post ID
  * @param string $date Date of payment (Y-m-d H:i:s)
  * @param array $entry Optional GF entry. If not specified entry will be loaded from transaction meta
+ * @param boolean $force Optional Whether to force the update. If false (default) it will only run if the entry has not yet been marked as Approved.
  */
-function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = null) {
+function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = null, $force = false) {
     if (is_null($entry)) {
         $entry = GFAPI::get_entry(get_post_meta($transaction_id, 'gf_entry_id', true));
     }
-    if ($entry['payment_status'] != 'Approved') {
+    if ($force || $entry['payment_status'] != 'Approved') {
         wp_publish_post($transaction_id);
         $entry['payment_status'] = 'Approved';
         $entry['payment_date'] = $date;
