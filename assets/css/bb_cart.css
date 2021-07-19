@@ -2,3 +2,4 @@
 .bb-table th {text-align: left;}
 .bb-table .tax, .bb_cart_total .tax {font-size: 0.75rem;}
 #table_fund_code_report.fund_code_detail {max-width: 100%; white-space: nowrap; overflow: hidden; overflow-x: scroll; display: block;}
+.wp-list-table .column-taxonomy-fundcode {width: 10%;}
