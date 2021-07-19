@@ -1,21 +1,21 @@
 <?php
 class bb_cart_export {
-    private $slug = 'bb_cart_export';
+	private $slug = 'bb_cart_export';
 
-    public function __construct() {
-        if (is_admin()) {
-            add_action('admin_menu', array($this, 'add_plugin_page'));
-            if ($_GET['page'] == $this->slug && $_GET['export'] == 'csv') {
-                add_action('init', array($this, 'export_csv'));
-            }
-        }
-    }
+	public function __construct() {
+		if (is_admin()) {
+			add_action('admin_menu', array($this, 'add_plugin_page'));
+			if ($_GET['page'] == $this->slug && $_GET['export'] == 'csv') {
+				add_action('init', array($this, 'export_csv'));
+			}
+		}
+	}
 
-    public function add_plugin_page() {
-        add_submenu_page('bb_cart_settings', 'Export Transactions', 'Export Transactions', 'add_users', $this->slug, array($this, 'create_admin_page'));
-    }
+	public function add_plugin_page() {
+		add_submenu_page('bb_cart_settings', 'Export Transactions', 'Export Transactions', 'add_users', $this->slug, array($this, 'create_admin_page'));
+	}
 
-    public function create_admin_page() {
+	public function create_admin_page() {
 ?>
 <div class="wrap">
     <h2>Export Transactions</h2>
@@ -29,6 +29,26 @@ class bb_cart_export {
             <tr>
                 <th><label for="input_end_date">End Date</label></th>
                 <td><input required name="end_date" id="input_end_date" type="date" value="<?php echo current_time('Y-m-d'); ?>"></td>
+            </tr>
+            <tr>
+                <th><label for="input_fund_code">Fund Code</label></th>
+                <td>
+                    <select id="input_fund_code" name="fund_code">
+                    	<option value="" selected>All</option>
+<?php
+    $args = array(
+            'post_type' => 'fundcode',
+            'posts_per_page' => -1,
+            'orderby' => 'post_title',
+            'order' => 'ASC',
+    );
+    $fund_codes = get_posts($args);
+    foreach ($fund_codes as $fund_code) {
+        echo '                    	<option value="'.$fund_code->ID.'">'.$fund_code->post_title.'</option>'."\n";
+    }
+?>
+                    </select>
+                </td>
             </tr>
             <tr>
                 <th><label>Which transactions do you want to export?</label></th>
@@ -142,7 +162,19 @@ class bb_cart_export {
             $user_meta = get_user_meta($user->ID);
             $line_items = bb_cart_get_transaction_line_items($transaction->ID);
             foreach ($line_items as $line_item) {
-                $fund_code = wp_get_post_terms($line_item->ID, 'fundcode');
+            	$txn_fund_codes = wp_get_object_terms($line_item->ID, 'fundcode');
+            	if (!empty($txn_fund_codes)) {
+            		$fund_code_term = array_shift($txn_fund_codes);
+            		$fund_code = $fund_code_term->name;
+            	} else {
+            		$fund_code = get_post_meta($line_item->ID, 'fund_code', true);
+            	}
+            	if (empty($fund_code)) {
+            		$fund_code = 'Blank/Unknown';
+            	}
+                if (!empty($_POST['fund_code']) && get_the_title((int)$_POST['fund_code']) !== $fund_code) {
+                	continue;
+                }
                 $first_name = $user->first_name;
                 if ($first_name == 'Unknown') {
                     if (!empty($user_meta['organization'][0])) {
@@ -167,7 +199,7 @@ class bb_cart_export {
                         'Postcode' => $user_meta['bbconnect_address_postal_code_1'][0],
                         'State' => $user_meta['bbconnect_address_state_1'][0],
                         'Country' => $user_meta['bbconnect_address_country_1'][0],
-                        'Fund Code' => $fund_code[0]->name,
+                		'Fund Code' => $fund_code,
                 		'Description' => $line_item->post_content,
                         'Amount' => get_post_meta($line_item->ID, 'price', true),
                         'Receipted' => get_post_meta($transaction->ID, 'is_receipted', true) == 'true' ? 'Y' : 'N',
@@ -179,6 +211,12 @@ class bb_cart_export {
             if ($_POST['input_mark_receipted'] == 'yes') {
                 update_post_meta($transaction->ID, 'is_receipted', 'true');
             }
+        }
+
+        // Check again here for matching records in case we were filtering by fund code
+        // We check for a count of 1 because it will always already include the header row
+        if (count($csv) <= 1) {
+        	wp_die('No matching transactions found.');
         }
 
         $fp = fopen('php://output', 'w+');
@@ -266,4 +304,4 @@ class bb_cart_export {
     }
 }
 
-$bb_cart_export = new bb_cart_export();
+new bb_cart_export();
