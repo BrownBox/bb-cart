@@ -219,7 +219,7 @@ class bb_cart_batch_management {
     private function edit_batch_page($back_url) {
         $batch_id = (int)$_GET['batch'];
         $batch = get_post($batch_id);
-        $can_edit = $can_delete = current_user_can('manage_options') && $batch->post_status == 'pending';
+        $can_edit = $can_delete = current_user_can('manage_options');
         $can_edit_users = current_user_can('edit_users');
         $ajax_url = admin_url('admin-ajax.php');
 
