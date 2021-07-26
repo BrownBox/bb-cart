@@ -1941,6 +1941,9 @@ function bb_cart_gfpdf_pdf_html_output($html, $form, $entry, $settings, $Helper_
 
 add_filter('gform_product_info', 'bb_cart_gf_product_info', 10, 3);
 function bb_cart_gf_product_info($product_info, $form, $entry) {
+	if (!bb_cart_is_checkout_form($form)) {
+		return $product_info;
+	}
     $gf_line_items = array();
     if (!is_admin() && !empty($_SESSION[BB_CART_SESSION_ITEM])) {
         $cart_items = $_SESSION[BB_CART_SESSION_ITEM];
