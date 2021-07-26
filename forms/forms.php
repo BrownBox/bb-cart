@@ -506,7 +506,7 @@ function bb_cart_get_checkout_form(){
                             'queryString' => 'n={Name (First):1.3}&e={entry_id}&f={form_id}',
                     ),
             ),
-            'fields' => array( // Next field ID: 54
+            'fields' => array( // Next field ID: 55
                     array(
                             'type' => 'checkbox',
                             'id' => 28,
@@ -1289,6 +1289,15 @@ Your details will also allow us to give you a personal reference number to inclu
                             'inputName' => 'bb_donation_frequency',
                             'visibility' => 'visible',
                     ),
+            		array(
+            				'type' => 'hidden',
+            				'id' => 54,
+            				'label' => 'Max Payments',
+            				'isRequired' => false,
+            				'allowsPrepopulate' => true,
+            				'inputName' => 'bb_max_payments',
+            				'visibility' => 'visible',
+            		),
                     array(
                             'type' => 'hidden',
                             'id' => 26,
