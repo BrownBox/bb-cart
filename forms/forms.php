@@ -995,7 +995,7 @@ Your details will also allow us to give you a personal reference number to inclu
                                     ),
                                     2 =>  array(
                                             'id' => '50.3',
-                                            'label' => 'City',
+                                            'label' => 'Suburb',
                                     ),
                                     3 =>  array(
                                             'id' => '50.4',
@@ -1081,7 +1081,7 @@ Your details will also allow us to give you a personal reference number to inclu
                                     ),
                                     2 =>  array(
                                             'id' => '2.3',
-                                            'label' => 'City',
+                                            'label' => 'Suburb',
                                     ),
                                     3 =>  array(
                                             'id' => '2.4',
