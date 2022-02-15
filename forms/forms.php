@@ -279,6 +279,7 @@ function bb_cart_get_donate_form() {
                                             'name' => '',
                                     )
                             ),
+                    		'allowsPrepopulate' => true,
                             'inputName' => 'bb_donation_amounts',
                             'enableOtherChoice' => true,
                             'field_bb_click_array_other_label' => 'My Best Gift',
