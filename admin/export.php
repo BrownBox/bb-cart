@@ -5,7 +5,7 @@ class bb_cart_export {
 	public function __construct() {
 		if (is_admin()) {
 			add_action('admin_menu', array($this, 'add_plugin_page'));
-			if ($_GET['page'] == $this->slug && $_GET['export'] == 'csv') {
+			if (isset($_GET['page']) && $_GET['page'] == $this->slug && $_GET['export'] == 'csv') {
 				add_action('init', array($this, 'export_csv'));
 			}
 		}
