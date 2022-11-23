@@ -11,11 +11,15 @@ function bb_cart_post_process($form, $page_number, $source_page_number) {
 				'address_country' => rgpost('input_5_6'),
 		);
 
-		// Hack to get country code
-		foreach ($form['fields'] as $field) {
-			if ($field->type == 'address') {
-				$shipping_address['address_country_code'] = $field->get_country_code($shipping_address['address_country']);
-				break;
+		if (strlen($shipping_address['address_country']) == 2) {
+			$shipping_address['address_country_code'] = $shipping_address['address_country'];
+		} else {
+			// Hack to get country code
+			foreach ($form['fields'] as $field) {
+				if ($field->type == 'address') {
+					$shipping_address['address_country_code'] = $field->get_country_code($shipping_address['address_country']);
+					break;
+				}
 			}
 		}
 
