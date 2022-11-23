@@ -342,6 +342,9 @@ function bb_cart_section_total($section = 'donations', $include_shipping = true,
 				}
 			}
 			$section_total = $section_total/100;
+			if ($include_shipping && apply_filters('bb_cart_section_incurs_shipping', false, $section)) {
+				$section_total += bb_cart_calculate_shipping($section_total);
+			}
 			return $section_total;
 			break;
 	}
@@ -2174,6 +2177,29 @@ function bb_cart_table($purpose = 'table', array $cart_items = array(), $total =
 								$html .= '&nbsp;';
 							}
 							$html .= '</td>'."\n";
+						}
+						$html .= '</tr>'."\n";
+					}
+					if (apply_filters('bb_cart_section_incurs_shipping', false, $section)) {
+						if (is_null($shipping)) {
+							$shipping = bb_cart_calculate_shipping($product_total);
+						}
+						$shipping_tax = 0;
+						if (is_numeric($shipping)) {
+							$shipping_tax = bb_cart_calculate_shipping_tax($shipping);
+							$total_tax += $shipping_tax;
+							$shipping = bb_cart_format_currency($shipping);
+						}
+						if (empty($shipping_label)) {
+							$shipping_label = bb_cart_shipping_label();
+						}
+						if (!empty($shipping_tax)) {
+							$shipping .= '<br><span class="tax">incl. '.bb_cart_format_currency(bb_cart_calculate_shipping_tax()).' '.__('Tax', 'woocommerce').'</span>';
+						}
+						$html .= '<tr><td>'.$shipping_label.'</td>'."\n";
+						$html .= '<td style="text-align: right;">'.$shipping.'</td>'."\n";
+						if ($purpose != 'email') {
+							$html .= '<td>&nbsp;</td>'."\n";
 						}
 						$html .= '</tr>'."\n";
 					}
