@@ -1018,7 +1018,12 @@ function bb_cart_post_purchase_actions($entry, $form){
 			$donation_amount = 0;
 			$payment_method = 'Credit Card';
 			$transaction_type = 'online';
-			$transaction_date = $entry['date_created'];
+
+			// GF always stores dates in UTC - need to convert to local time
+			$entry_date = new DateTime($entry['date_created'], new DateTimeZone('UTC'));
+			$entry_date->setTimezone(wp_timezone());
+			$transaction_date = $entry_date->format('Y-m-d H:i:s');
+
 			$currency = bb_cart_get_default_currency();
 			$shipping_label = bb_cart_shipping_label();
 			$bb_line_items = array();
