@@ -1682,7 +1682,7 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 	$ipn_date->setTimezone($timezone);
 	if ($transaction) {
 		$transaction_date = new DateTime($transaction->post_date, $timezone);
-		if ($transaction_date->format('Ymd') == $ipn_date->format('Ymd')) {
+		if (abs($transaction_date->format('Ymd') - $ipn_date->format('Ymd')) <= 1) { // Check if it's within 1 day to allow for timezone issues
 			bb_cart_complete_pending_transaction($transaction->ID, current_time('mysql'), $entry);
 			return;
 		}
