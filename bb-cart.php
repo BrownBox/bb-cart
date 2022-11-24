@@ -1109,12 +1109,17 @@ function bb_cart_post_purchase_actions($entry, $form){
 				}
 			}
 
+			$payment_complete = true;
 			if (in_array(strtolower($payment_method), array('direct debit', 'paypal')) || strtotime($transaction_date) > strtotime(current_time('mysql'))) {
-				$post_status = 'draft';
-				$transaction_status = 'Pending';
-			} else {
+				$payment_complete = false;
+			}
+			$payment_complete = apply_filters('bb_cart_payment_complete', $payment_complete, $payment_method, $transaction_date, $cart_items);
+			if ($payment_complete) {
 				$post_status = 'publish';
 				$transaction_status = 'Approved';
+			} else {
+				$post_status = 'draft';
+				$transaction_status = 'Pending';
 			}
 
 			// Create post object
