@@ -2,7 +2,7 @@
 /**
  * Plugin Name: BB Cart
  * Description: A cart system for Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
- * Version: 3.8.0
+ * Version: 3.8.1
  * Author: Spark Web Solutions
  * Author URI: https://sparkweb.com.au
  */
