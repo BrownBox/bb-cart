@@ -199,15 +199,20 @@ function bb_cart_remove_item_from_cart() {
 				$woo_cart_item = $_SESSION[BB_CART_SESSION_ITEM][$section][$item]['cart_item_key'];
 				WC()->cart->remove_cart_item($woo_cart_item);
 			}
+			$removed_item = $_SESSION[BB_CART_SESSION_ITEM][$section][$item];
+			$removed_section = $section;
 			unset($_SESSION[BB_CART_SESSION_ITEM][$section][$item]);
 
 			if (empty($_SESSION[BB_CART_SESSION_ITEM][$section])) {
 				unset($_SESSION[BB_CART_SESSION_ITEM][$section]);
 			}
 		} else {
+			$removed_item = $_SESSION[BB_CART_SESSION_ITEM][$item];
+			$removed_section = null;
 			unset($_SESSION[BB_CART_SESSION_ITEM][$item]);
 		}
-		wp_redirect(remove_query_arg('remove_item'));
+		$redirect = apply_filters('bb_cart_remove_item_from_cart_redirect', remove_query_arg('remove_item'), $removed_item, $removed_section);
+		wp_redirect($redirect);
 		exit;
 	}
 }
