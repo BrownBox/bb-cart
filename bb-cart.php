@@ -1573,22 +1573,24 @@ function bb_cart_get_transaction_from_line_item($line_item) {
  * @return WP_Post|false Matching transaction if found, otherwise false
  */
 function bb_cart_get_transaction_from_entry($entry_id) {
-	$args = array(
-			'post_type' => 'transaction',
-			'post_status' => 'any',
-			'posts_per_page' => 1,
-			'orderby' => 'date',
-			'order' => 'ASC',
-			'meta_query' => array(
-					array(
-							'key' => 'gf_entry_id',
-							'value' => $entry_id,
-					),
-			),
-	);
-	$transactions = get_posts($args);
-	if (count($transactions)) {
-		return array_shift($transactions);
+	if (!empty($entry_id)) {
+		$args = array(
+				'post_type' => 'transaction',
+				'post_status' => 'any',
+				'posts_per_page' => 1,
+				'orderby' => 'date',
+				'order' => 'ASC',
+				'meta_query' => array(
+						array(
+								'key' => 'gf_entry_id',
+								'value' => $entry_id,
+						),
+				),
+		);
+		$transactions = get_posts($args);
+		if (count($transactions)) {
+			return array_shift($transactions);
+		}
 	}
 	return false;
 }
@@ -2050,7 +2052,8 @@ function bb_cart_gf_product_info($product_info, $form, $entry) {
 					break;
 			}
 		}
-	} else {
+		return $gf_line_items;
+	} elseif (!empty($entry['id'])) {
 		$transaction = bb_cart_get_transaction_from_entry($entry['id']);
 		if ($transaction instanceof WP_Post) {
 			$line_items = bb_cart_get_transaction_line_items($transaction->ID);
@@ -2069,11 +2072,10 @@ function bb_cart_gf_product_info($product_info, $form, $entry) {
 					);
 				}
 			}
-		} else {
-			return $product_info;
+			return $gf_line_items;
 		}
 	}
-	return $gf_line_items;
+	return $product_info;
 }
 
 function bb_cart_shortcode() {
