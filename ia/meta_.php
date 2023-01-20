@@ -21,34 +21,38 @@ class metaClass {
     }
 
     function bb_metabox_content( $post ) {
-        $meta_fields = array();
-
-        wp_nonce_field(plugin_basename( __FILE__ ), 'bb_metabox_content_nonce');
-
-        foreach ($this->fields as $field) {
-            array_push($meta_fields, $this->bb_new_field($field));
-        }
-
-        set_transient($this->slug.'_meta_fields', maybe_serialize($meta_fields), 3600);
+    	wp_nonce_field(plugin_basename( __FILE__ ), 'bb_metabox_content_nonce');
+    	foreach ($this->fields as $field) {
+    		$this->bb_new_field($field);
+    	}
     }
 
     function bb_metabox_save( $post_id ) {
-        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-            return;
-        }
+    	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+    		return;
+    	}
 //         if (!wp_verify_nonce($_POST['bb_metabox_content_nonce'], plugin_basename(__FILE__))) {
 //             return;
 //         }
-        if ('page' == $_POST['post_type'] && (!current_user_can('edit_page', $post_id) || !current_user_can('edit_post', $post_id))) {
-            return;
-        }
+    	if ('page' == $_POST['post_type'] && (!current_user_can('edit_page', $post_id) || !current_user_can('edit_post', $post_id))) {
+    		return;
+    	}
 
-        $meta_fields = maybe_unserialize(get_transient($this->slug.'_meta_fields'));
-        if (is_array($meta_fields)) {
-            foreach ($meta_fields as $meta_field) {
-                update_post_meta($post_id, $meta_field, sanitize_text_field($_POST[$meta_field]));
-            }
-        }
+    	foreach ($this->fields as $meta_field) {
+    		$value = $_POST[$meta_field['field_name']];
+    		switch ($meta_field['type']) {
+    			case 'wp-editor':
+    				$value = wp_kses_post($value);
+    				break;
+    			case 'textarea':
+    				$value = sanitize_textarea_field($value);
+    				break;
+    			default:
+    				$value = sanitize_text_field($value);
+    				break;
+    		}
+    		update_post_meta($post_id, $meta_field['field_name'], maybe_serialize($value));
+    	}
     }
 
     function bb_meta_columns($columns) {
