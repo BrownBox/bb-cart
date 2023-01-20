@@ -403,7 +403,7 @@ function bb_cart_deductible_donation_total($value = '') {
 			}
 		}
 	}
-	return number_format($value, 2);
+	return round($value, 2);
 }
 
 add_filter("gform_field_value_bb_cart_non_deductible_donation_total", "bb_cart_non_deductible_donation_total");
@@ -416,7 +416,7 @@ function bb_cart_non_deductible_donation_total($value = '') {
 			}
 		}
 	}
-	return number_format($value, 2);
+	return round($value, 2);
 }
 
 add_filter("gform_field_value_bb_cart_deductible_purchase_total", "bb_cart_deductible_purchase_total");
@@ -429,7 +429,7 @@ function bb_cart_deductible_purchase_total($value = '') {
 			}
 		}
 	}
-	return number_format($value, 2);
+	return round($value, 2);
 }
 
 add_filter("gform_field_value_bb_cart_non_deductible_purchase_total", "bb_cart_non_deductible_purchase_total");
@@ -443,7 +443,7 @@ function bb_cart_non_deductible_purchase_total($value = '') {
 		}
 	}
 	$value += bb_cart_calculate_shipping();
-	return number_format($value, 2);
+	return round($value, 2);
 }
 
 function bb_cart_has_donation() {
