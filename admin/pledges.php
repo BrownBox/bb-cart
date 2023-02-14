@@ -48,7 +48,10 @@ function bb_cart_pledges() {
             $name = $donor->display_name;
             $email = $donor->user_email;
         } else {
-            $entry = GFAPI::get_entry(get_post_meta($pledge->ID, 'gf_entry_id', true));
+        	$entry = GFAPI::get_entry(get_post_meta($pledge->ID, 'gf_entry_id', true));
+        	if (!$entry) {
+        		continue;
+        	}
             $form = GFAPI::get_form($entry['form_id']);
             foreach ($form['fields'] as $field) {
                 switch ($field->type) {
