@@ -21,7 +21,7 @@ class metaClass {
     }
 
     function bb_metabox_content( $post ) {
-    	wp_nonce_field(plugin_basename( __FILE__ ), 'bb_metabox_content_nonce');
+    	wp_nonce_field(plugin_basename( __FILE__ ), 'bb_cart_metabox_content_nonce');
     	foreach ($this->fields as $field) {
     		$this->bb_new_field($field);
     	}
@@ -31,9 +31,12 @@ class metaClass {
     	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
     		return;
     	}
-//         if (!wp_verify_nonce($_POST['bb_metabox_content_nonce'], plugin_basename(__FILE__))) {
-//             return;
-//         }
+    	if (!in_array($_POST['post_type'], $this->posttypes)) {
+    		return;
+    	}
+        if (!wp_verify_nonce($_POST['bb_cart_metabox_content_nonce'], plugin_basename(__FILE__))) {
+            return;
+        }
     	if ('page' == $_POST['post_type'] && (!current_user_can('edit_page', $post_id) || !current_user_can('edit_post', $post_id))) {
     		return;
     	}
