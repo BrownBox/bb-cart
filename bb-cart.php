@@ -819,7 +819,6 @@ function bb_cart_calculate_costs() {
 	$rate = apply_filters('bb_cart_cost_rate', 0.015);
 	$totals = bb_cart_amounts_by_frequency();
 	foreach ($totals as $freq => $total) {
-		var_dump($total);
 		if (!empty($_SESSION[BB_CART_SESSION_ITEM]['other']['costs-'.$freq])) {
 			$total -= $_SESSION[BB_CART_SESSION_ITEM]['other']['costs-'.$freq]['price']/100;
 		}
