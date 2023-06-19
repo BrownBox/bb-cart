@@ -193,7 +193,7 @@ switch ($data['event']) {
 						'post_modified' => current_time('mysql'),
 				);
 				if ($transaction_details) {
-					$prev_amount = get_post_meta($transaction_details->ID, 'total_amount');
+					$prev_amount = get_post_meta($transaction_details->ID, 'total_amount', true);
 					if ($prev_amount == $amount) {
 						update_post_meta($transaction_id, 'donation_amount', get_post_meta($transaction_details->ID, 'donation_amount', true)); // Subscriptions should generally be donations but just to be safe...
 					}
