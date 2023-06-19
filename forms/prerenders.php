@@ -282,7 +282,7 @@ function bb_cart_populate_payment_method_choices($choices, $form, $field) {
 
 add_filter('gform_pre_render', 'bb_cart_populate_shipping_address');
 function bb_cart_populate_shipping_address($form) {
-	if (in_array('bb_cart_checkout', explode(' ', $form['cssClass']))) {
+	if (count(array_intersect(array('bb_cart_shipping', 'bb_cart_checkout'), explode(' ', $form['cssClass']))) > 0) {
 		if (!empty($_SESSION[BB_CART_SESSION_SHIPPING_ADDRESS])) {
 			$shipping_address = $_SESSION[BB_CART_SESSION_SHIPPING_ADDRESS];
 			foreach ($form['fields'] as &$field) {
