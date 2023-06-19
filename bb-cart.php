@@ -164,7 +164,7 @@ function bb_cart_end_session() {
 	if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
 		unset($_SESSION[BB_CART_SESSION_ITEM]);
 	}
-	bb_cart_reset_shipping();
+	bb_cart_reset_shipping(true);
 }
 
 add_action('wp_logout', 'bb_cart_end_session');
@@ -211,6 +211,7 @@ function bb_cart_remove_item_from_cart() {
 			$removed_section = null;
 			unset($_SESSION[BB_CART_SESSION_ITEM][$item]);
 		}
+		bb_cart_reset_shipping();
 		$redirect = apply_filters('bb_cart_remove_item_from_cart_redirect', remove_query_arg('remove_item'), $removed_item, $removed_section);
 		wp_redirect($redirect);
 		exit;
@@ -957,11 +958,11 @@ add_action('woocommerce_add_to_cart', 'bb_cart_reset_shipping');
 add_action('woocommerce_cart_item_removed', 'bb_cart_reset_shipping');
 add_action('woocommerce_cart_item_restored', 'bb_cart_reset_shipping');
 add_action('woocommerce_after_cart_item_quantity_update', 'bb_cart_reset_shipping');
-function bb_cart_reset_shipping() {
+function bb_cart_reset_shipping($hard = false) {
 	if (!empty($_SESSION[BB_CART_SESSION_SHIPPING_TYPE])) {
 		unset($_SESSION[BB_CART_SESSION_SHIPPING_TYPE]);
 	}
-	if (!empty($_SESSION[BB_CART_SESSION_SHIPPING_ADDRESS])) {
+	if ($hard && !empty($_SESSION[BB_CART_SESSION_SHIPPING_ADDRESS])) {
 		unset($_SESSION[BB_CART_SESSION_SHIPPING_ADDRESS]);
 	}
 }
