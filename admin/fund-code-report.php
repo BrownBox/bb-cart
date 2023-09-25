@@ -38,7 +38,7 @@ class bb_cart_fund_code_report {
 		} else {
 			echo '<p>Click an amount for a breakdown of donations for that code.</p>'."\n";
 		}
-		echo '<button name="report-download" id="fund_code_report_download" class="button action" style="float: right;"><img src="'.BBCONNECT_URL.'assets/g/excel.png"> Export to Excel</button>'."\n";
+		echo '<button name="report-download" id="fund_code_report_download" class="button action" style="float: right;">Export to Excel</button>'."\n";
 		echo $this->get_date_filter();
 		$this->show_report();
 		echo '<script>'."\n";
