@@ -80,11 +80,11 @@ function bb_cart_populate_donation_for_choices($choices, $form, $field) {
 	if (class_exists('Brownbox\Config\BB_Cart') && !empty(Brownbox\Config\BB_Cart::$donation_for_choices)) {
 		$choices = array();
 		global $post;
-		if (isset(Brownbox\Config\BB_Cart::$member) && !empty(Brownbox\Config\BB_Cart::$member['post_type']) && Brownbox\Config\BB_Cart::$member['post_type'] == $post->post_type) {
+		if (isset(Brownbox\Config\BB_Cart::$member) && !empty(Brownbox\Config\BB_Cart::$member['post_type']) && $post instanceof WP_Post && Brownbox\Config\BB_Cart::$member['post_type'] == $post->post_type) {
 			$default = 'sponsorship';
 		} elseif (isset(Brownbox\Config\BB_Cart::$member) && !empty(Brownbox\Config\BB_Cart::$member['user'])) {
 			$default = 'sponsorship';
-		} elseif (isset(Brownbox\Config\BB_Cart::$project) && in_array($post->post_type, Brownbox\Config\BB_Cart::$project)) {
+		} elseif (isset(Brownbox\Config\BB_Cart::$project) && $post instanceof WP_Post && in_array($post->post_type, Brownbox\Config\BB_Cart::$project)) {
 			$default = 'campaign';
 		} else {
 			$default = 'default';
