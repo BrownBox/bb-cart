@@ -1366,7 +1366,9 @@ function bb_cart_post_purchase_actions($entry, $form){
 			gform_update_meta($entry['id'], 'gform_product_info__1', $gf_line_items);
 			gform_update_meta($entry['id'], 'gform_product_info_1_1', $gf_line_items);
 
-			if ($transaction_status == 'Approved') {
+			$send_notifications = $transaction_status == 'Approved';
+			$send_notifications = apply_filters('bb_cart_send_payment_complete_notifications', $send_notifications, $transaction_status, $payment_method);
+			if ($send_notifications) {
 				// Send notifications configured to go on "Payment Completed" event
 				$action = array();
 				$action['id']               = $transaction_id.'_'.$entry['id'];
