@@ -2458,3 +2458,21 @@ function bb_cart_create_missing_transaction_line_items(array $from_date) {
 		update_option('bb_cart_last_transaction_reviewed', $transaction->ID);
 	}
 }
+
+add_action('bb_cart_webhook_paydock_recurring_success', 'bb_cart_paydock_recurring_success', 10, 3);
+function bb_cart_paydock_recurring_success($user, $amount, $transaction_id) {
+	$subject = get_option('bb_cart_recurring_payment_email_subject');
+	$message = get_option('bb_cart_recurring_payment_email_message');
+	if (!empty($subject) && !empty($message)) {
+		$currency = get_post_meta($transaction_id, 'currency', true);
+		$amount = GFCommon::to_money($amount, $currency);
+		$replace = array(
+			'{first_name}' => $user->user_firstname,
+			'{amount}' => $amount,
+		);
+		$subject = str_replace(array_keys($replace), $replace, $subject);
+		$message = wpautop(str_replace(array_keys($replace), $replace, $message));
+		add_filter('wp_mail_content_type', function($type) {return 'text/html';});
+		wp_mail($user->user_email, $subject, $message);
+	}
+}
