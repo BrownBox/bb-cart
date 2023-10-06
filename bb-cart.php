@@ -1762,7 +1762,7 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 		update_post_meta($transaction_id, 'subscription_id', $ipn_post['subscr_id']);
 
 		$form = GFAPI::get_form($entry['form_id']);
-		$batch_id = bb_cart_get_web_batch($new_transaction->post_date, $form, $entry, 'paypal');
+		$batch_id = bb_cart_get_web_batch($new_transaction['post_date'], $form, $entry, 'paypal');
 		update_post_meta($transaction_id, 'batch_id', $batch_id);
 
 		$transaction_term = get_term_by('slug', $transaction_id, 'transaction'); // Have to pass term ID rather than slug
@@ -1882,6 +1882,7 @@ function bb_cart_cancel_pending_transaction($transaction_id, $message, $entry = 
 		$entry = GFAPI::get_entry(get_post_meta($transaction_id, 'gf_entry_id', true));
 	}
 	if ($entry['payment_status'] != 'Failed') {
+		$transaction = get_post($transaction_id);
 		$transaction->post_content .= "\n\nTransaction marked as cancelled. Message: ".$message;
 		wp_trash_post($transaction_id);
 		GFAPI::update_entry_property($entry['id'], "payment_status", 'Failed');

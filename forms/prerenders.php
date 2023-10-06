@@ -123,6 +123,9 @@ function bb_cart_populate_interval_choices($choices, $form, $field) {
  */
 add_filter('bb_cart_currency_choices', 'bb_cart_populate_currency_choices', 1, 3);
 function bb_cart_populate_currency_choices($choices, $form, $field) {
+	if (!is_array($choices)) {
+		$choices = array();
+	}
 	if (!empty($_SESSION[BB_CART_SESSION_ITEM])) {
 		// If cart not empty, always use the previously selected currency
 		$choices = array(
