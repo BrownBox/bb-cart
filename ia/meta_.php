@@ -119,7 +119,7 @@ class metaClass {
         echo ' <div style="display:block;width:100%;padding-bottom:5px;">' . "\n";
         switch ($type) {
             case 'checkbox':
-                $checked = ($source == 'meta' && get_post_meta($_GET[post], $field_name, true) == 'true') ? 'checked="checked"' : '';
+                $checked = ($source == 'meta' && get_post_meta($_GET['post'], $field_name, true) == 'true') ? 'checked="checked"' : '';
                 if ($source == 'option') {
                     $option = get_option($group);
                     $value = $option[$name];
@@ -130,7 +130,7 @@ class metaClass {
 
             case 'textarea':
                 if ($source == 'meta')
-                    $value = get_post_meta($_GET[post], $field_name, true);
+                    $value = get_post_meta($_GET['post'], $field_name, true);
                 if ($source == 'option') {
                     $option = get_option($group);
                     $value = $option[$name];
@@ -152,7 +152,7 @@ class metaClass {
                 //		array ( 'label' => 'aaa', 'value' => '1' ),
                 //		array ( 'label' => 'aaa', 'value' => '1' ),
                 //		);
-                $current = get_post_meta($_GET[post], $field_name, true);
+                $current = get_post_meta($_GET['post'], $field_name, true);
                 echo '	<sub style="color:rgba(0,0,0,0.75);display:block;width:100%;max-width:' . $max_width . ';">' . $title . '</sub>' . "\n";
                 echo '  	<select name="' . $field_name . '" id="' . $field_name . '">' . "\n";
                 foreach ($options as $option)
@@ -162,12 +162,12 @@ class metaClass {
 
             case 'color-picker':
                 echo '	<label for="meta-color" class="prfx-row-title" style="display:block;width:100%;max-width:' . $max_width . ';">' . $title . '</label>' . "\n";
-                echo '	<input name="' . $field_name . '" type="text" value="' . get_post_meta($_GET[post], $field_name, true) . '" class="meta-color" />' . "\n";
+                echo '	<input name="' . $field_name . '" type="text" value="' . get_post_meta($_GET['post'], $field_name, true) . '" class="meta-color" />' . "\n";
                 break;
 
             case 'wp-editor':
                 if ($source == 'meta')
-                    $value = get_post_meta($_GET[post], $field_name, true);
+                    $value = get_post_meta($_GET['post'], $field_name, true);
                 if ($source == 'option') {
                     $option = get_option($group);
                     $value = $option[$name];
@@ -180,7 +180,7 @@ class metaClass {
             case 'text':
             default:
                 if ($source == 'meta')
-                    $value = get_post_meta($_GET[post], $field_name, true);
+                    $value = get_post_meta($_GET['post'], $field_name, true);
                 if ($source == 'option') {
                     $option = get_option($group);
                     $value = $option[$name];
