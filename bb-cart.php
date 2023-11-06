@@ -672,7 +672,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
 				$cart_item['deductible'] = $deductible;
 				$cart_item['transaction_type'] = $transaction_type;
 
-				$_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section);
+				$_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section, $form, $entry);
 			}
 			$quantity = $old_quantity;
 			$label = $old_label;
@@ -746,7 +746,7 @@ function bb_cart_check_for_cart_additions($entry, $form){
 				$cart_item['deductible'] = $deductible;
 				$cart_item['transaction_type'] = $transaction_type;
 
-				$_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section);
+				$_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section, $form, $entry);
 			}
 			$quantity = $old_quantity;
 			$label = $old_label;
@@ -785,7 +785,7 @@ function bb_cart_add_from_querystring() {
 					'quantity' => 1,
 					'sku' => $sku,
 			);
-			$_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section);
+			$_SESSION[BB_CART_SESSION_ITEM][$section][] = apply_filters('bb_cart_new_cart_item', $cart_item, $section, $form, $entry);
 		}
 		wp_redirect(remove_query_arg(array('add_to_cart', 'sku', 'frequency', 'label', 'type')));
 		exit;
