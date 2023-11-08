@@ -1027,8 +1027,9 @@ function bb_cart_post_purchase_actions($entry, $form){
 			$payment_method = 'Credit Card';
 			$transaction_type = 'online';
 
-			// GF always stores dates in UTC - need to convert to local time
 			$entry_date = new DateTime($entry['date_created'], new DateTimeZone('UTC'));
+			$payment_date = $entry_date->format('Y-m-d H:i:s');
+			// GF always stores dates in UTC - need to convert to local time for transaction record
 			$entry_date->setTimezone(wp_timezone());
 			$transaction_date = $entry_date->format('Y-m-d H:i:s');
 
@@ -1342,7 +1343,7 @@ function bb_cart_post_purchase_actions($entry, $form){
 						// Add payment details to the entry of the donate form
 						GFAPI::update_entry_property($item['entry_id'], "payment_status", $transaction_status);
 						GFAPI::update_entry_property($item['entry_id'], "payment_amount", $item['price']/100);
-						GFAPI::update_entry_property($item['entry_id'], "payment_date",   $transaction_date);
+						GFAPI::update_entry_property($item['entry_id'], "payment_date",   $payment_date);
 						GFAPI::update_entry_property($item['entry_id'], "payment_method", $payment_method);
 
 						if ($switched) {
@@ -1355,11 +1356,11 @@ function bb_cart_post_purchase_actions($entry, $form){
 			// Add payment details to the entry of the checkout form
 			$entry['payment_amount'] = $total_amount;
 			$entry['payment_status'] = $transaction_status;
-			$entry['payment_date'] = $transaction_date;
+			$entry['payment_date'] = $payment_date;
 			$entry['payment_method'] = $payment_method;
 			GFAPI::update_entry_property($entry['id'], "payment_amount", $total_amount);
 			GFAPI::update_entry_property($entry['id'], "payment_status", $transaction_status);
-			GFAPI::update_entry_property($entry['id'], "payment_date",   $transaction_date);
+			GFAPI::update_entry_property($entry['id'], "payment_date",   $payment_date);
 			GFAPI::update_entry_property($entry['id'], "payment_method", $payment_method);
 			gform_update_meta($entry['id'], 'gform_product_info__', $gf_line_items);
 			gform_update_meta($entry['id'], 'gform_product_info_1_', $gf_line_items);
@@ -1837,7 +1838,7 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
 /**
  * Mark a pending transaction (pledge) as complete/paid
  * @param int $transaction_id Transaction post ID
- * @param string $date Date of payment (Y-m-d H:i:s)
+ * @param string $date Date of payment (Y-m-d H:i:s). Expected to be in local timezone.
  * @param array $entry Optional GF entry. If not specified entry will be loaded from transaction meta
  * @param boolean $force Optional Whether to force the update. If false (default) it will only run if the entry has not yet been marked as Approved.
  */
@@ -1847,10 +1848,14 @@ function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = n
 	}
 	if ($force || $entry['payment_status'] != 'Approved') {
 		wp_publish_post($transaction_id);
+
+		// GF always stores dates in UTC so we need to convert it from local
+		$payment_date = new DateTime($date, wp_timezone());
+		$payment_date->setTimezone(new DateTimeZone('UTC'));
 		$entry['payment_status'] = 'Approved';
-		$entry['payment_date'] = $date;
+		$entry['payment_date'] = $payment_date->format('Y-m-d H:i:s');
 		GFAPI::update_entry_property($entry['id'], "payment_status", 'Approved');
-		GFAPI::update_entry_property($entry['id'], "payment_date", $date);
+		GFAPI::update_entry_property($entry['id'], "payment_date", $payment_date->format('Y-m-d H:i:s'));
 		$form = GFAPI::get_form($entry['form_id']);
 		foreach ($form['fields'] as $field) {
 			if ($field->inputName == 'bb_cart_checkout_items_array' && !empty($entry[$field->id])) {
@@ -1858,7 +1863,7 @@ function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = n
 				foreach ($item_entries as $item_entry) {
 					if (!empty($item_entry)) {
 						GFAPI::update_entry_property($item_entry, "payment_status", 'Approved');
-						GFAPI::update_entry_property($item_entry, "payment_date", $date);
+						GFAPI::update_entry_property($item_entry, "payment_date", $payment_date->format('Y-m-d H:i:s'));
 					}
 				}
 			}
