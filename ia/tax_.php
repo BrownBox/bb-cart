@@ -1,6 +1,12 @@
 <?php
 namespace bb_cart;
 class taxClass {
+	var $plural;
+	var $singular;
+	var $taxonomy;
+	var $args;
+	var $posttypes;
+
     function __construct($singular, $plural, array $posttypes, array $args = array(), $slug = '') {
         $this->plural = $plural;
         $this->singular = $singular;

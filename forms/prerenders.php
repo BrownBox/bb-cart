@@ -261,7 +261,7 @@ function bb_cart_populate_donation_campaign_choices($choices, $form, $field) {
 			$choices[] = array(
 					'text' => $label,
 					'value' => $campaign_id,
-					'isSelected' => $post->ID == $project->ID,
+					'isSelected' => ($post instanceof WP_Post && $post->ID == $project->ID),
 			);
 		}
 	}

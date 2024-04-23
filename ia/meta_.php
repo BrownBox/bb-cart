@@ -1,6 +1,12 @@
 <?php
 namespace bb_cart;
 class metaClass {
+	var $label;
+	var $slug;
+	var $posttypes;
+	var $fields;
+	var $metabox_options;
+
     function __construct($label, array $posttypes, array $fields) {
         $this->label = $label;
         $this->slug = str_replace(' ','',strtolower($label));

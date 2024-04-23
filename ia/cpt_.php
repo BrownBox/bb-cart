@@ -1,6 +1,11 @@
 <?php
 namespace bb_cart;
 class cptClass {
+	var $plural;
+	var $singular;
+	var $slug;
+	var $args;
+
     function __construct($singular, $plural, array $args = array(), $slug = '') {
         $this->plural = $plural;
         $this->singular = $singular;

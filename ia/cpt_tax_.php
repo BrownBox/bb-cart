@@ -1,6 +1,9 @@
 <?php
 namespace bb_cart;
 class cptTaxClass extends taxClass {
+	var $cpt;
+	var $tax;
+
 	function __construct($singular, $plural, array $posttypes, array $post_args = array(), array $tax_args = array(), $slug = '') {
 	    $this->cpt = new cptClass($singular, $plural, $post_args, $slug);
 	    $default_tax_args = array(
