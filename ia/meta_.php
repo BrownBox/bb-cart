@@ -37,12 +37,12 @@ class metaClass {
     	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
     		return;
     	}
-    	if (!in_array($_POST['post_type'], $this->posttypes)) {
-    		return;
-    	}
-        if (!wp_verify_nonce($_POST['bb_cart_metabox_content_nonce'], plugin_basename(__FILE__))) {
-            return;
+        if (!isset($_POST['bb_cart_metabox_content_nonce']) || !wp_verify_nonce($_POST['bb_cart_metabox_content_nonce'], plugin_basename(__FILE__))) {
+			return;
         }
+		if (!in_array($_POST['post_type'], $this->posttypes)) {
+			return;
+		}
     	if ('page' == $_POST['post_type'] && (!current_user_can('edit_page', $post_id) || !current_user_can('edit_post', $post_id))) {
     		return;
     	}
