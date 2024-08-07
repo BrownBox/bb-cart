@@ -32,6 +32,7 @@ require_once(BB_CART_DIR.'admin/fund-code-report.php');
 require_once(BB_CART_DIR.'admin/batch-management.php');
 require_once(BB_CART_DIR.'admin/donor-history.php');
 require_once(BB_CART_DIR.'admin/offline-email-receipts.php');
+require_once(BB_CART_DIR.'admin/bbconnect.php');
 // require_once(BB_CART_DIR.'demo/config.class.php');
 
 require_once(BB_CART_DIR.'admin/updates.php');
