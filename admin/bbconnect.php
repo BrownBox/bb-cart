@@ -73,11 +73,12 @@ function bb_cart_bbconnect_field_value($value, $key, $user) {
 					if (empty($fund_code)) {
 						$fund_code = 'Blank/Unknown';
 					}
+					$user_fund_codes[$fund_code] = $fund_code;
 				}
 			} else {
 				$fund_code = get_post_meta($transaction->ID, 'fund_code', true);
+				$user_fund_codes[$fund_code] = $fund_code;
 			}
-			$user_fund_codes[$fund_code] = $fund_code;
 		}
         ksort($user_fund_codes);
         $value = implode('; ', $user_fund_codes);
