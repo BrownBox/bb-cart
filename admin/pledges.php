@@ -48,10 +48,10 @@ function bb_cart_pledges() {
             $name = $donor->display_name;
             $email = $donor->user_email;
         } else {
-        	$entry = GFAPI::get_entry(get_post_meta($pledge->ID, 'gf_entry_id', true));
-        	if (!$entry) {
-        		continue;
-        	}
+			$entry = GFAPI::get_entry(get_post_meta($pledge->ID, 'gf_entry_id', true));
+			if (!$entry) {
+				continue;
+			}
             $form = GFAPI::get_form($entry['form_id']);
             foreach ($form['fields'] as $field) {
                 switch ($field->type) {
@@ -69,7 +69,7 @@ function bb_cart_pledges() {
             <td><?php echo $pledge->post_date; ?></td>
             <td><?php echo $name; ?></td>
             <td><?php echo $email; ?></td>
-            <td style="text-align: right;">$<?php echo number_format(get_post_meta($pledge->ID, 'total_amount', true), 2); ?></td>
+            <td style="text-align: right;">$<?php echo number_format((float)get_post_meta($pledge->ID, 'total_amount', true), 2); ?></td>
             <td><?php echo get_post_meta($pledge->ID, 'payment_method', true); ?></td>
             <td><a onclick="return confirm('Are you sure you want to manually mark this transaction as complete?');" href="admin.php?page=bb_cart_pledges&pledge_id=<?php echo $pledge->ID; ?>&pledge_action=complete" class="dashicons dashicons-yes" title="Mark as won"></a> <a onclick="return confirm('Are you sure you want to manually mark this transaction as failed?');" href="admin.php?page=bb_cart_pledges&pledge_id=<?php echo $pledge->ID; ?>&pledge_action=cancel" class="dashicons dashicons-no-alt" title="Mark as lost"></a></td>
         </tr>
