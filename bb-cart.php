@@ -54,9 +54,9 @@ define('BB_CART_SESSION_SHIPPING_POSTCODE', 'bb_cart_shipping_postcode');
 define('BB_CART_SESSION_SHIPPING_SUBURB', 'bb_cart_shipping_suburb');
 
 // JUST DO SOME SESSION STUFF HERE TO KEEP IT CLEAN + NOT CREATE ANY SESSION PROBLEMS
-add_action('init', 'bb_cart_start_session', 1);
+add_action('init', 'bb_cart_start_session');
 function bb_cart_start_session() {
-	if(!session_id()) {
+	if (!session_id()) {
 		if (is_multisite()) {
 			$domain = network_site_url();
 			$domain = substr($domain, strpos($domain, '//')+2);
@@ -92,7 +92,7 @@ function bb_cart_start_session() {
 
 		// And now make sure all the WC cart items are also in BB Cart
 		if (!empty($wc_cart)) {
-			$currency = get_option('woocommerce_currency');
+			$currency = apply_filters('wcml_get_client_currency', get_option('woocommerce_currency'));
 			if (empty($currency)) {
 				$currency = bb_cart_get_default_currency();
 			}
@@ -559,7 +559,7 @@ function bb_cart_get_default_currency() {
 			}
 		}
 	}
-	return GFCommon::get_currency();
+	return apply_filters('wcml_get_client_currency', GFCommon::get_currency());
 }
 
 // OK NOW WE NEED A POST-SUBMISSION HOOK TO CATCH ANY SUBMISSIONS FROM FORMS WITH 'bb_cart_enable' CHECKED
