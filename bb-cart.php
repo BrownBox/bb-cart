@@ -101,11 +101,7 @@ function bb_cart_start_session() {
 				$fund_code_id = bb_cart_get_fund_code($woo_item['product_id']);
 				$fund_code_deductible = get_post_meta($fund_code_id, 'deductible', true);
 				$deductible = $fund_code_deductible == 'true';
-				$price = $woo_item['line_total'];
-				if (!empty($woo_item['line_tax'])) {
-					$price += $woo_item['line_tax'];
-				}
-				$price /= $woo_item['quantity'];
+				$price = get_post_meta($woo_item['product_id'], '_price', true);
 				$price *= 100;
 				if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
 					foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as &$cart_item) {
@@ -297,16 +293,9 @@ function bb_cart_products_total($include_shipping = true, array $cart_items = ar
 	if (empty($cart_items)) {
 		$cart_items = $_SESSION[BB_CART_SESSION_ITEM];
 	}
-	if (!empty($cart_items['woo']) && function_exists('WC')) {
-		$wc_session = WC()->session;
-		if (is_object($wc_session)) {
-			$cart = $wc_session->get('cart', array());
-			foreach ($cart as $product) {
-				$woo_total += $product['line_total'];
-				if (!empty($product['line_tax'])) {
-					$woo_total += $product['line_tax'];
-				}
-			}
+	if (!empty($cart_items['woo'])) {
+		foreach ($cart_items['woo'] as $product) {
+			$woo_total += ($product['price']*$product['quantity'])/100;
 		}
 
 		// Calculate shipping
