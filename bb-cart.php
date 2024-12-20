@@ -97,11 +97,12 @@ function bb_cart_start_session() {
 				$currency = bb_cart_get_default_currency();
 			}
 			foreach ($wc_cart as $woo_idx => $woo_item) {
-				$label = !empty($woo_item['variation_id']) ? get_the_title($woo_item['variation_id']) : get_the_title($woo_item['product_id']);
+				$_product = apply_filters('woocommerce_cart_item_product', $woo_item['data'], $woo_item, $woo_idx);
+				$label = apply_filters('woocommerce_cart_item_name', $_product->get_name(), $woo_item, $woo_idx);
 				$fund_code_id = bb_cart_get_fund_code($woo_item['product_id']);
 				$fund_code_deductible = get_post_meta($fund_code_id, 'deductible', true);
 				$deductible = $fund_code_deductible == 'true';
-				$price = get_post_meta($woo_item['product_id'], '_price', true);
+				$price = GFCommon::to_number(strip_tags(WC()->cart->get_product_price($_product)), $currency);
 				$price *= 100;
 				if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
 					foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as &$cart_item) {
