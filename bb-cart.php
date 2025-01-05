@@ -76,7 +76,7 @@ function bb_cart_start_session() {
 				unset($_SESSION[BB_CART_SESSION_ITEM]['woo']);
 			}
 		} else {
-			$wc_cart = $wc_session->get('cart', array());
+			$wc_cart = WC()->cart->get_cart();
 			if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
 				// Go through BB Cart Woocommerce items to make sure they're still in the WC cart
 				foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as $idx => $cart_item) {
@@ -367,7 +367,7 @@ function bb_cart_total_quantity($value = '') {
 					if (function_exists('WC')) {
 						$wc_session = WC()->session;
 						if (is_object($wc_session)) {
-							$cart = $wc_session->get('cart', array());
+							$cart = WC()->cart->get_cart();
 							foreach ($cart as $product) {
 								$count += $product['quantity'];
 							}
@@ -1164,7 +1164,7 @@ function bb_cart_post_purchase_actions($entry, $form){
 							if (is_object($wc_session)) {
 								define('WOOCOMMERCE_CHECKOUT',true);
 								WC()->cart->calculate_totals();
-								$woo_cart = $wc_session->get('cart', array());
+								$woo_cart = WC()->cart->get_cart();
 								$WCCheckout = new WC_Checkout();
 								$order_id = $WCCheckout->create_order(array());
 								update_post_meta($transaction_id, 'woocommerce_order_id', $order_id);
