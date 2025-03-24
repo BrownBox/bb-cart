@@ -102,7 +102,7 @@ function bb_cart_start_session() {
 				$fund_code_id = bb_cart_get_fund_code($woo_item['product_id']);
 				$fund_code_deductible = get_post_meta($fund_code_id, 'deductible', true);
 				$deductible = $fund_code_deductible == 'true';
-				$price = GFCommon::to_number(strip_tags(WC()->cart->get_product_price($_product)), $currency);
+				$price = ($woo_item['line_total']+$woo_item['line_tax'])/$woo_item['quantity'];
 				$price *= 100;
 				if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
 					foreach ($_SESSION[BB_CART_SESSION_ITEM]['woo'] as &$cart_item) {
