@@ -128,7 +128,7 @@ class bb_cart_fund_code_report {
 			if (is_array($line_items) && count($line_items) > 0) {
 				foreach ($line_items as $line_item) {
 					$fund_code = $this->get_line_item_fund_code($line_item);
-					$amount = get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
+					$amount = (float)get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
 					if (!isset($totals[$fund_code])) {
 						$totals[$fund_code] = 0;
 					}
@@ -139,7 +139,7 @@ class bb_cart_fund_code_report {
 				if (empty($fund_code)) {
 					$fund_code = 'Blank/Unknown';
 				}
-				$amount = get_post_meta($transaction->ID, 'total_amount', true);
+				$amount = (float)get_post_meta($transaction->ID, 'total_amount', true);
 				if (!isset($totals[$fund_code])) {
 					$totals[$fund_code] = 0;
 				}
@@ -217,7 +217,7 @@ class bb_cart_fund_code_report {
 				foreach ($line_items as $line_item) {
 					$fund_code = $this->get_line_item_fund_code($line_item);
 					if ($fund_code == $this->selected_fund_code) {
-						$amount = get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
+						$amount = (float)get_post_meta($line_item->ID, 'price', true)*get_post_meta($line_item->ID, 'quantity', true);
 						$donor = new WP_User($transaction->post_author);
 						$country = $donor->bbconnect_address_country_1;
 						if (function_exists('bbconnect_helper_country')) {
@@ -251,7 +251,7 @@ class bb_cart_fund_code_report {
 					$fund_code = 'Blank/Unknown';
 				}
 				if ($fund_code == $this->selected_fund_code) {
-					$amount = get_post_meta($transaction->ID, 'total_amount', true);
+					$amount = (float)get_post_meta($transaction->ID, 'total_amount', true);
 					$donor = new WP_User($transaction->post_author);
 					$country = $donor->bbconnect_address_country_1;
 					if (function_exists('bbconnect_helper_country')) {
