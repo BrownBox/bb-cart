@@ -1243,12 +1243,19 @@ function bb_cart_post_purchase_actions($entry, $form){
 									);
 								}
 								$shipping_item = new WC_Order_Item_Shipping();
+								$shipping_tax_rates = WC_Tax::get_shipping_tax_rates();
+								if (count($shipping_tax_rates)) {
+									$shipping_tax_total = array(array_shift(array_keys($shipping_tax_rates)) => $shipping_tax);
+								} else {
+									$shipping_tax_total = array($shipping_tax);
+								}
 								$shipping_item->set_props(array(
 										'method_title' => $shipping_label,
 										'method_id'    => 'flat_rate',
-										'total'        => $shipping, // Just show full amount for now as tax doesn't work. @todo $shipping - $shipping_tax, // WooCommerce always assumes shipping is exclusive of tax, even if product prices are inclusive
+										'total'        => $shipping - $shipping_tax,
+										'total_tax'    => $shipping_tax,
 										'taxes'        => array(
-												'total' => array($shipping_tax),
+												'total' => $shipping_tax_total,
 										),
 								));
 								$order->add_item($shipping_item);
@@ -1256,6 +1263,7 @@ function bb_cart_post_purchase_actions($entry, $form){
 								$order->set_shipping_tax($shipping_tax);
 								$grand_total = $total+$shipping;
 								$order->set_total($grand_total);
+								$order->update_taxes();
 								$order->save();
 								if ($transaction_status == 'Approved') {
 									$order->payment_complete($transaction_id);
