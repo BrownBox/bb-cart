@@ -1411,8 +1411,15 @@ Your details will also allow us to give you a personal reference number to inclu
             )
     );
 
-    // If they have configured reCAPTCHA add it to the form
-    if (!empty(get_option('rg_gforms_captcha_public_key')) && !empty(get_option('rg_gforms_captcha_private_key'))) {
+    // If they have configured Turnstile or reCAPTCHA add it to the form
+    if (!empty(get_option('gravityformsaddon_gravityformsturnstile_settings'))) {
+        $checkout_form['fields'][] = array(
+                'type' => 'turnstile',
+                'id' => 47,
+                'label' => 'Security Check',
+                'turnstileWidgetTheme' => 'auto',
+        );
+    } elseif (!empty(get_option('rg_gforms_captcha_public_key')) && !empty(get_option('rg_gforms_captcha_private_key'))) {
         $checkout_form['fields'][] = array(
                 'type' => 'captcha',
         		'id' => 47,
