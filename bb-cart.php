@@ -1218,15 +1218,28 @@ function bb_cart_post_purchase_actions($entry, $form){
 								}
 								$total = 0;
 								foreach ($items as $product) {
-									$price = $woo_cart[$product['cart_item_key']]['line_total'];
-									if (!empty($woo_cart[$product['cart_item_key']]['line_tax'])) {
-										$price += $woo_cart[$product['cart_item_key']]['line_tax'];
+									$cart_product = $woo_cart[$product['cart_item_key']];
+									$price = $cart_product['line_total'];
+									if (!empty($cart_product['line_tax'])) {
+										$price += $cart_product['line_tax'];
 									}
 									$total += $price;
+
+									$list_price = $cart_product['data']->price;
+									$discount_percent = 0;
+									if (!empty($cart_product['discounts']['applied_discounts'])) {
+										foreach ($cart_product['discounts']['applied_discounts'] as $applied_discount) {
+											$list_price = $applied_discount['price_base'];
+											$discount = $applied_discount['price_base'] - $applied_discount['price_adjusted'];
+											$discount_percent = round(100 * $discount / $applied_discount['price_base']);
+										}
+									}
 									$line_item = array(
 											'name' => $product['label'],
 											'price' => $price/$product['quantity'],
 											'quantity' => $product['quantity'],
+											'list_price' => $list_price,
+											'discount_percent' => $discount_percent,
 									);
 									$gf_line_items['products'][] = $line_item;
 									$line_item['fund_code'] = $product['fund_code'];
@@ -1240,6 +1253,7 @@ function bb_cart_post_purchase_actions($entry, $form){
 											'price' => $shipping,
 											'quantity' => '1',
 											'fund_code' => apply_filters('bb_cart_shipping_fund_code', 'Postage', $bb_line_items),
+											'list_price' => $shipping - $shipping_tax,
 									);
 								}
 								$shipping_item = new WC_Order_Item_Shipping();
@@ -1324,6 +1338,13 @@ function bb_cart_post_purchase_actions($entry, $form){
 				update_post_meta($line_item_id, 'transaction_id', $transaction_id);
 				update_post_meta($line_item_id, 'price', $bb_line_item['price']);
 				update_post_meta($line_item_id, 'quantity', $bb_line_item['quantity']);
+
+				if (!empty($bb_line_item['list_price'])) {
+					update_post_meta($line_item_id, 'list_price', $bb_line_item['list_price']);
+				}
+				if (!empty($bb_line_item['discount_percent'])) {
+					update_post_meta($line_item_id, 'discount_percent', $bb_line_item['discount_percent']);
+				}
 
 				$transaction_term = get_term_by('slug', $transaction_id, 'transaction'); // Have to pass term ID rather than slug
 				wp_set_post_terms($line_item_id, $transaction_term->term_id, 'transaction');
