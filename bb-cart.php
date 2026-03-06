@@ -92,7 +92,7 @@ function bb_cart_start_session() {
 
 		// And now make sure all the WC cart items are also in BB Cart
 		if (!empty($wc_cart)) {
-			$currency = apply_filters('wcml_client_currency', get_option('woocommerce_currency'));
+			$currency = apply_filters('wcml_get_client_currency', get_option('woocommerce_currency'));
 			if (empty($currency)) {
 				$currency = bb_cart_get_default_currency();
 			}
@@ -549,7 +549,7 @@ function bb_cart_get_default_currency() {
 			}
 		}
 	}
-	return apply_filters('wcml_client_currency', GFCommon::get_currency());
+	return apply_filters('wcml_get_client_currency', GFCommon::get_currency());
 }
 
 // OK NOW WE NEED A POST-SUBMISSION HOOK TO CATCH ANY SUBMISSIONS FROM FORMS WITH 'bb_cart_enable' CHECKED
