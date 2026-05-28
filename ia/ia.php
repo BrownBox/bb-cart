@@ -198,6 +198,10 @@ $fund_code_meta = array(
                                 'value' => 'purchase',
                                 'label' => 'Purchase',
                         ),
+                        array(
+                                'value' => 'fee',
+                                'label' => 'Fee',
+                        ),
                 ),
                 'show_in_admin' => true,
         ),
