@@ -374,7 +374,14 @@ function bb_cart_form_submit_button($button, $form) {
                     jQuery(".pseudo-submit").on("click", function() {
                         var payment_method = jQuery(this).attr("data-paymentmethod");
                         jQuery("input[value='" + payment_method + "']").trigger("click");
-                        jQuery(this).parents(".gform_footer").find("div.hide input.gform_button.button").trigger("click");
+                        // GF 3.1 renders the submit button as <button>, earlier versions as <input>; match both.
+                        var real_button = jQuery(this).parents(".gform_footer").find("div.hide").find("input.gform_button.button, button.gform_button.button");
+                        if (window.gform && gform.submission && typeof gform.submission.handleButtonClick === "function") {
+                            // GF's own submission flow. A triggered click would run it and then also fire a native submit, which GF 3.x logs as a duplicate.
+                            gform.submission.handleButtonClick(real_button[0]);
+                        } else {
+                            real_button.trigger("click");
+                        }
                         return false;
                     });
                 });
