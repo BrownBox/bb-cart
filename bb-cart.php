@@ -2,14 +2,14 @@
 /**
  * Plugin Name: BB Cart
  * Description: A cart system for Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
- * Version: 3.8.27
+ * Version: 3.8.28
  * Author: Spark Web Solutions
  * Author URI: https://sparkweb.com.au
  */
 
 define('BB_CART_DIR', plugin_dir_path(__FILE__));
 define('BB_CART_URL', plugin_dir_url(__FILE__));
-define('BB_CART_VERSION', '3.8.27');
+define('BB_CART_VERSION', '3.8.28');
 
 require_once(BB_CART_DIR.'time.php');
 require_once(BB_CART_DIR.'ia/cpt_.php');
@@ -1115,7 +1115,7 @@ function bb_cart_post_purchase_actions($entry, $form){
 			$payment_complete = apply_filters('bb_cart_payment_complete', $payment_complete, $payment_method, $transaction_date, $cart_items);
 			if ($payment_complete) {
 				$post_status = 'publish';
-				$transaction_status = 'Approved';
+				$transaction_status = 'Paid';
 			} else {
 				$post_status = 'draft';
 				$transaction_status = 'Pending';
@@ -1279,7 +1279,7 @@ function bb_cart_post_purchase_actions($entry, $form){
 								$order->set_total($grand_total);
 								$order->update_taxes();
 								$order->save();
-								if ($transaction_status == 'Approved') {
+								if ($transaction_status == 'Paid') {
 									$order->payment_complete($transaction_id);
 								}
 							}
@@ -1389,7 +1389,7 @@ function bb_cart_post_purchase_actions($entry, $form){
 			gform_update_meta($entry['id'], 'gform_product_info__1', $gf_line_items);
 			gform_update_meta($entry['id'], 'gform_product_info_1_1', $gf_line_items);
 
-			$send_notifications = $transaction_status == 'Approved';
+			$send_notifications = $transaction_status == 'Paid';
 			$send_notifications = apply_filters('bb_cart_send_payment_complete_notifications', $send_notifications, $transaction_status, $payment_method);
 			if ($send_notifications) {
 				// Send notifications configured to go on "Payment Completed" event
@@ -1862,21 +1862,25 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
  * @param int $transaction_id Transaction post ID
  * @param string $date Date of payment (Y-m-d H:i:s). Expected to be in local timezone.
  * @param array $entry Optional GF entry. If not specified entry will be loaded from transaction meta
- * @param boolean $force Optional Whether to force the update. If false (default) it will only run if the entry has not yet been marked as Approved.
+ * @param boolean $force Optional Whether to force the update. If false (default) it will only run if the entry is not already in a completed payment status - see $completed_statuses below.
  */
 function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = null, $force = false) {
 	if (is_null($entry)) {
 		$entry = GFAPI::get_entry(get_post_meta($transaction_id, 'gf_entry_id', true));
 	}
-	if ($force || $entry['payment_status'] != 'Approved') {
+	// A GF payment add-on writes 'Paid' (or 'Active' for a subscription), and this plugin wrote
+	// 'Approved' before 3.8.28, so all three mean "already complete" and all three must be
+	// recognised here or an entry gets completed more than once.
+	$completed_statuses = array('Paid', 'Active', 'Approved');
+	if ($force || !in_array($entry['payment_status'], $completed_statuses)) {
 		wp_publish_post($transaction_id);
 
 		// GF always stores dates in UTC so we need to convert it from local
 		$payment_date = new DateTime($date, wp_timezone());
 		$payment_date->setTimezone(new DateTimeZone('UTC'));
-		$entry['payment_status'] = 'Approved';
+		$entry['payment_status'] = 'Paid';
 		$entry['payment_date'] = $payment_date->format('Y-m-d H:i:s');
-		GFAPI::update_entry_property($entry['id'], "payment_status", 'Approved');
+		GFAPI::update_entry_property($entry['id'], "payment_status", 'Paid');
 		GFAPI::update_entry_property($entry['id'], "payment_date", $payment_date->format('Y-m-d H:i:s'));
 		$form = GFAPI::get_form($entry['form_id']);
 		foreach ($form['fields'] as $field) {
@@ -1884,7 +1888,7 @@ function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = n
 				$item_entries = explode(',', $entry[$field->id]);
 				foreach ($item_entries as $item_entry) {
 					if (!empty($item_entry)) {
-						GFAPI::update_entry_property($item_entry, "payment_status", 'Approved');
+						GFAPI::update_entry_property($item_entry, "payment_status", 'Paid');
 						GFAPI::update_entry_property($item_entry, "payment_date", $payment_date->format('Y-m-d H:i:s'));
 					}
 				}
