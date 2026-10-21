@@ -2,14 +2,14 @@
 /**
  * Plugin Name: BB Cart
  * Description: A cart system for Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
- * Version: 3.8.28
+ * Version: 3.8.29
  * Author: Spark Web Solutions
  * Author URI: https://sparkweb.com.au
  */
 
 define('BB_CART_DIR', plugin_dir_path(__FILE__));
 define('BB_CART_URL', plugin_dir_url(__FILE__));
-define('BB_CART_VERSION', '3.8.28');
+define('BB_CART_VERSION', '3.8.29');
 
 require_once(BB_CART_DIR.'time.php');
 require_once(BB_CART_DIR.'ia/cpt_.php');
@@ -33,6 +33,7 @@ require_once(BB_CART_DIR.'admin/batch-management.php');
 require_once(BB_CART_DIR.'admin/donor-history.php');
 require_once(BB_CART_DIR.'admin/offline-email-receipts.php');
 require_once(BB_CART_DIR.'admin/bbconnect.php');
+require_once(BB_CART_DIR.'admin/recovery.php');
 // require_once(BB_CART_DIR.'demo/config.class.php');
 
 require_once(BB_CART_DIR.'admin/updates.php');
@@ -1862,17 +1863,24 @@ function bb_cart_complete_paypal_transaction($ipn_post, $entry, $feed, $cancel) 
  * @param int $transaction_id Transaction post ID
  * @param string $date Date of payment (Y-m-d H:i:s). Expected to be in local timezone.
  * @param array $entry Optional GF entry. If not specified entry will be loaded from transaction meta
- * @param boolean $force Optional Whether to force the update. If false (default) it will only run if the entry is not already in a completed payment status - see $completed_statuses below.
+ * @param boolean $force Optional Whether to force the update. If false (default) it will only run if the transaction has not already been published.
  */
 function bb_cart_complete_pending_transaction($transaction_id, $date, $entry = null, $force = false) {
+	// Callers look the transaction up from the entry, and get nothing back when it hasn't been
+	// recorded yet (e.g. a card payment completed before gform_after_submission). An empty ID would
+	// make the post functions below fall back to the global post, so stop here.
+	if (empty($transaction_id) || !get_post($transaction_id)) {
+		return;
+	}
 	if (is_null($entry)) {
 		$entry = GFAPI::get_entry(get_post_meta($transaction_id, 'gf_entry_id', true));
 	}
-	// A GF payment add-on writes 'Paid' (or 'Active' for a subscription), and this plugin wrote
-	// 'Approved' before 3.8.28, so all three mean "already complete" and all three must be
-	// recognised here or an entry gets completed more than once.
-	$completed_statuses = array('Paid', 'Active', 'Approved');
-	if ($force || !in_array($entry['payment_status'], $completed_statuses)) {
+	// Run once per transaction, keyed on the transaction post's own status, which no payment add-on
+	// writes. The entry's payment status can't be the gate: every GF payment add-on writes 'Paid' to
+	// the entry before firing the hooks that call this function (gform_post_payment_completed,
+	// gform_stripe_fulfillment, gform_paypal_post_ipn), so a gate on 'Paid' stops the very call that
+	// should complete the transaction.
+	if ($force || 'publish' != get_post_status($transaction_id)) {
 		wp_publish_post($transaction_id);
 
 		// GF always stores dates in UTC so we need to convert it from local

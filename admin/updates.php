@@ -219,6 +219,7 @@ function bb_cart_db_updates() {
         // List of versions that involved a DB update - each one must have a corresponding function below
         $db_versions = array(
                 '3.8.16',
+				'3.8.29',
         );
 
         foreach ($db_versions as $version) {
@@ -229,6 +230,11 @@ function bb_cart_db_updates() {
         }
         update_option('bb_cart_db_version', BB_CART_VERSION);
     }
+}
+
+function bb_cart_db_update_3_8_29() {
+	// Complete the transactions 3.8.28 left in draft - see admin/recovery.php
+	bb_cart_recovery_queue();
 }
 
 function bb_cart_db_update_3_8_16() {
