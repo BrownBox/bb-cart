@@ -2,14 +2,14 @@
 /**
  * Plugin Name: BB Cart
  * Description: A cart system for Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
- * Version: 3.8.29
+ * Version: 3.8.30
  * Author: Spark Web Solutions
  * Author URI: https://sparkweb.com.au
  */
 
 define('BB_CART_DIR', plugin_dir_path(__FILE__));
 define('BB_CART_URL', plugin_dir_url(__FILE__));
-define('BB_CART_VERSION', '3.8.29');
+define('BB_CART_VERSION', '3.8.30');
 
 require_once(BB_CART_DIR.'time.php');
 require_once(BB_CART_DIR.'ia/cpt_.php');
@@ -300,9 +300,9 @@ function bb_cart_products_total($include_shipping = true, array $cart_items = ar
 			$woo_total += ($product['price']*$product['quantity'])/100;
 		}
 
-		// Calculate shipping
-		if ($include_shipping) {
-			$woo_total += bb_cart_calculate_shipping($woo_total);
+		// Calculate shipping, based on the whole cart's total
+		if ($include_shipping && 'woo' == bb_cart_shipping_section($cart_items)) {
+			$woo_total += bb_cart_calculate_shipping(bb_cart_total_price(false, $cart_items));
 		}
 	}
 	return $woo_total;
@@ -340,12 +340,32 @@ function bb_cart_section_total($section = 'donations', $include_shipping = true,
 				}
 			}
 			$section_total = $section_total/100;
-			if ($include_shipping && apply_filters('bb_cart_section_incurs_shipping', false, $section)) {
-				$section_total += bb_cart_calculate_shipping($section_total);
+			if ($include_shipping && $section == bb_cart_shipping_section($cart_items)) {
+				$section_total += bb_cart_calculate_shipping(bb_cart_total_price(false, $cart_items)); // Based on the whole cart's total
 			}
 			return $section_total;
 			break;
 	}
+}
+
+/**
+ * The cart section that carries the postage. Shipping is calculated for the whole cart, so only one section can include it or it would be counted once per section.
+ * @param array $cart_items Optional cart contents. Defaults to the current cart.
+ * @return string|boolean The first section that incurs shipping, or false if none does
+ */
+function bb_cart_shipping_section(array $cart_items = array()) {
+	if (empty($cart_items) && !empty($_SESSION[BB_CART_SESSION_ITEM])) {
+		$cart_items = $_SESSION[BB_CART_SESSION_ITEM];
+	}
+	foreach ($cart_items as $section => $items) {
+		if (empty($items) || 'event' == $section) {
+			continue;
+		}
+		if ('woo' == $section || apply_filters('bb_cart_section_incurs_shipping', false, $section)) {
+			return $section;
+		}
+	}
+	return false;
 }
 
 /**
@@ -930,6 +950,11 @@ function bb_cart_calculate_shipping_tax($shipping = null) {
 add_filter('bb_cart_calculate_shipping', 'bb_cart_woocommerce_shipping', 1, 3);
 function bb_cart_woocommerce_shipping($shipping, $total_price, $cart_items) {
 	if (!empty($cart_items['woo']) && function_exists('WC')) {
+		// WooCommerce's stored totals come from the last request that calculated them, so make sure they have been calculated in this one before showing or charging its shipping.
+		// Checking for the start of a calculation also stops this running again from inside one.
+		if (did_action('wp_loaded') && !did_action('woocommerce_before_calculate_totals') && WC()->cart instanceof WC_Cart) {
+			WC()->cart->calculate_totals();
+		}
 		return WC()->cart->shipping_total;
 	}
 	return $shipping;
@@ -1246,7 +1271,7 @@ function bb_cart_post_purchase_actions($entry, $form){
 									$line_item['fund_code'] = $product['fund_code'];
 									$bb_line_items[] = $line_item;
 								}
-								$shipping = bb_cart_calculate_shipping($total);
+								$shipping = bb_cart_calculate_shipping(bb_cart_total_price(false, $cart_items)); // Based on the whole cart's total, as the cart shows it
 								$shipping_tax = bb_cart_calculate_shipping_tax($shipping);
 								if ($shipping > 0) {
 									$bb_line_items[] = array(
@@ -2058,24 +2083,18 @@ function bb_cart_gf_product_info($product_info, $form, $entry) {
 		return $product_info;
 	}
 	$gf_line_items = array();
-	if (!is_admin() && !empty($_SESSION[BB_CART_SESSION_ITEM])) {
+	// Gravity Forms 2.9+ submits AJAX-enabled forms through admin-ajax.php, where is_admin() is true
+	$use_cart = !is_admin() || (wp_doing_ajax() && 'gform_submit_form' == rgar($_REQUEST, 'action'));
+	if ($use_cart && !empty($_SESSION[BB_CART_SESSION_ITEM])) {
 		$cart_items = $_SESSION[BB_CART_SESSION_ITEM];
 		foreach ($cart_items as $section => $items) {
 			switch ($section) {
 				case 'woo':
-					$total = 0;
 					foreach ($items as $product) {
 						$gf_line_items['products'][] = array(
 								'name' => $product['label'],
 								'price' => $product['price']/100,
 								'quantity' => $product['quantity'],
-						);
-					}
-					$shipping = bb_cart_calculate_shipping($total);
-					if ($shipping > 0) {
-						$gf_line_items['shipping'] = array(
-								'name' => bb_cart_shipping_label(),
-								'price' => $shipping,
 						);
 					}
 					break;
@@ -2099,6 +2118,14 @@ function bb_cart_gf_product_info($product_info, $form, $entry) {
 					}
 					break;
 			}
+		}
+		// Postage is worked out the same way as the cart total, so what is charged matches the total the cart shows
+		$shipping = round(bb_cart_total_price(true, $cart_items) - bb_cart_total_price(false, $cart_items), 2);
+		if ($shipping > 0) {
+			$gf_line_items['shipping'] = array(
+					'name' => bb_cart_shipping_label(),
+					'price' => $shipping,
+			);
 		}
 		return $gf_line_items;
 	} elseif (!empty($entry['id'])) {
@@ -2148,15 +2175,14 @@ function bb_cart_table($purpose = 'table', array $cart_items = array(), $total =
 	$html = '';
 	if (!empty($cart_items)) {
 		$total_tax = 0;
+		$shipping_section = bb_cart_shipping_section($cart_items); // Postage is shown once, with the section that carries it
 		foreach ($cart_items as $section => $items) {
 			$html .= '<table class="bb-table" width="100%">'."\n";
 			switch ($section) {
 				case 'woo':
 					$html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Products</th></tr>';
-					$product_total = 0;
 					foreach ($items as $idx => $product) {
 						$price = ($product['price']*$product['quantity'])/100;
-						$product_total += $price;
 						$html .= '<tr><td>'.$product['quantity'].'x <a href="'.get_the_permalink($product['product_id']).'">'.apply_filters('bb_cart_table_item_label_display', $product['label'], $purpose, $product, $section, $idx).'</a></td>'."\n";
 						$html .= '<td style="text-align: right; white-space: nowrap;">';
 						$html .= bb_cart_format_currency($price);
@@ -2176,27 +2202,29 @@ function bb_cart_table($purpose = 'table', array $cart_items = array(), $total =
 						}
 						$html .= '</tr>';
 					}
-					if (is_null($shipping)) {
-						$shipping = bb_cart_calculate_shipping($product_total);
+					if ($section == $shipping_section) {
+						if (is_null($shipping)) {
+							$shipping = bb_cart_calculate_shipping(bb_cart_total_price(false, $cart_items));
+						}
+						$shipping_tax = 0;
+						if (is_numeric($shipping)) {
+							$shipping_tax = bb_cart_calculate_shipping_tax($shipping);
+							$total_tax += $shipping_tax;
+							$shipping = bb_cart_format_currency($shipping);
+						}
+						if (empty($shipping_label)) {
+							$shipping_label = bb_cart_shipping_label();
+						}
+						if (!empty($shipping_tax)) {
+							$shipping .= '<br><span class="tax">incl. '.bb_cart_format_currency(bb_cart_calculate_shipping_tax()).' '.__('Tax', 'woocommerce').'</span>';
+						}
+						$html .= '<tr><td>'.$shipping_label.'</td>'."\n";
+						$html .= '<td style="text-align: right;">'.$shipping.'</td>'."\n";
+						if ($purpose != 'email') {
+							$html .= '<td>&nbsp;</td>'."\n";
+						}
+						$html .= '</tr>'."\n";
 					}
-					$shipping_tax = 0;
-					if (is_numeric($shipping)) {
-						$shipping_tax = bb_cart_calculate_shipping_tax($shipping);
-						$total_tax += $shipping_tax;
-						$shipping = bb_cart_format_currency($shipping);
-					}
-					if (empty($shipping_label)) {
-						$shipping_label = bb_cart_shipping_label();
-					}
-					if (!empty($shipping_tax)) {
-						$shipping .= '<br><span class="tax">incl. '.bb_cart_format_currency(bb_cart_calculate_shipping_tax()).' '.__('Tax', 'woocommerce').'</span>';
-					}
-					$html .= '<tr><td>'.$shipping_label.'</td>'."\n";
-					$html .= '<td style="text-align: right;">'.$shipping.'</td>'."\n";
-					if ($purpose != 'email') {
-						$html .= '<td>&nbsp;</td>'."\n";
-					}
-					$html .= '</tr>'."\n";
 					break;
 				case 'event':
 					$html .= '<tr><th colspan="'.$cols.'" style="text-align:left;">Events</th></tr>';
@@ -2240,9 +2268,9 @@ function bb_cart_table($purpose = 'table', array $cart_items = array(), $total =
 						}
 						$html .= '</tr>'."\n";
 					}
-					if (apply_filters('bb_cart_section_incurs_shipping', false, $section)) {
+					if ($section == $shipping_section) {
 						if (is_null($shipping)) {
-							$shipping = bb_cart_calculate_shipping($product_total);
+							$shipping = bb_cart_calculate_shipping(bb_cart_total_price(false, $cart_items));
 						}
 						$shipping_tax = 0;
 						if (is_numeric($shipping)) {
