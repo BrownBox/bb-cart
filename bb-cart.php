@@ -2,14 +2,14 @@
 /**
  * Plugin Name: BB Cart
  * Description: A cart system for Gravity Forms. Includes session and checkout functionality, transaction tracking and reporting.
- * Version: 3.8.30
+ * Version: 3.8.31
  * Author: Spark Web Solutions
  * Author URI: https://sparkweb.com.au
  */
 
 define('BB_CART_DIR', plugin_dir_path(__FILE__));
 define('BB_CART_URL', plugin_dir_url(__FILE__));
-define('BB_CART_VERSION', '3.8.30');
+define('BB_CART_VERSION', '3.8.31');
 
 require_once(BB_CART_DIR.'time.php');
 require_once(BB_CART_DIR.'ia/cpt_.php');
@@ -76,7 +76,7 @@ function bb_cart_start_session() {
 			if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
 				unset($_SESSION[BB_CART_SESSION_ITEM]['woo']);
 			}
-		} else {
+		} elseif (WC()->cart instanceof WC_Cart) { // Some plugins start a WC session without a cart, e.g. on Store API requests
 			$wc_cart = WC()->cart->get_cart();
 			if (!empty($_SESSION[BB_CART_SESSION_ITEM]['woo'])) {
 				// Go through BB Cart Woocommerce items to make sure they're still in the WC cart
