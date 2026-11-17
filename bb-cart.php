@@ -976,7 +976,7 @@ function bb_cart_woocommerce_customer_name_add_column($columns) {
 
 	return $new_columns;
 }
-add_filter( 'manage_edit-shop_order_columns', 'bb_cart_woocommerce_customer_name_add_column' );
+add_filter('manage_edit-shop_order_columns', 'bb_cart_woocommerce_customer_name_add_column');
 
 /**
  * Place customer name into the column on Orders List page
@@ -1124,7 +1124,7 @@ function bb_cart_post_purchase_actions($entry, $form){
 
 			// Create post object
 			$transaction = array(
-					'post_title' => $firstname . '-' . $lastname . '-' . $total_amount,
+					'post_title' => $firstname.'-'.$lastname.'-'.$total_amount,
 					'post_content' => serialize($entry),
 					'post_status' => $post_status,
 					'post_author' => $author_id,
@@ -1184,29 +1184,29 @@ function bb_cart_post_purchase_actions($entry, $form){
 								if ($use_shipping || $use_billing) {
 									$shipping_address = array(
 											'first_name' => $firstname,
-											'last_name'  => $lastname,
-											'company'    => rgpost('input_34'),
-											'email'      => $email,
-											'phone'      => rgpost('input_19'),
-											'address_1'  => rgpost('input_50_1'),
-											'address_2'  => rgpost('input_50_2'),
-											'city'       => rgpost('input_50_3'),
-											'state'      => rgpost('input_50_4'),
-											'postcode'   => rgpost('input_50_5'),
-											'country'    => rgpost('input_50_6'),
+											'last_name' => $lastname,
+											'company' => rgpost('input_34'),
+											'email' => $email,
+											'phone' => rgpost('input_19'),
+											'address_1' => rgpost('input_50_1'),
+											'address_2' => rgpost('input_50_2'),
+											'city' => rgpost('input_50_3'),
+											'state' => rgpost('input_50_4'),
+											'postcode' => rgpost('input_50_5'),
+											'country' => rgpost('input_50_6'),
 									);
 									$billing_address = array(
 											'first_name' => $firstname,
-											'last_name'  => $lastname,
-											'company'    => rgpost('input_34'),
-											'email'      => $email,
-											'phone'      => rgpost('input_19'),
-											'address_1'  => rgpost('input_2_1'),
-											'address_2'  => rgpost('input_2_2'),
-											'city'       => rgpost('input_2_3'),
-											'state'      => rgpost('input_2_4'),
-											'postcode'   => rgpost('input_2_5'),
-											'country'    => rgpost('input_2_6'),
+											'last_name' => $lastname,
+											'company' => rgpost('input_34'),
+											'email' => $email,
+											'phone' => rgpost('input_19'),
+											'address_1' => rgpost('input_2_1'),
+											'address_2' => rgpost('input_2_2'),
+											'city' => rgpost('input_2_3'),
+											'state' => rgpost('input_2_4'),
+											'postcode' => rgpost('input_2_5'),
+											'country' => rgpost('input_2_6'),
 									);
 									if (!$use_shipping) {
 										$shipping_address = $billing_address;
@@ -1266,10 +1266,10 @@ function bb_cart_post_purchase_actions($entry, $form){
 								}
 								$shipping_item->set_props(array(
 										'method_title' => $shipping_label,
-										'method_id'    => 'flat_rate',
-										'total'        => $shipping - $shipping_tax,
-										'total_tax'    => $shipping_tax,
-										'taxes'        => array(
+										'method_id' => 'flat_rate',
+										'total' => $shipping - $shipping_tax,
+										'total_tax' => $shipping_tax,
+										'taxes' => array(
 												'total' => $shipping_tax_total,
 										),
 								));
@@ -1395,13 +1395,13 @@ function bb_cart_post_purchase_actions($entry, $form){
 			if ($send_notifications) {
 				// Send notifications configured to go on "Payment Completed" event
 				$action = array();
-				$action['id']               = $transaction_id.'_'.$entry['id'];
-				$action['type']             = 'complete_payment';
-				$action['transaction_id']   = $transaction_id;
-				$action['amount']           = $total_amount;
-				$action['entry_id']         = $entry['id'];
-				$action['payment_date']     = $transaction_date;
-				$action['payment_method']	= $payment_method;
+				$action['id'] = $transaction_id.'_'.$entry['id'];
+				$action['type'] = 'complete_payment';
+				$action['transaction_id'] = $transaction_id;
+				$action['amount'] = $total_amount;
+				$action['entry_id'] = $entry['id'];
+				$action['payment_date'] = $transaction_date;
+				$action['payment_method'] = $payment_method;
 				$action['ready_to_fulfill'] = !$entry['is_fulfilled'] ? true : false;
 				GFAPI::send_notifications($form, $entry, rgar($action, 'type'), array('payment_action' => $action));
 			}
@@ -1481,9 +1481,9 @@ function bb_cart_transaction_exists(array $data) {
 			'author' => $data['user']->ID,
 			'date_query' => array(
 					array(
-							'year'  => date('Y', strtotime($data['date'])),
+							'year' => date('Y', strtotime($data['date'])),
 							'month' => date('m', strtotime($data['date'])),
-							'day'   => date('d', strtotime($data['date'])),
+							'day' => date('d', strtotime($data['date'])),
 					),
 			),
 			'meta_query' => array(
@@ -1707,7 +1707,7 @@ function bb_cart_paypal_line_items($query_string, $form, $entry, $feed, $submiss
 	if (!is_null($currency)) {
 		$query['currency_code'] = $currency;
 	}
-	$query_string = '&' . http_build_query($query);
+	$query_string = '&'.http_build_query($query);
 	return $query_string;
 }
 
